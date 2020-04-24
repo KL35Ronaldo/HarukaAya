@@ -30,7 +30,8 @@ from haruka.modules.connection import connected
 
 
 @user_admin
-def locale(bot, update, args):
+def locale(update, context):
+    args = context.args
     chat = update.effective_chat
     message = update.effective_message
     if len(args) > 0:
@@ -76,7 +77,7 @@ def locale(bot, update, args):
 
 
 @user_admin
-def locale_button(bot, update):
+def locale_button(update, context):
     chat = update.effective_chat
     user = update.effective_user
     query = update.callback_query
@@ -96,7 +97,7 @@ def locale_button(bot, update):
     text = tld(chat.id, "language_select_language")
     text += tld(chat.id, "language_user_language").format(curr_lang)
 
-    conn = connected(bot, update, chat, user.id, need_admin=False)
+    conn = connected(update, context, chat, user.id, need_admin=False)
 
     if conn:
         try:
@@ -108,7 +109,7 @@ def locale_button(bot, update):
 
     text += tld(chat.id, "language_sel_user_lang")
 
-    bot.edit_message_text(
+    context.bot.edit_message_text(
         chat_id=query.message.chat_id,
         message_id=query.message.message_id,
         text=text,
@@ -127,7 +128,7 @@ def locale_button(bot, update):
         ]]))
 
     # query.message.delete()
-    bot.answer_callback_query(query.id)
+    context.bot.answer_callback_query(query.id)
 
 
 LOCALE_HANDLER = CommandHandler(["set_locale", "locale", "lang", "setlang"],

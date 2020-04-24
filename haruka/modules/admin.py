@@ -40,11 +40,12 @@ from haruka.modules.connection import connected
 @bot_admin
 @user_admin
 @loggable
-def promote(bot: Bot, update: Update, args: List[str]) -> str:
+def promote(update, context) -> str:
+    args = context.args
     message = update.effective_message
     user = update.effective_user
     chat = update.effective_chat
-    conn = connected(bot, update, chat, user.id)
+    conn = connected(update, context, chat, user.id)
     if conn:
         chatD = dispatcher.bot.getChat(conn)
     else:
@@ -52,7 +53,7 @@ def promote(bot: Bot, update: Update, args: List[str]) -> str:
         if chat.type == "private":
             return
 
-    if not chatD.get_member(bot.id).can_promote_members:
+    if not chatD.get_member(context.bot.id).can_promote_members:
         update.effective_message.reply_text(tld(chat.id, "admin_err_no_perm"))
         return
 
@@ -66,23 +67,24 @@ def promote(bot: Bot, update: Update, args: List[str]) -> str:
         message.reply_text(tld(chat.id, "admin_err_user_admin"))
         return
 
-    if user_id == bot.id:
+    if user_id == context.bot.id:
         message.reply_text(tld(chat.id, "admin_err_self_promote"))
         return
 
     # set same perms as bot - bot can't assign higher perms than itself!
-    bot_member = chatD.get_member(bot.id)
+    bot_member = chatD.get_member(context.bot.id)
 
-    bot.promoteChatMember(chatD.id,
-                          user_id,
-                          can_change_info=bot_member.can_change_info,
-                          can_post_messages=bot_member.can_post_messages,
-                          can_edit_messages=bot_member.can_edit_messages,
-                          can_delete_messages=bot_member.can_delete_messages,
-                          can_invite_users=bot_member.can_invite_users,
-                          can_restrict_members=bot_member.can_restrict_members,
-                          can_pin_messages=bot_member.can_pin_messages,
-                          can_promote_members=bot_member.can_promote_members)
+    context.bot.promoteChatMember(
+        chatD.id,
+        user_id,
+        can_change_info=bot_member.can_change_info,
+        can_post_messages=bot_member.can_post_messages,
+        can_edit_messages=bot_member.can_edit_messages,
+        can_delete_messages=bot_member.can_delete_messages,
+        can_invite_users=bot_member.can_invite_users,
+        can_restrict_members=bot_member.can_restrict_members,
+        can_pin_messages=bot_member.can_pin_messages,
+        can_promote_members=bot_member.can_promote_members)
 
     message.reply_text(tld(chat.id, "admin_promote_success").format(
         mention_html(user.id, user.first_name),
@@ -99,11 +101,12 @@ def promote(bot: Bot, update: Update, args: List[str]) -> str:
 @bot_admin
 @user_admin
 @loggable
-def demote(bot: Bot, update: Update, args: List[str]) -> str:
+def demote(update, context) -> str:
+    args = context.args
     chat = update.effective_chat
     message = update.effective_message
     user = update.effective_user
-    conn = connected(bot, update, chat, user.id)
+    conn = connected(update, context, chat, user.id)
     if conn:
         chatD = dispatcher.bot.getChat(conn)
     else:
@@ -111,7 +114,7 @@ def demote(bot: Bot, update: Update, args: List[str]) -> str:
         if chat.type == "private":
             return
 
-    if not chatD.get_member(bot.id).can_promote_members:
+    if not chatD.get_member(context.bot.id).can_promote_members:
         update.effective_message.reply_text(tld(chat.id, "admin_err_no_perm"))
         return
 
@@ -129,21 +132,21 @@ def demote(bot: Bot, update: Update, args: List[str]) -> str:
         message.reply_text(tld(chat.id, "admin_err_demote_noadmin"))
         return ""
 
-    if user_id == bot.id:
+    if user_id == context.bot.id:
         message.reply_text(tld(chat.id, "admin_err_self_demote"))
         return ""
 
     try:
-        bot.promoteChatMember(int(chatD.id),
-                              int(user_id),
-                              can_change_info=False,
-                              can_post_messages=False,
-                              can_edit_messages=False,
-                              can_delete_messages=False,
-                              can_invite_users=False,
-                              can_restrict_members=False,
-                              can_pin_messages=False,
-                              can_promote_members=False)
+        context.bot.promoteChatMember(int(chatD.id),
+                                      int(user_id),
+                                      can_change_info=False,
+                                      can_post_messages=False,
+                                      can_edit_messages=False,
+                                      can_delete_messages=False,
+                                      can_invite_users=False,
+                                      can_restrict_members=False,
+                                      can_pin_messages=False,
+                                      can_promote_members=False)
         message.reply_text(tld(chat.id, "admin_demote_success").format(
             mention_html(user.id, user.first_name),
             mention_html(user_member.user.id, user_member.user.first_name),
@@ -164,7 +167,8 @@ def demote(bot: Bot, update: Update, args: List[str]) -> str:
 @can_pin
 @user_admin
 @loggable
-def pin(bot: Bot, update: Update, args: List[str]) -> str:
+def pin(update, context) -> str:
+    args = context.args
     user = update.effective_user
     chat = update.effective_chat
 
@@ -180,9 +184,9 @@ def pin(bot: Bot, update: Update, args: List[str]) -> str:
 
     if prev_message and is_group:
         try:
-            bot.pinChatMessage(chat.id,
-                               prev_message.message_id,
-                               disable_notification=is_silent)
+            context.bot.pinChatMessage(chat.id,
+                                       prev_message.message_id,
+                                       disable_notification=is_silent)
         except BadRequest as excp:
             if excp.message == "Chat_not_modified":
                 pass
@@ -200,12 +204,12 @@ def pin(bot: Bot, update: Update, args: List[str]) -> str:
 @can_pin
 @user_admin
 @loggable
-def unpin(bot: Bot, update: Update) -> str:
+def unpin(update, context) -> str:
     chat = update.effective_chat
     user = update.effective_user
 
     try:
-        bot.unpinChatMessage(chat.id)
+        context.bot.unpinChatMessage(chat.id)
     except BadRequest as excp:
         if excp.message == "Chat_not_modified":
             pass
@@ -220,10 +224,10 @@ def unpin(bot: Bot, update: Update) -> str:
 @run_async
 @bot_admin
 @user_admin
-def invite(bot: Bot, update: Update):
+def invite(update, context):
     chat = update.effective_chat
     user = update.effective_user
-    conn = connected(bot, update, chat, user.id, need_admin=False)
+    conn = connected(update, context, chat, user.id, need_admin=False)
     if conn:
         chatP = dispatcher.bot.getChat(conn)
     else:
@@ -234,12 +238,12 @@ def invite(bot: Bot, update: Update):
     if chatP.username:
         update.effective_message.reply_text(chatP.username)
     elif chatP.type == chatP.SUPERGROUP or chatP.type == chatP.CHANNEL:
-        bot_member = chatP.get_member(bot.id)
+        bot_member = chatP.get_member(context.bot.id)
         if bot_member.can_invite_users:
             invitelink = chatP.invite_link
             #print(invitelink)
             if not invitelink:
-                invitelink = bot.exportChatInviteLink(chatP.id)
+                invitelink = context.bot.exportChatInviteLink(chatP.id)
 
             update.effective_message.reply_text(invitelink)
         else:
@@ -251,7 +255,7 @@ def invite(bot: Bot, update: Update):
 
 
 @run_async
-def adminlist(bot: Bot, update: Update):
+def adminlist(update, context):
     chat = update.effective_chat
     administrators = update.effective_chat.get_administrators()
     text = tld(chat.id, "admin_list").format(
@@ -271,7 +275,8 @@ def adminlist(bot: Bot, update: Update):
 # TODO: Finalize this command, add automatic message deleting
 @user_admin
 @run_async
-def reaction(bot: Bot, update: Update, args: List[str]) -> str:
+def reaction(update, context) -> str:
+    args = context.args
     chat = update.effective_chat
     if len(args) >= 1:
         var = args[0]

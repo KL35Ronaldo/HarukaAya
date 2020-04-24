@@ -39,7 +39,8 @@ from haruka.modules.tr_engine.strings import tld
 @can_restrict
 @user_admin
 @loggable
-def ban(bot: Bot, update: Update, args: List[str]) -> str:
+def ban(update, context) -> str:
+    args = context.args
     chat = update.effective_chat  # type: Optional[Chat]
     user = update.effective_user  # type: Optional[User]
     message = update.effective_message  # type: Optional[Message]
@@ -59,7 +60,7 @@ def ban(bot: Bot, update: Update, args: List[str]) -> str:
         else:
             raise
 
-    if user_id == bot.id:
+    if user_id == context.bot.id:
         message.reply_text(tld(chat.id, "bans_err_usr_is_bot"))
         return ""
 
@@ -105,7 +106,8 @@ def ban(bot: Bot, update: Update, args: List[str]) -> str:
 @can_restrict
 @user_admin
 @loggable
-def temp_ban(bot: Bot, update: Update, args: List[str]) -> str:
+def temp_ban(update, context) -> str:
+    args = context.args
     chat = update.effective_chat  # type: Optional[Chat]
     user = update.effective_user  # type: Optional[User]
     message = update.effective_message  # type: Optional[Message]
@@ -129,7 +131,7 @@ def temp_ban(bot: Bot, update: Update, args: List[str]) -> str:
         message.reply_text(tld(chat.id, "bans_err_usr_is_admin"))
         return ""
 
-    if user_id == bot.id:
+    if user_id == context.bot.id:
         message.reply_text(tld(chat.id, "bans_err_usr_is_bot"))
         return ""
 
@@ -191,7 +193,8 @@ def temp_ban(bot: Bot, update: Update, args: List[str]) -> str:
 @can_restrict
 @user_admin
 @loggable
-def kick(bot: Bot, update: Update, args: List[str]) -> str:
+def kick(update, context) -> str:
+    args = context.args
     chat = update.effective_chat  # type: Optional[Chat]
     user = update.effective_user  # type: Optional[User]
     message = update.effective_message  # type: Optional[Message]
@@ -211,7 +214,7 @@ def kick(bot: Bot, update: Update, args: List[str]) -> str:
         else:
             raise
 
-    if user_id == bot.id:
+    if user_id == context.bot.id:
         message.reply_text(tld(chat.id, "bans_kick_is_bot"))
         return ""
 
@@ -248,7 +251,7 @@ def kick(bot: Bot, update: Update, args: List[str]) -> str:
 @run_async
 @bot_admin
 @can_restrict
-def kickme(bot: Bot, update: Update):
+def kickme(update, context):
     chat = update.effective_chat  # type: Optional[Chat]
 
     user_id = update.effective_message.from_user.id
@@ -269,7 +272,7 @@ def kickme(bot: Bot, update: Update):
 @bot_admin
 @can_restrict
 @loggable
-def banme(bot: Bot, update: Update):
+def banme(update, context):
     user_id = update.effective_message.from_user.id
     chat = update.effective_chat
     if is_user_admin(update.effective_chat, user_id):
@@ -291,7 +294,8 @@ def banme(bot: Bot, update: Update):
 @can_restrict
 @user_admin
 @loggable
-def unban(bot: Bot, update: Update, args: List[str]) -> str:
+def unban(update, context) -> str:
+    args = context.args
     message = update.effective_message  # type: Optional[Message]
     user = update.effective_user  # type: Optional[User]
     chat = update.effective_chat  # type: Optional[Chat]
@@ -331,7 +335,8 @@ def unban(bot: Bot, update: Update, args: List[str]) -> str:
 @can_restrict
 @user_admin
 @loggable
-def sban(bot: Bot, update: Update, args: List[str]) -> str:
+def sban(update, context) -> str:
+    args = context.args
     chat = update.effective_chat  # type: Optional[Chat]
     user = update.effective_user  # type: Optional[User]
     message = update.effective_message  # type: Optional[Message]
@@ -354,7 +359,7 @@ def sban(bot: Bot, update: Update, args: List[str]) -> str:
     if is_user_ban_protected(chat, user_id, member):
         return ""
 
-    if user_id == bot.id:
+    if user_id == context.bot.id:
         return ""
 
     log = tld(chat.id, "bans_sban_logger").format(

@@ -33,12 +33,13 @@ from haruka.modules.tr_engine.strings import tld
 @run_async
 @user_admin
 @loggable
-def purge(bot: Bot, update: Update, args: List[str]) -> str:
+def purge(update, context) -> str:
+    args = context.args
     msg = update.effective_message
     if msg.reply_to_message:
         user = update.effective_user
         chat = update.effective_chat
-        if can_delete(chat, bot.id):
+        if can_delete(chat, context.bot.id):
             message_id = msg.reply_to_message.message_id
             if args and args[0].isdigit():
                 if int(args[0]) < int(1):
@@ -50,10 +51,10 @@ def purge(bot: Bot, update: Update, args: List[str]) -> str:
             for m_id in range(delete_to, message_id - 1,
                               -1):  # Reverse iteration over message ids
                 try:
-                    bot.deleteMessage(chat.id, m_id)
+                    context.bot.deleteMessage(chat.id, m_id)
                 except BadRequest as err:
                     if err.message == "Message can't be deleted":
-                        bot.send_message(
+                        context.bot.send_message(
                             chat.id, tld(chat.id,
                                          "purge_msg_cant_del_too_old"))
 
@@ -64,13 +65,14 @@ def purge(bot: Bot, update: Update, args: List[str]) -> str:
                 msg.delete()
             except BadRequest as err:
                 if err.message == "Message can't be deleted":
-                    bot.send_message(
+                    context.bot.send_message(
                         chat.id, tld(chat.id, "purge_msg_cant_del_too_old"))
 
                 elif err.message != "Message to delete not found":
                     LOGGER.exception("Error while purging chat messages.")
 
-            bot.send_message(chat.id, tld(chat.id, "purge_msg_success"))
+            context.bot.send_message(chat.id, tld(chat.id,
+                                                  "purge_msg_success"))
             return "<b>{}:</b>" \
                    "\n#PURGE" \
                    "\n<b>• Admin:</b> {}" \
@@ -87,11 +89,11 @@ def purge(bot: Bot, update: Update, args: List[str]) -> str:
 @run_async
 @user_admin
 @loggable
-def del_message(bot: Bot, update: Update) -> str:
+def del_message(update, context) -> str:
     chat = update.effective_chat
     if update.effective_message.reply_to_message:
         user = update.effective_user
-        if can_delete(chat, bot.id):
+        if can_delete(chat, context.bot.id):
             update.effective_message.reply_to_message.delete()
             update.effective_message.delete()
             return "<b>{}:</b>" \

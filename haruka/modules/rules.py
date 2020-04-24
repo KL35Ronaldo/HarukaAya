@@ -30,7 +30,7 @@ from haruka.modules.tr_engine.strings import tld
 
 
 @run_async
-def get_rules(bot: Bot, update: Update):
+def get_rules(update, context):
     chat_id = update.effective_chat.id
     send_rules(update, chat_id)
 
@@ -41,11 +41,11 @@ def send_rules(update, chat_id, from_pm=False):
     chat = update.effective_chat
     user = update.effective_user
     try:
-        chat = bot.get_chat(chat_id)
+        chat = context.bot.get_chat(chat_id)
     except BadRequest as excp:
         if excp.message == "Chat not found" and from_pm:
-            bot.send_message(user.id,
-                             tld(chat.id, "rules_shortcut_not_setup_properly"))
+            context.bot.send_message(
+                user.id, tld(chat.id, "rules_shortcut_not_setup_properly"))
             return
         else:
             raise
@@ -55,9 +55,9 @@ def send_rules(update, chat_id, from_pm=False):
                                                 rules)
 
     if from_pm and rules:
-        bot.send_message(user.id, text, parse_mode=ParseMode.MARKDOWN)
+        context.bot.send_message(user.id, text, parse_mode=ParseMode.MARKDOWN)
     elif from_pm:
-        bot.send_message(user.id, tld(chat.id, "rules_not_found"))
+        context.bot.send_message(user.id, tld(chat.id, "rules_not_found"))
     elif rules:
         rules_text = tld(chat.id, "rules")
         update.effective_message.reply_text(
@@ -65,7 +65,7 @@ def send_rules(update, chat_id, from_pm=False):
             reply_markup=InlineKeyboardMarkup([[
                 InlineKeyboardButton(text=rules_text,
                                      url="t.me/{}?start={}".format(
-                                         bot.username, chat_id))
+                                         context.bot.username, chat_id))
             ]]))
     else:
         update.effective_message.reply_text(tld(chat.id, "rules_not_found"))
@@ -73,7 +73,7 @@ def send_rules(update, chat_id, from_pm=False):
 
 @run_async
 @user_admin
-def set_rules(bot: Bot, update: Update):
+def set_rules(update, context):
     chat_id = update.effective_chat.id
     msg = update.effective_message
     raw_text = msg.text
@@ -93,7 +93,7 @@ def set_rules(bot: Bot, update: Update):
 
 @run_async
 @user_admin
-def clear_rules(bot: Bot, update: Update):
+def clear_rules(update, context):
     chat_id = update.effective_chat.id
     sql.set_rules(chat_id, "")
     update.effective_message.reply_text("Successfully cleared rules!")

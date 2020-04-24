@@ -42,7 +42,7 @@ LOGGER.info("android: Original Android Modules by @RealAkito on Telegram")
 
 
 @run_async
-def posp(bot: Bot, update: Update):
+def posp(update, context):
     cmd_name = "posp"
     message = update.effective_message
     chat = update.effective_chat  # type: Optional[Chat]
@@ -88,7 +88,7 @@ def posp(bot: Bot, update: Update):
 
 
 @run_async
-def los(bot: Bot, update: Update):
+def los(update, context):
     cmd_name = "los"
     message = update.effective_message
     chat = update.effective_chat  # type: Optional[Chat]
@@ -132,7 +132,7 @@ def los(bot: Bot, update: Update):
 
 
 @run_async
-def evo(bot: Bot, update: Update):
+def evo(update, context):
     cmd_name = "evo"
     message = update.effective_message
     chat = update.effective_chat  # type: Optional[Chat]
@@ -209,7 +209,8 @@ def evo(bot: Bot, update: Update):
         return
 
 
-def phh(bot: Bot, update: Update, args: List[str]):
+def phh(update, context):
+    args = context.args
     romname = "Phh's"
     message = update.effective_message
     chat = update.effective_chat  # type: Optional[Chat]
@@ -229,7 +230,8 @@ def phh(bot: Bot, update: Update, args: List[str]):
 
 
 @run_async
-def getaex(bot: Bot, update: Update, args: List[str]):
+def getaex(update, context):
+    args = context.args
     message = update.effective_message
     chat = update.effective_chat  # type: Optional[Chat]
 
@@ -280,7 +282,7 @@ def getaex(bot: Bot, update: Update, args: List[str]):
 
 
 @run_async
-def bootleggers(bot: Bot, update: Update):
+def bootleggers(update, context):
     cmd_name = "bootleggers"
     message = update.effective_message
     chat = update.effective_chat  # type: Optional[Chat]

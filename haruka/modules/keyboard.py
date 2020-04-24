@@ -24,7 +24,7 @@ from telegram.ext import CommandHandler
 import haruka.modules.sql.connection_sql as con_sql
 
 
-def keyboard(bot, update):
+def keyboard(update, context):
     chat = update.effective_chat
     user = update.effective_user
     conn_id = con_sql.get_connected_chat(user.id)

@@ -32,13 +32,14 @@ from haruka.modules.tr_engine.strings import tld
 
 
 @run_async
-def about_me(bot: Bot, update: Update, args: List[str]):
+def about_me(update, context):
+    args = context.args
     message = update.effective_message
     user_id = extract_user(message, args)
     chat = update.effective_chat
 
     if user_id:
-        user = bot.get_chat(user_id)
+        user = context.bot.get_chat(user_id)
     else:
         user = message.from_user
 
@@ -58,7 +59,7 @@ def about_me(bot: Bot, update: Update, args: List[str]):
 
 
 @run_async
-def set_about_me(bot: Bot, update: Update):
+def set_about_me(update, context):
     chat = update.effective_chat
     message = update.effective_message
     user_id = message.from_user.id
@@ -78,12 +79,13 @@ def set_about_me(bot: Bot, update: Update):
 
 
 @run_async
-def about_bio(bot: Bot, update: Update, args: List[str]):
+def about_bio(update, context):
+    args = context.args
     message = update.effective_message
     chat = update.effective_chat
     user_id = extract_user(message, args)
     if user_id:
-        user = bot.get_chat(user_id)
+        user = context.bot.get_chat(user_id)
     else:
         user = message.from_user
 
@@ -103,7 +105,7 @@ def about_bio(bot: Bot, update: Update, args: List[str]):
 
 
 @run_async
-def set_about_bio(bot: Bot, update: Update):
+def set_about_bio(update, context):
     chat = update.effective_chat
     message = update.effective_message
     sender = update.effective_user
@@ -113,7 +115,7 @@ def set_about_bio(bot: Bot, update: Update):
         if user_id == message.from_user.id:
             message.reply_text(tld(chat.id, 'userinfo_bio_you_cant_set'))
             return
-        elif user_id == bot.id and sender.id not in SUDO_USERS:
+        elif user_id == context.bot.id and sender.id not in SUDO_USERS:
             message.reply_text(tld(chat.id, 'userinfo_bio_bot_sudo_only'))
             return
         elif user_id in SUDO_USERS and sender.id not in SUDO_USERS:

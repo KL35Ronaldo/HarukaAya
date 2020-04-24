@@ -33,7 +33,8 @@ from haruka.modules.keyboard import keyboard
 
 @user_admin
 @run_async
-def allow_connections(bot: Bot, update: Update, args: List[str]) -> str:
+def allow_connections(update, context) -> str:
+    args = context.args
     chat = update.effective_chat  # type: Optional[Chat]
     if chat.type != chat.PRIVATE:
         if len(args) >= 1:
@@ -59,7 +60,8 @@ def allow_connections(bot: Bot, update: Update, args: List[str]) -> str:
 
 
 @run_async
-def connect_chat(bot, update, args):
+def connect_chat(update, context):
+    args = context.args
     chat = update.effective_chat  # type: Optional[Chat]
     user = update.effective_user  # type: Optional[User]
     if update.effective_chat.type == 'private':
@@ -70,11 +72,11 @@ def connect_chat(bot, update, args):
                 update.effective_message.reply_text(
                     tld(chat.id, "common_err_invalid_chatid"))
                 return
-            if (bot.get_chat_member(
+            if (context.bot.get_chat_member(
                     connect_chat, update.effective_message.from_user.id).status
                     in ('administrator', 'creator') or
                 (sql.allow_connect_to_chat(connect_chat) == True)
-                    and bot.get_chat_member(
+                    and context.bot.get_chat_member(
                         connect_chat,
                         update.effective_message.from_user.id).status in
                 ('member')) or (user.id in SUDO_USERS):
@@ -83,7 +85,10 @@ def connect_chat(bot, update, args):
                     update.effective_message.from_user.id, connect_chat)
                 if connection_status:
                     chat_name = dispatcher.bot.getChat(
-                        connected(bot, update, chat, user.id,
+                        connected(update,
+                                  context,
+                                  chat,
+                                  user.id,
                                   need_admin=False)).title
                     update.effective_message.reply_text(
                         tld(chat.id, "connection_success").format(chat_name),
@@ -123,7 +128,7 @@ def connect_chat(bot, update, args):
                     else:
                         sql.add_history(user.id, connect_chat, "0", "0", 2)
                     # Rebuild user's keyboard
-                    keyboard(bot, update)
+                    keyboard(update, context)
 
                 else:
                     update.effective_message.reply_text(
@@ -139,13 +144,13 @@ def connect_chat(bot, update, args):
 
     elif update.effective_chat.type == 'supergroup':
         connect_chat = chat.id
-        if (bot.get_chat_member(
+        if (context.bot.get_chat_member(
                 connect_chat, update.effective_message.from_user.id).status in
             ('administrator', 'creator') or
             (sql.allow_connect_to_chat(connect_chat) == True)
-                and bot.get_chat_member(connect_chat, update.effective_message.
-                                        from_user.id).status in 'member') or (
-                                            user.id in SUDO_USERS):
+                and context.bot.get_chat_member(
+                    connect_chat, update.effective_message.from_user.id).status
+                in 'member') or (user.id in SUDO_USERS):
 
             connection_status = sql.connect(
                 update.effective_message.from_user.id, connect_chat)
@@ -165,7 +170,7 @@ def connect_chat(bot, update, args):
         update.effective_message.reply_text(tld(chat.id, "common_cmd_pm_only"))
 
 
-def disconnect_chat(bot, update):
+def disconnect_chat(update, context):
     chat = update.effective_chat  # type: Optional[Chat]
     if update.effective_chat.type == 'private':
         disconnection_status = sql.disconnect(
@@ -174,7 +179,7 @@ def disconnect_chat(bot, update):
             sql.disconnected_chat = update.effective_message.reply_text(
                 tld(chat.id, "connection_dis_success"))
             #Rebuild user's keyboard
-            keyboard(bot, update)
+            keyboard(update, context)
         else:
             update.effective_message.reply_text(
                 tld(chat.id, "connection_dis_fail"))
@@ -185,7 +190,7 @@ def disconnect_chat(bot, update):
             sql.disconnected_chat = update.effective_message.reply_text(
                 tld(chat.id, "connection_dis_success"))
             # Rebuild user's keyboard
-            keyboard(bot, update)
+            keyboard(update, context)
         else:
             update.effective_message.reply_text(
                 tld(chat.id, "connection_dis_fail"))
@@ -193,18 +198,18 @@ def disconnect_chat(bot, update):
         update.effective_message.reply_text(tld(chat.id, "common_cmd_pm_only"))
 
 
-def connected(bot, update, chat, user_id, need_admin=True):
+def connected(update, context, chat, user_id, need_admin=True):
     chat = update.effective_chat  # type: Optional[Chat]
     if chat.type == chat.PRIVATE and sql.get_connected_chat(user_id):
         conn_id = sql.get_connected_chat(user_id).chat_id
-        if (bot.get_chat_member(
+        if (context.bot.get_chat_member(
                 conn_id, user_id).status in ('administrator', 'creator') or
             (sql.allow_connect_to_chat(connect_chat) == True)
-                and bot.get_chat_member(
+                and context.bot.get_chat_member(
                     user_id, update.effective_message.from_user.id).status in
             ('member')) or (user_id in SUDO_USERS):
             if need_admin:
-                if bot.get_chat_member(
+                if context.bot.get_chat_member(
                         conn_id,
                         update.effective_message.from_user.id).status in (
                             'administrator',
@@ -219,7 +224,7 @@ def connected(bot, update, chat, user_id, need_admin=True):
         else:
             update.effective_message.reply_text(
                 tld(chat.id, "connection_err_unknown"))
-            disconnect_chat(bot, update)
+            disconnect_chat(update, context)
             return
     else:
         return False
@@ -229,14 +234,10 @@ __help__ = True
 
 CONNECT_CHAT_HANDLER = CommandHandler(["connect", "connection"],
                                       connect_chat,
-                                      allow_edited=True,
                                       pass_args=True)
-DISCONNECT_CHAT_HANDLER = CommandHandler("disconnect",
-                                         disconnect_chat,
-                                         allow_edited=True)
+DISCONNECT_CHAT_HANDLER = CommandHandler("disconnect", disconnect_chat)
 ALLOW_CONNECTIONS_HANDLER = CommandHandler("allowconnect",
                                            allow_connections,
-                                           allow_edited=True,
                                            pass_args=True)
 
 dispatcher.add_handler(CONNECT_CHAT_HANDLER)

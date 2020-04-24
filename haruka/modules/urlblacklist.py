@@ -31,7 +31,7 @@ from haruka.modules.tr_engine.strings import tld
 
 @run_async
 @user_admin
-def add_blacklist_url(bot: Bot, update: Update):
+def add_blacklist_url(update, context):
     chat = update.effective_chat
     message = update.effective_message
     urls = message.text.split(None, 1)
@@ -69,7 +69,7 @@ def add_blacklist_url(bot: Bot, update: Update):
 
 @run_async
 @user_admin
-def rm_blacklist_url(bot: Bot, update: Update):
+def rm_blacklist_url(update, context):
     chat = update.effective_chat
     message = update.effective_message
     urls = message.text.split(None, 1)
@@ -115,7 +115,7 @@ def rm_blacklist_url(bot: Bot, update: Update):
 
 @run_async
 @user_not_admin
-def del_blacklist_url(bot: Bot, update: Update):
+def del_blacklist_url(update, context):
     chat = update.effective_chat
     message = update.effective_message
     parsed_entities = message.parse_entities(types=["url"])
@@ -136,7 +136,7 @@ def del_blacklist_url(bot: Bot, update: Update):
 
 
 @run_async
-def get_blacklisted_urls(bot: Bot, update: Update):
+def get_blacklisted_urls(update, context):
     chat = update.effective_chat
     message = update.effective_message
 
@@ -169,9 +169,7 @@ GET_BLACKLISTED_URLS = CommandHandler("geturl",
                                       get_blacklisted_urls,
                                       filters=Filters.group)
 
-URL_DELETE_HANDLER = MessageHandler(Filters.entity("url"),
-                                    del_blacklist_url,
-                                    edited_updates=True)
+URL_DELETE_HANDLER = MessageHandler(Filters.entity("url"), del_blacklist_url)
 
 __help__ = False
 

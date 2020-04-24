@@ -21,7 +21,7 @@ from telegram.error import BadRequest
 from telegram.ext import Filters, MessageHandler, run_async
 
 from haruka import dispatcher
-from haruka.modules.disable import DisableAbleCommandHandler, DisableAbleRegexHandler
+from haruka.modules.disable import DisableAbleCommandHandler
 from haruka.modules.sql.redis import start_afk, end_afk, is_user_afk, afk_reason
 from haruka.modules.users import get_user_id
 
@@ -32,7 +32,7 @@ AFK_REPLY_GROUP = 8
 
 
 @run_async
-def afk(bot: Bot, update: Update):
+def afk(update, context):
     chat = update.effective_chat
     args = update.effective_message.text.split(None, 1)
     if len(args) >= 2:
@@ -47,7 +47,7 @@ def afk(bot: Bot, update: Update):
 
 
 @run_async
-def no_longer_afk(bot: Bot, update: Update):
+def no_longer_afk(update, context):
     user = update.effective_user
     chat = update.effective_chat
     message = update.effective_message
@@ -71,7 +71,7 @@ def no_longer_afk(bot: Bot, update: Update):
 
 
 @run_async
-def reply_afk(bot: Bot, update: Update):
+def reply_afk(update, context):
     message = update.effective_message
     userc = update.effective_user
     userc_id = userc.id
@@ -102,7 +102,7 @@ def reply_afk(bot: Bot, update: Update):
                 chk_users.append(user_id)
 
                 try:
-                    chat = bot.get_chat(user_id)
+                    chat = context.bot.get_chat(user_id)
                 except BadRequest:
                     print("Error: Could not fetch userid {} for AFK module".
                           format(user_id))
@@ -112,15 +112,15 @@ def reply_afk(bot: Bot, update: Update):
             else:
                 return
 
-            check_afk(bot, update, user_id, fst_name, userc_id)
+            check_afk(update, context, user_id, fst_name, userc_id)
 
     elif message.reply_to_message:
         user_id = message.reply_to_message.from_user.id
         fst_name = message.reply_to_message.from_user.first_name
-        check_afk(bot, update, user_id, fst_name, userc_id)
+        check_afk(update, context, user_id, fst_name, userc_id)
 
 
-def check_afk(bot, update, user_id, fst_name, userc_id):
+def check_afk(update, context, user_id, fst_name, userc_id):
     chat = update.effective_chat
     if is_user_afk(user_id):
         afkreason = afk_reason(user_id)
@@ -139,7 +139,7 @@ def check_afk(bot, update, user_id, fst_name, userc_id):
 __help__ = True
 
 AFK_HANDLER = DisableAbleCommandHandler("afk", afk)
-AFK_REGEX_HANDLER = DisableAbleRegexHandler("(?i)brb", afk, friendly="afk")
+AFK_REGEX_HANDLER = MessageHandler(Filters.regex("(?i)brb"), afk)
 NO_AFK_HANDLER = MessageHandler(Filters.all & Filters.group, no_longer_afk)
 AFK_REPLY_HANDLER = MessageHandler(Filters.all & Filters.group, reply_afk)
 

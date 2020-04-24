@@ -72,7 +72,7 @@ UNFBAN_ERRORS = {
 
 
 @run_async
-def new_fed(bot: Bot, update: Update):
+def new_fed(update, context):
     chat = update.effective_chat
     user = update.effective_user
     message = update.effective_message
@@ -98,10 +98,11 @@ def new_fed(bot: Bot, update: Update):
                                                     fed_name, fed_id, fed_id),
                                             parse_mode=ParseMode.MARKDOWN)
         try:
-            bot.send_message(MESSAGE_DUMP,
-                             tld(chat.id, "feds_create_success_logger").format(
-                                 fed_name, fed_id),
-                             parse_mode=ParseMode.HTML)
+            context.bot.send_message(MESSAGE_DUMP,
+                                     tld(chat.id,
+                                         "feds_create_success_logger").format(
+                                             fed_name, fed_id),
+                                     parse_mode=ParseMode.HTML)
         except Exception:
             LOGGER.warning("Cannot send a message to MESSAGE_DUMP")
     else:
@@ -109,7 +110,8 @@ def new_fed(bot: Bot, update: Update):
 
 
 @run_async
-def del_fed(bot: Bot, update: Update, args: List[str]):
+def del_fed(update, context):
+    args = context.args
     chat = update.effective_chat
     user = update.effective_user
     if chat.type != "private":
@@ -147,7 +149,8 @@ def del_fed(bot: Bot, update: Update, args: List[str]):
 
 @run_async
 #@user_admin
-def fed_chat(bot: Bot, update: Update, args: List[str]):
+def fed_chat(update, context):
+    args = context.args
     chat = update.effective_chat
     fed_id = sql.get_fed_id(chat.id)
 
@@ -165,7 +168,8 @@ def fed_chat(bot: Bot, update: Update, args: List[str]):
     update.effective_message.reply_text(text, parse_mode=ParseMode.HTML)
 
 
-def join_fed(bot: Bot, update: Update, args: List[str]):
+def join_fed(update, context):
+    args = context.args
     chat = update.effective_chat
     user = update.effective_user
     message = update.effective_message
@@ -205,14 +209,15 @@ def join_fed(bot: Bot, update: Update, args: List[str]):
 
 
 @run_async
-def leave_fed(bot: Bot, update: Update, args: List[str]):
+def leave_fed(update, context):
+    args = context.args
     chat = update.effective_chat
     user = update.effective_user
     fed_id = sql.get_fed_id(chat.id)
     fed_info = sql.get_fed_info(fed_id)
 
     # administrators = chat.get_administrators().status
-    getuser = bot.get_chat_member(chat.id, user.id).status
+    getuser = context.bot.get_chat_member(chat.id, user.id).status
     if getuser in 'creator' or user.id in SUDO_USERS:
         if sql.chat_leave_fed(chat.id) == True:
             update.effective_message.reply_text(
@@ -226,7 +231,8 @@ def leave_fed(bot: Bot, update: Update, args: List[str]):
 
 
 @run_async
-def user_join_fed(bot: Bot, update: Update, args: List[str]):
+def user_join_fed(update, context):
+    args = context.args
     chat = update.effective_chat
     user = update.effective_user
     msg = update.effective_message
@@ -235,7 +241,7 @@ def user_join_fed(bot: Bot, update: Update, args: List[str]):
     if is_user_fed_owner(fed_id, user.id):
         user_id = extract_user(msg, args)
         if user_id:
-            user = bot.get_chat(user_id)
+            user = context.bot.get_chat(user_id)
         elif not msg.reply_to_message and not args:
             user = msg.from_user
         elif not msg.reply_to_message and (
@@ -251,7 +257,7 @@ def user_join_fed(bot: Bot, update: Update, args: List[str]):
         fed_id = sql.get_fed_id(chat.id)
         info = sql.get_fed_info(fed_id)
         get_owner = eval(info['fusers'])['owner']
-        get_owner = bot.get_chat(get_owner).id
+        get_owner = context.bot.get_chat(get_owner).id
         if user_id == get_owner:
             update.effective_message.reply_text(
                 tld(chat.id, "feds_promote_owner"))
@@ -260,7 +266,7 @@ def user_join_fed(bot: Bot, update: Update, args: List[str]):
             update.effective_message.reply_text(
                 tld(chat.id, "feds_promote_owner"))
             return
-        if user_id == bot.id:
+        if user_id == context.bot.id:
             update.effective_message.reply_text(
                 tld(chat.id, "feds_promote_bot"))
             return
@@ -275,7 +281,8 @@ def user_join_fed(bot: Bot, update: Update, args: List[str]):
 
 
 @run_async
-def user_demote_fed(bot: Bot, update: Update, args: List[str]):
+def user_demote_fed(update, context):
+    args = context.args
     chat = update.effective_chat
     user = update.effective_user
     fed_id = sql.get_fed_id(chat.id)
@@ -284,7 +291,7 @@ def user_demote_fed(bot: Bot, update: Update, args: List[str]):
         msg = update.effective_message
         user_id = extract_user(msg, args)
         if user_id:
-            user = bot.get_chat(user_id)
+            user = context.bot.get_chat(user_id)
 
         elif not msg.reply_to_message and not args:
             user = msg.from_user
@@ -299,7 +306,7 @@ def user_demote_fed(bot: Bot, update: Update, args: List[str]):
         else:
             LOGGER.warning('error')
 
-        if user_id == bot.id:
+        if user_id == context.bot.id:
             update.effective_message.reply_text(tld(chat.id,
                                                     "feds_demote_bot"))
             return
@@ -322,7 +329,8 @@ def user_demote_fed(bot: Bot, update: Update, args: List[str]):
 
 
 @run_async
-def fed_info(bot: Bot, update: Update, args: List[str]):
+def fed_info(update, context):
+    args = context.args
     chat = update.effective_chat
     user = update.effective_user
     fed_id = sql.get_fed_id(chat.id)
@@ -337,7 +345,7 @@ def fed_info(bot: Bot, update: Update, args: List[str]):
         update.effective_message.reply_text(tld(chat.id, "feds_fedadmin_only"))
         return
 
-    owner = bot.get_chat(info['owner'])
+    owner = context.bot.get_chat(info['owner'])
     try:
         owner_name = owner.first_name + " " + owner.last_name
     except Exception:
@@ -362,7 +370,8 @@ def fed_info(bot: Bot, update: Update, args: List[str]):
 
 
 @run_async
-def fed_admin(bot: Bot, update: Update, args: List[str]):
+def fed_admin(update, context):
+    args = context.args
     chat = update.effective_chat
     user = update.effective_user
     fed_id = sql.get_fed_id(chat.id)
@@ -382,7 +391,7 @@ def fed_admin(bot: Bot, update: Update, args: List[str]):
 
     text = tld(chat.id, "feds_admins").format(info['fname'])
     text += "👑 Owner:\n"
-    owner = bot.get_chat(info['owner'])
+    owner = context.bot.get_chat(info['owner'])
     try:
         owner_name = owner.first_name + " " + owner.last_name
     except Exception:
@@ -395,14 +404,15 @@ def fed_admin(bot: Bot, update: Update, args: List[str]):
     else:
         text += "\n🔱 Admin:\n"
         for x in members:
-            user = bot.get_chat(x)
+            user = context.bot.get_chat(x)
             text += " • {}\n".format(mention_html(user.id, user.first_name))
 
     update.effective_message.reply_text(text, parse_mode=ParseMode.HTML)
 
 
 @run_async
-def fed_ban(bot: Bot, update: Update, args: List[str]):
+def fed_ban(update, context):
+    args = context.args
     chat = update.effective_chat
     user = update.effective_user
     fed_id = sql.get_fed_id(chat.id)
@@ -413,7 +423,7 @@ def fed_ban(bot: Bot, update: Update, args: List[str]):
         return
 
     info = sql.get_fed_info(fed_id)
-    OW = bot.get_chat(info['owner'])
+    OW = context.bot.get_chat(info['owner'])
     HAHA = OW.id
     FEDADMIN = sql.all_fed_users(fed_id)
     FEDADMIN.append(int(HAHA))
@@ -433,7 +443,7 @@ def fed_ban(bot: Bot, update: Update, args: List[str]):
         message.reply_text("You don't seem to be referring to a user")
         return
 
-    if user_id == bot.id:
+    if user_id == context.bot.id:
         message.reply_text(
             "What is funnier than fbanning the bot? Self sacrifice.")
         return
@@ -461,7 +471,7 @@ def fed_ban(bot: Bot, update: Update, args: List[str]):
         return
 
     try:
-        user_chat = bot.get_chat(user_id)
+        user_chat = context.bot.get_chat(user_id)
     except BadRequest as excp:
         message.reply_text(excp.message)
         return
@@ -496,7 +506,7 @@ def fed_ban(bot: Bot, update: Update, args: List[str]):
         fed_chats = sql.all_fed_chats(fed_id)
         for chat in fed_chats:
             try:
-                bot.kick_chat_member(chat, user_id)
+                context.bot.kick_chat_member(chat, user_id)
             except BadRequest as excp:
                 if excp.message in FBAN_ERRORS:
                     pass
@@ -540,7 +550,7 @@ def fed_ban(bot: Bot, update: Update, args: List[str]):
     fed_chats = sql.all_fed_chats(fed_id)
     for chat in fed_chats:
         try:
-            bot.kick_chat_member(chat, user_id)
+            context.bot.kick_chat_member(chat, user_id)
         except BadRequest as excp:
             if excp.message in FBAN_ERRORS:
                 try:
@@ -571,7 +581,8 @@ def fed_ban(bot: Bot, update: Update, args: List[str]):
 
 
 @run_async
-def unfban(bot: Bot, update: Update, args: List[str]):
+def unfban(update, context):
+    args = context.args
     chat = update.effective_chat
     user = update.effective_user
     message = update.effective_message
@@ -592,7 +603,7 @@ def unfban(bot: Bot, update: Update, args: List[str]):
         message.reply_text("You do not seem to be referring to a user.")
         return
 
-    user_chat = bot.get_chat(user_id)
+    user_chat = context.bot.get_chat(user_id)
     if user_chat.type != 'private':
         message.reply_text("That's not a user!")
         return
@@ -612,9 +623,9 @@ def unfban(bot: Bot, update: Update, args: List[str]):
 
     for chat in chat_list:
         try:
-            member = bot.get_chat_member(chat, user_id)
+            member = context.bot.get_chat_member(chat, user_id)
             if member.status == 'kicked':
-                bot.unban_chat_member(chat, user_id)
+                context.bot.unban_chat_member(chat, user_id)
         except BadRequest as excp:
             if excp.message in UNFBAN_ERRORS:
                 pass
@@ -637,7 +648,8 @@ def unfban(bot: Bot, update: Update, args: List[str]):
 
 
 @run_async
-def set_frules(bot: Bot, update: Update, args: List[str]):
+def set_frules(update, context):
+    args = context.args
     chat = update.effective_chat
     user = update.effective_user
     fed_id = sql.get_fed_id(chat.id)
@@ -678,7 +690,8 @@ def set_frules(bot: Bot, update: Update, args: List[str]):
 
 
 @run_async
-def get_frules(bot: Bot, update: Update, args: List[str]):
+def get_frules(update, context):
+    args = context.args
     chat = update.effective_chat
     fed_id = sql.get_fed_id(chat.id)
     if not fed_id:
@@ -693,7 +706,8 @@ def get_frules(bot: Bot, update: Update, args: List[str]):
 
 
 @run_async
-def fed_broadcast(bot: Bot, update: Update, args: List[str]):
+def fed_broadcast(update, context):
+    args = context.args
     chat = update.effective_chat
     msg = update.effective_message
     user = update.effective_user
@@ -723,7 +737,7 @@ def fed_broadcast(bot: Bot, update: Update, args: List[str]):
         failed = 0
         for chat in chat_list:
             try:
-                bot.sendMessage(chat, text, parse_mode="markdown")
+                context.bot.sendMessage(chat, text, parse_mode="markdown")
             except TelegramError:
                 failed += 1
                 LOGGER.warning("Couldn't send broadcast to %s, group name %s",
@@ -737,7 +751,8 @@ def fed_broadcast(bot: Bot, update: Update, args: List[str]):
 
 
 @run_async
-def fed_ban_list(bot: Bot, update: Update, args: List[str], chat_data):
+def fed_ban_list(update, context, chat_data):
+    args = context.args
     chat = update.effective_chat
     user = update.effective_user
 
@@ -889,7 +904,8 @@ def fed_ban_list(bot: Bot, update: Update, args: List[str], chat_data):
 
 
 @run_async
-def fed_notif(bot: Bot, update: Update, args: List[str]):
+def fed_notif(update, context):
+    args = context.args
     chat = update.effective_chat
     user = update.effective_user
     msg = update.effective_message
@@ -923,7 +939,8 @@ def fed_notif(bot: Bot, update: Update, args: List[str]):
 
 
 @run_async
-def fed_chats(bot: Bot, update: Update, args: List[str]):
+def fed_chats(update, context):
+    args = context.args
     chat = update.effective_chat
     user = update.effective_user
     fed_id = sql.get_fed_id(chat.id)
@@ -968,7 +985,7 @@ def fed_chats(bot: Bot, update: Update, args: List[str]):
 
 
 @run_async
-def fed_import_bans(bot: Bot, update: Update, chat_data):
+def fed_import_bans(update, context, chat_data):
     chat = update.effective_chat
     user = update.effective_user
     msg = update.effective_message
@@ -1010,7 +1027,8 @@ def fed_import_bans(bot: Bot, update: Update, chat_data):
         success = 0
         failed = 0
         try:
-            file_info = bot.get_file(msg.reply_to_message.document.file_id)
+            file_info = context.bot.get_file(
+                msg.reply_to_message.document.file_id)
         except BadRequest:
             msg.reply_text(
                 "Try downloading and re-uploading the file, this one seems broken!"
@@ -1042,7 +1060,7 @@ def fed_import_bans(bot: Bot, update: Update, chat_data):
                         failed += 1
                         continue
                     # Checking user
-                    if int(import_userid) == bot.id:
+                    if int(import_userid) == context.bot.id:
                         failed += 1
                         continue
                     if is_user_fed_owner(fed_id, import_userid) == True:
@@ -1094,7 +1112,7 @@ def fed_import_bans(bot: Bot, update: Update, chat_data):
                         failed += 1
                         continue
                     # Checking user
-                    if int(import_userid) == bot.id:
+                    if int(import_userid) == context.bot.id:
                         failed += 1
                         continue
                     if is_user_fed_owner(fed_id, import_userid) == True:
@@ -1128,7 +1146,7 @@ def fed_import_bans(bot: Bot, update: Update, chat_data):
 
 
 @run_async
-def del_fed_button(bot, update):
+def del_fed_button(update, context):
     query = update.callback_query
     fed_id = query.data.split("_")[1]
 
@@ -1173,7 +1191,7 @@ def is_user_fed_owner(fed_id, user_id):
 
 
 @run_async
-def welcome_fed(bot, update):
+def welcome_fed(update, context):
     chat = update.effective_chat
     user = update.effective_user
 
@@ -1182,7 +1200,7 @@ def welcome_fed(bot, update):
     if fban:
         update.effective_message.reply_text(
             "This user is banned in current federation! I will remove him.")
-        bot.kick_chat_member(chat.id, user.id)
+        context.bot.kick_chat_member(chat.id, user.id)
         return True
     else:
         return False

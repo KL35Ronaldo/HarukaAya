@@ -93,7 +93,7 @@ def send_help(chat_id, text, keyboard=None):
 
 
 @run_async
-def test(bot: Bot, update: Update):
+def test(update, context):
     # pprint(eval(str(update)))
     # update.effective_message.reply_text("Hola tester! _I_ *have* `markdown`", parse_mode=ParseMode.MARKDOWN)
     update.effective_message.reply_text("This person edited a message")
@@ -101,10 +101,11 @@ def test(bot: Bot, update: Update):
 
 
 @run_async
-def start(bot: Bot, update: Update, args: List[str]):
+def start(update, context):
     chat = update.effective_chat
     # query = update.callback_query #Unused variable
     if update.effective_chat.type == "private":
+        args = context.args
         if len(args) >= 1:
             if args[0].lower() == "help":
                 send_help(
@@ -117,7 +118,7 @@ def start(bot: Bot, update: Update, args: List[str]):
                 IMPORTED["rules"].send_rules(update, args[0], from_pm=True)
 
         else:
-            send_start(bot, update)
+            send_start(update, context)
     else:
         try:
             update.effective_message.reply_text(
@@ -126,7 +127,7 @@ def start(bot: Bot, update: Update, args: List[str]):
             print("Nut")
 
 
-def send_start(bot, update):
+def send_start(update, context):
     chat = update.effective_chat
 
     # chat = update.effective_chat and unused variable
@@ -146,23 +147,25 @@ def send_start(bot, update):
     try:
         query = update.callback_query
         # query.message.delete()
-        bot.edit_message_text(chat_id=query.message.chat_id,
-                              message_id=query.message.message_id,
-                              text=text,
-                              parse_mode=ParseMode.MARKDOWN,
-                              reply_markup=InlineKeyboardMarkup(keyboard),
-                              disable_web_page_preview=True)
+        context.bot.edit_message_text(
+            chat_id=query.message.chat_id,
+            message_id=query.message.message_id,
+            text=text,
+            parse_mode=ParseMode.MARKDOWN,
+            reply_markup=InlineKeyboardMarkup(keyboard),
+            disable_web_page_preview=True)
     except Exception:
         pass
 
     if query:
         try:
-            bot.edit_message_text(chat_id=query.message.chat_id,
-                                  message_id=query.message.message_id,
-                                  text=text,
-                                  parse_mode=ParseMode.MARKDOWN,
-                                  reply_markup=InlineKeyboardMarkup(keyboard),
-                                  disable_web_page_preview=True)
+            context.bot.edit_message_text(
+                chat_id=query.message.chat_id,
+                message_id=query.message.message_id,
+                text=text,
+                parse_mode=ParseMode.MARKDOWN,
+                reply_markup=InlineKeyboardMarkup(keyboard),
+                disable_web_page_preview=True)
         except Exception:
             return
     else:
@@ -174,32 +177,37 @@ def send_start(bot, update):
 
 
 # for test purposes
-def error_callback(bot, update, error):
+def error_callback(update, context):
     try:
-        raise error
+        raise context.error
     except Unauthorized:
-        LOGGER.warning(error)
         # remove update.message.chat_id from conversation list
+        LOGGER.exception('Update "%s" caused error "%s"', update,
+                         context.error)
     except BadRequest:
-        LOGGER.warning(error)
-
         # handle malformed requests - read more below!
+        LOGGER.exception('Update "%s" caused error "%s"', update,
+                         context.error)
     except TimedOut:
-        LOGGER.warning("NO NONO3")
         # handle slow connection problems
+        LOGGER.exception('Update "%s" caused error "%s"', update,
+                         context.error)
     except NetworkError:
-        LOGGER.warning("NO NONO4")
         # handle other connection problems
-    except ChatMigrated as err:
-        LOGGER.warning(err)
+        LOGGER.exception('Update "%s" caused error "%s"', update,
+                         context.error)
+    except ChatMigrated as e:
         # the chat_id of a group has changed, use e.new_chat_id instead
+        LOGGER.exception('Update "%s" caused error "%s"', update,
+                         context.error)
     except TelegramError:
-        LOGGER.warning(error)
         # handle all other telegram related errors
+        LOGGER.exception('Update "%s" caused error "%s"', update,
+                         context.error)
 
 
 @run_async
-def help_button(bot: Bot, update: Update):
+def help_button(update, context):
     query = update.callback_query
     chat = update.effective_chat
     back_match = re.match(r"help_back", query.data)
@@ -217,32 +225,31 @@ def help_button(bot: Bot, update: Update):
 
             text = tld(chat.id, "here_is_help").format(mod_name, help_txt)
 
-            bot.edit_message_text(chat_id=query.message.chat_id,
-                                  message_id=query.message.message_id,
-                                  text=text,
-                                  parse_mode=ParseMode.MARKDOWN,
-                                  reply_markup=InlineKeyboardMarkup([[
-                                      InlineKeyboardButton(
-                                          text=tld(chat.id, "btn_go_back"),
-                                          callback_data="help_back")
-                                  ]]),
-                                  disable_web_page_preview=True)
+            context.bot.edit_message_text(
+                chat_id=query.message.chat_id,
+                message_id=query.message.message_id,
+                text=text,
+                parse_mode=ParseMode.MARKDOWN,
+                reply_markup=InlineKeyboardMarkup([[
+                    InlineKeyboardButton(text=tld(chat.id, "btn_go_back"),
+                                         callback_data="help_back")
+                ]]),
+                disable_web_page_preview=True)
 
         elif back_match:
-            bot.edit_message_text(chat_id=query.message.chat_id,
-                                  message_id=query.message.message_id,
-                                  text=tld(chat.id, "send-help").format(
-                                      dispatcher.bot.first_name,
-                                      "" if not ALLOW_EXCL else tld(
-                                          chat.id, "cmd_multitrigger")),
-                                  parse_mode=ParseMode.MARKDOWN,
-                                  reply_markup=InlineKeyboardMarkup(
-                                      paginate_modules(chat.id, 0, HELPABLE,
-                                                       "help")),
-                                  disable_web_page_preview=True)
+            context.bot.edit_message_text(
+                chat_id=query.message.chat_id,
+                message_id=query.message.message_id,
+                text=tld(chat.id, "send-help").format(
+                    dispatcher.bot.first_name, "" if not ALLOW_EXCL else tld(
+                        chat.id, "cmd_multitrigger")),
+                parse_mode=ParseMode.MARKDOWN,
+                reply_markup=InlineKeyboardMarkup(
+                    paginate_modules(chat.id, 0, HELPABLE, "help")),
+                disable_web_page_preview=True)
 
         # ensure no spinny white circle
-        bot.answer_callback_query(query.id)
+        context.bot.answer_callback_query(query.id)
         # query.message.delete()
 
     except BadRequest:
@@ -250,7 +257,7 @@ def help_button(bot: Bot, update: Update):
 
 
 @run_async
-def get_help(bot: Bot, update: Update):
+def get_help(update, context):
     chat = update.effective_chat
     args = update.effective_message.text.split(None, 1)
 
@@ -261,7 +268,7 @@ def get_help(bot: Bot, update: Update):
             reply_markup=InlineKeyboardMarkup([[
                 InlineKeyboardButton(text=tld(chat.id, 'btn_help'),
                                      url="t.me/{}?start=help".format(
-                                         bot.username))
+                                         context.bot.username))
             ]]))
         return
 
@@ -301,7 +308,7 @@ def get_help(bot: Bot, update: Update):
             "" if not ALLOW_EXCL else tld(chat.id, "cmd_multitrigger")))
 
 
-def migrate_chats(bot: Bot, update: Update):
+def migrate_chats(update, context):
     msg = update.effective_message
     if msg.migrate_to_chat_id:
         old_chat = update.effective_chat.id
@@ -337,10 +344,7 @@ def main():
     dispatcher.add_handler(help_handler)
     dispatcher.add_handler(help_callback_handler)
     dispatcher.add_handler(migrate_handler)
-    # dispatcher.add_error_handler(error_callback)
-
-    # add antiflood processor
-    Dispatcher.process_update = process_update
+    dispatcher.add_error_handler(error_callback)
 
     LOGGER.info("Using long polling.")
     # updater.start_polling(timeout=15, read_latency=4, clean=True)
@@ -350,74 +354,6 @@ def main():
                           bootstrap_retries=-1,
                           read_latency=3.0)
     updater.idle()
-
-
-CHATS_CNT = {}
-CHATS_TIME = {}
-
-
-def process_update(self, update):
-    # An error happened while polling
-    if isinstance(update, TelegramError):
-        try:
-            self.dispatch_error(None, update)
-        except Exception:
-            self.logger.exception(
-                'An uncaught error was raised while handling the error')
-        return
-
-    if update.effective_chat:  # Checks if update contains chat object
-        now = datetime.datetime.utcnow()
-    try:
-        cnt = CHATS_CNT.get(update.effective_chat.id, 0)
-    except AttributeError:
-        self.logger.exception(
-            'An uncaught error was raised while updating process')
-        return
-
-    t = CHATS_TIME.get(update.effective_chat.id, datetime.datetime(1970, 1, 1))
-    if t and now > t + datetime.timedelta(0, 1):
-        CHATS_TIME[update.effective_chat.id] = now
-        cnt = 0
-    else:
-        cnt += 1
-
-    if cnt > 10:
-        return
-
-    CHATS_CNT[update.effective_chat.id] = cnt
-
-    for group in self.groups:
-        try:
-            for handler in (x for x in self.handlers[group]
-                            if x.check_update(update)):
-                handler.handle_update(update, self)
-                break
-
-        # Stop processing with any other handler.
-        except DispatcherHandlerStop:
-            self.logger.debug(
-                'Stopping further handlers due to DispatcherHandlerStop')
-            break
-
-        # Dispatch any error.
-        except TelegramError as te:
-            self.logger.warning(
-                'A TelegramError was raised while processing the Update')
-
-            try:
-                self.dispatch_error(update, te)
-            except DispatcherHandlerStop:
-                self.logger.debug('Error handler stopped further handlers')
-                break
-            except Exception:
-                self.logger.exception(
-                    'An uncaught error was raised while handling the error')
-
-        # Errors should not stop the thread.
-        except Exception:
-            self.logger.exception(
-                'An uncaught error was raised while processing the update')
 
 
 if __name__ == '__main__':

@@ -93,7 +93,7 @@ def warn(user: User,
             keyboard[0].append(
                 InlineKeyboardButton(tld(chat.id, 'warns_btn_rules'),
                                      url="t.me/{}?start={}".format(
-                                         bot.username, chat.id)))
+                                         context.bot.username, chat.id)))
 
         reply = tld(chat.id, 'warns_user_warned').format(
             mention_html(user.id, user.first_name), num_warns, limit)
@@ -125,7 +125,7 @@ def warn(user: User,
 @run_async
 @bot_admin
 @loggable
-def rmwarn_handler(bot: Bot, update: Update) -> str:
+def rmwarn_handler(update, context) -> str:
     chat = update.effective_chat
     query = update.callback_query
     user = update.effective_user
@@ -160,7 +160,7 @@ def rmwarn_handler(bot: Bot, update: Update) -> str:
 @run_async
 @bot_admin
 @loggable
-def sendrules_handler(bot: Bot, update: Update) -> str:
+def sendrules_handler(update, context) -> str:
     query = update.callback_query
     print(query)
     print(query.data)
@@ -176,7 +176,8 @@ def sendrules_handler(bot: Bot, update: Update) -> str:
 @user_admin
 @bot_admin
 @loggable
-def remove_warns(bot: Bot, update: Update, args: List[str]) -> str:
+def remove_warns(update, context) -> str:
+    args = context.args
     message = update.effective_message
     chat = update.effective_chat
     user = update.effective_user
@@ -199,7 +200,8 @@ def remove_warns(bot: Bot, update: Update, args: List[str]) -> str:
 @user_admin
 @can_restrict
 @loggable
-def warn_user(bot: Bot, update: Update, args: List[str]) -> str:
+def warn_user(update, context) -> str:
+    args = context.args
     message = update.effective_message
     chat = update.effective_chat
     warner = update.effective_user
@@ -222,7 +224,8 @@ def warn_user(bot: Bot, update: Update, args: List[str]) -> str:
 @user_admin
 @bot_admin
 @loggable
-def reset_warns(bot: Bot, update: Update, args: List[str]) -> str:
+def reset_warns(update, context) -> str:
+    args = context.args
     message = update.effective_message
     chat = update.effective_chat
     user = update.effective_user
@@ -242,7 +245,8 @@ def reset_warns(bot: Bot, update: Update, args: List[str]) -> str:
 
 
 @run_async
-def warns(bot: Bot, update: Update, args: List[str]):
+def warns(update, context):
+    args = context.args
     message = update.effective_message
     chat = update.effective_chat
     user_id = extract_user(message, args) or update.effective_user.id
@@ -273,7 +277,7 @@ def warns(bot: Bot, update: Update, args: List[str]):
 
 # Dispatcher handler stop - do not async
 @user_admin
-def add_warn_filter(bot: Bot, update: Update):
+def add_warn_filter(update, context):
     chat = update.effective_chat
     msg = update.effective_message
 
@@ -307,7 +311,7 @@ def add_warn_filter(bot: Bot, update: Update):
 
 
 @user_admin
-def remove_warn_filter(bot: Bot, update: Update):
+def remove_warn_filter(update, context):
     chat = update.effective_chat
     msg = update.effective_message
 
@@ -341,7 +345,7 @@ def remove_warn_filter(bot: Bot, update: Update):
 
 
 @run_async
-def list_warn_filters(bot: Bot, update: Update):
+def list_warn_filters(update, context):
     chat = update.effective_chat
     all_handlers = sql.get_chat_warn_triggers(chat.id)
 
@@ -367,7 +371,7 @@ def list_warn_filters(bot: Bot, update: Update):
 
 @run_async
 @loggable
-def reply_filter(bot: Bot, update: Update) -> str:
+def reply_filter(update, context) -> str:
     chat = update.effective_chat
     message = update.effective_message
 
@@ -388,7 +392,8 @@ def reply_filter(bot: Bot, update: Update) -> str:
 @run_async
 @user_admin
 @loggable
-def set_warn_limit(bot: Bot, update: Update, args: List[str]) -> str:
+def set_warn_limit(update, context) -> str:
+    args = context.args
     chat = update.effective_chat
     user = update.effective_user
     msg = update.effective_message
@@ -416,7 +421,8 @@ def set_warn_limit(bot: Bot, update: Update, args: List[str]) -> str:
 
 @run_async
 @user_admin
-def set_warn_strength(bot: Bot, update: Update, args: List[str]):
+def set_warn_strength(update, context):
+    args = context.args
     chat = update.effective_chat
     user = update.effective_user
     msg = update.effective_message

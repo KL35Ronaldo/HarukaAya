@@ -30,7 +30,8 @@ from googletrans import LANGUAGES, Translator
 
 
 @run_async
-def do_translate(bot: Bot, update: Update, args: List[str]):
+def do_translate(update, context):
+    args = context.args
     chat = update.effective_chat  # type: Optional[Chat]
     msg = update.effective_message  # type: Optional[Message]
     lan = " ".join(args)

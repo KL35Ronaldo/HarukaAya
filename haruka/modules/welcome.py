@@ -129,7 +129,7 @@ def send(update, message, keyboard, backup_message):
 
 
 @run_async
-def new_member(bot: Bot, update: Update):
+def new_member(update, context):
     chat = update.effective_chat  # type: Optional[Chat]
 
     should_welc, cust_welcome, cust_content, welc_type = sql.get_welc_pref(
@@ -145,13 +145,14 @@ def new_member(bot: Bot, update: Update):
             if is_user_gbanned(new_mem.id):
                 return
 
-            if new_mem.id == bot.id:
-                bot.send_message(
+            if new_mem.id == context.bot.id:
+                context.bot.send_message(
                     MESSAGE_DUMP,
                     "I have been added to {} with ID: <pre>{}</pre>".format(
                         chat.title, chat.id),
                     parse_mode=ParseMode.HTML)
-                bot.send_message(chat.id, tld(chat.id, 'welcome_added_to_grp'))
+                context.bot.send_message(chat.id,
+                                         tld(chat.id, 'welcome_added_to_grp'))
 
             else:
                 if is_user_gbanned(new_mem.id):
@@ -207,7 +208,7 @@ def new_member(bot: Bot, update: Update):
                             if mutetime[:1] == "0":
                                 if member.can_send_messages is None or member.can_send_messages:
                                     try:
-                                        bot.restrict_chat_member(
+                                        context.bot.restrict_chat_member(
                                             chat.id,
                                             new_mem.id,
                                             can_send_messages=False)
@@ -223,7 +224,7 @@ def new_member(bot: Bot, update: Update):
 
                                 if member.can_send_messages is None or member.can_send_messages:
                                     try:
-                                        bot.restrict_chat_member(
+                                        context.bot.restrict_chat_member(
                                             chat.id,
                                             new_mem.id,
                                             until_date=mutetime,
@@ -297,7 +298,7 @@ def new_member(bot: Bot, update: Update):
 
                             if member.can_send_messages is None or member.can_send_messages:
                                 try:
-                                    bot.restrict_chat_member(
+                                    context.bot.restrict_chat_member(
                                         chat.id,
                                         new_mem.id,
                                         can_send_messages=False)
@@ -313,7 +314,7 @@ def new_member(bot: Bot, update: Update):
 
                             if member.can_send_messages is None or member.can_send_messages:
                                 try:
-                                    bot.restrict_chat_member(
+                                    context.bot.restrict_chat_member(
                                         chat.id,
                                         new_mem.id,
                                         until_date=mutetime,
@@ -341,7 +342,7 @@ def new_member(bot: Bot, update: Update):
             prev_welc = sql.get_clean_pref(chat.id)
             if prev_welc:
                 try:
-                    bot.delete_message(chat.id, prev_welc)
+                    context.bot.delete_message(chat.id, prev_welc)
                 except BadRequest as excp:
                     pass
 
@@ -350,7 +351,7 @@ def new_member(bot: Bot, update: Update):
 
 
 @run_async
-def check_bot_button(bot: Bot, update: Update):
+def check_bot_button(update, context):
     chat = update.effective_chat  # type: Optional[Chat]
     user = update.effective_user  # type: Optional[User]
     query = update.callback_query  # type: Optional[CallbackQuery]
@@ -358,12 +359,12 @@ def check_bot_button(bot: Bot, update: Update):
     if user.id in getalluser:
         query.answer(text=tld(chat.id, 'welcome_mute_btn_unmuted'))
         # Unmute user
-        bot.restrict_chat_member(chat.id,
-                                 user.id,
-                                 can_send_messages=True,
-                                 can_send_media_messages=True,
-                                 can_send_other_messages=True,
-                                 can_add_web_page_previews=True)
+        context.bot.restrict_chat_member(chat.id,
+                                         user.id,
+                                         can_send_messages=True,
+                                         can_send_media_messages=True,
+                                         can_send_other_messages=True,
+                                         can_add_web_page_previews=True)
         sql.rm_from_userlist(chat.id, user.id)
     else:
         try:
@@ -373,7 +374,7 @@ def check_bot_button(bot: Bot, update: Update):
 
 
 @run_async
-def left_member(bot: Bot, update: Update):
+def left_member(update, context):
     chat = update.effective_chat  # type: Optional[Chat]
     should_goodbye, cust_goodbye, cust_content, goodbye_type = sql.get_gdbye_pref(
         chat.id)
@@ -386,7 +387,7 @@ def left_member(bot: Bot, update: Update):
             if is_user_gbanned(left_mem.id):
                 return
             # Ignore bot being kicked
-            if left_mem.id == bot.id:
+            if left_mem.id == context.bot.id:
                 return
 
             # Give the owner a special goodbye
@@ -482,13 +483,14 @@ def left_member(bot: Bot, update: Update):
 
 @run_async
 @user_admin
-def security(bot: Bot, update: Update, args: List[str]) -> str:
+def security(update, context) -> str:
+    args = context.args
     chat = update.effective_chat  # type: Optional[Chat]
     getcur, cur_value, cust_text = sql.welcome_security(chat.id)
     if len(args) >= 1:
         var = args[0].lower()
         if (var == "yes" or var == "y" or var == "on"):
-            check = bot.getChatMember(chat.id, bot.id)
+            check = context.bot.getChatMember(chat.id, context.bot.id)
             if check.status == 'member' or check[
                     'can_restrict_members'] == False:
                 text = tld(chat.id, 'welcome_mute_bot_cant_mute')
@@ -521,7 +523,8 @@ def security(bot: Bot, update: Update, args: List[str]) -> str:
 
 @run_async
 @user_admin
-def security_mute(bot: Bot, update: Update, args: List[str]) -> str:
+def security_mute(update, context) -> str:
+    args = context.args
     chat = update.effective_chat  # type: Optional[Chat]
     message = update.effective_message  # type: Optional[Message]
     getcur, cur_value, cust_text = sql.welcome_security(chat.id)
@@ -549,7 +552,8 @@ def security_mute(bot: Bot, update: Update, args: List[str]) -> str:
 
 @run_async
 @user_admin
-def security_text(bot: Bot, update: Update, args: List[str]) -> str:
+def security_text(update, context) -> str:
+    args = context.args
     chat = update.effective_chat  # type: Optional[Chat]
     getcur, cur_value, cust_text = sql.welcome_security(chat.id)
     if len(args) >= 1:
@@ -565,7 +569,7 @@ def security_text(bot: Bot, update: Update, args: List[str]) -> str:
 
 @run_async
 @user_admin
-def security_text_reset(bot: Bot, update: Update):
+def security_text_reset(update, context):
     chat = update.effective_chat  # type: Optional[Chat]
     getcur, cur_value, cust_text = sql.welcome_security(chat.id)
     sql.set_welcome_security(chat.id, getcur, cur_value,
@@ -578,7 +582,8 @@ def security_text_reset(bot: Bot, update: Update):
 
 @run_async
 @user_admin
-def cleanservice(bot: Bot, update: Update, args: List[str]) -> str:
+def cleanservice(update, context) -> str:
+    args = context.args
     chat = update.effective_chat  # type: Optional[Chat]
     if chat.type != chat.PRIVATE:
         if len(args) >= 1:
@@ -613,7 +618,8 @@ def cleanservice(bot: Bot, update: Update, args: List[str]) -> str:
 
 @run_async
 @user_admin
-def welcome(bot: Bot, update: Update, args: List[str]):
+def welcome(update, context):
+    args = context.args
     chat = update.effective_chat  # type: Optional[Chat]
     # if no args, show current replies.
     if len(args) == 0 or args[0].lower() == "noformat":
@@ -692,7 +698,8 @@ def welcome(bot: Bot, update: Update, args: List[str]):
 
 @run_async
 @user_admin
-def goodbye(bot: Bot, update: Update, args: List[str]):
+def goodbye(update, context):
+    args = context.args
     chat = update.effective_chat  # type: Optional[Chat]
 
     if len(args) == 0 or args[0] == "noformat":
@@ -760,7 +767,7 @@ def goodbye(bot: Bot, update: Update, args: List[str]):
 @run_async
 @user_admin
 @loggable
-def set_welcome(bot: Bot, update: Update) -> str:
+def set_welcome(update, context) -> str:
     chat = update.effective_chat  # type: Optional[Chat]
     user = update.effective_user  # type: Optional[User]
     msg = update.effective_message  # type: Optional[Message]
@@ -791,7 +798,7 @@ def set_welcome(bot: Bot, update: Update) -> str:
 @run_async
 @user_admin
 @loggable
-def reset_welcome(bot: Bot, update: Update) -> str:
+def reset_welcome(update, context) -> str:
     chat = update.effective_chat  # type: Optional[Chat]
     user = update.effective_user  # type: Optional[User]
     sql.set_custom_welcome(chat.id, None, sql.DEFAULT_WELCOME, sql.Types.TEXT)
@@ -807,7 +814,7 @@ def reset_welcome(bot: Bot, update: Update) -> str:
 @run_async
 @user_admin
 @loggable
-def set_goodbye(bot: Bot, update: Update) -> str:
+def set_goodbye(update, context) -> str:
     chat = update.effective_chat  # type: Optional[Chat]
     user = update.effective_user  # type: Optional[User]
     msg = update.effective_message  # type: Optional[Message]
@@ -836,7 +843,7 @@ def set_goodbye(bot: Bot, update: Update) -> str:
 @run_async
 @user_admin
 @loggable
-def reset_goodbye(bot: Bot, update: Update) -> str:
+def reset_goodbye(update, context) -> str:
     chat = update.effective_chat  # type: Optional[Chat]
     user = update.effective_user  # type: Optional[User]
     sql.set_custom_gdbye(chat.id, None, sql.DEFAULT_GOODBYE, sql.Types.TEXT)
@@ -852,7 +859,8 @@ def reset_goodbye(bot: Bot, update: Update) -> str:
 @run_async
 @user_admin
 @loggable
-def clean_welcome(bot: Bot, update: Update, args: List[str]) -> str:
+def clean_welcome(update, context) -> str:
+    args = context.args
     chat = update.effective_chat  # type: Optional[Chat]
     user = update.effective_user  # type: Optional[User]
 

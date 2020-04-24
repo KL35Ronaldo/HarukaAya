@@ -40,13 +40,14 @@ from requests import get
 
 
 @run_async
-def get_bot_ip(bot: Bot, update: Update):
+def get_bot_ip(update, context):
     res = requests.get("http://ipinfo.io/ip")
     update.message.reply_text(res.text)
 
 
 @run_async
-def get_id(bot: Bot, update: Update, args: List[str]):
+def get_id(update, context):
+    args = context.args
     user_id = extract_user(update.effective_message, args)
     chat = update.effective_chat  # type: Optional[Chat]
     if user_id:
@@ -60,7 +61,7 @@ def get_id(bot: Bot, update: Update, args: List[str]):
                                             escape_markdown(user1.first_name),
                                             user1.id))
         else:
-            user = bot.get_chat(user_id)
+            user = context.bot.get_chat(user_id)
             update.effective_message.reply_markdown(
                 tld(chat.id,
                     "misc_get_id_2").format(escape_markdown(user.first_name),
@@ -77,13 +78,14 @@ def get_id(bot: Bot, update: Update, args: List[str]):
 
 
 @run_async
-def info(bot: Bot, update: Update, args: List[str]):
+def info(update, context):
+    args = context.args
     msg = update.effective_message  # type: Optional[Message]
     user_id = extract_user(update.effective_message, args)
     chat = update.effective_chat  # type: Optional[Chat]
 
     if user_id:
-        user = bot.get_chat(user_id)
+        user = context.bot.get_chat(user_id)
 
     elif not msg.reply_to_message and not args:
         user = msg.from_user
@@ -139,7 +141,7 @@ def info(bot: Bot, update: Update, args: List[str]):
 
 
 @run_async
-def echo(bot: Bot, update: Update):
+def echo(update, context):
     message = update.effective_message
     message.delete()
     args = update.effective_message.text.split(None, 1)
@@ -150,21 +152,21 @@ def echo(bot: Bot, update: Update):
 
 
 @run_async
-def reply_keyboard_remove(bot: Bot, update: Update):
+def reply_keyboard_remove(update, context):
     reply_keyboard = []
     reply_keyboard.append([ReplyKeyboardRemove(remove_keyboard=True)])
     reply_markup = ReplyKeyboardRemove(remove_keyboard=True)
-    old_message = bot.send_message(
+    old_message = context.bot.send_message(
         chat_id=update.message.chat_id,
         text='trying',  # This text will not get translated
         reply_markup=reply_markup,
         reply_to_message_id=update.message.message_id)
-    bot.delete_message(chat_id=update.message.chat_id,
-                       message_id=old_message.message_id)
+    context.bot.delete_message(chat_id=update.message.chat_id,
+                               message_id=old_message.message_id)
 
 
 @run_async
-def gdpr(bot: Bot, update: Update):
+def gdpr(update, context):
     update.effective_message.reply_text(
         tld(update.effective_chat.id, "misc_gdpr"))
     for mod in GDPR:
@@ -176,7 +178,7 @@ def gdpr(bot: Bot, update: Update):
 
 
 @run_async
-def markdown_help(bot: Bot, update: Update):
+def markdown_help(update, context):
     chat = update.effective_chat  # type: Optional[Chat]
     update.effective_message.reply_text(tld(chat.id, "misc_md_list"),
                                         parse_mode=ParseMode.HTML)
@@ -185,7 +187,7 @@ def markdown_help(bot: Bot, update: Update):
 
 
 @run_async
-def stats(bot: Bot, update: Update):
+def stats(update, context):
     update.effective_message.reply_text(
         # This text doesn't get translated as it is internal message.
         "*Current Stats:*\n" + "\n".join([mod.__stats__() for mod in STATS]),
@@ -193,7 +195,7 @@ def stats(bot: Bot, update: Update):
 
 
 @run_async
-def github(bot: Bot, update: Update):
+def github(update, context):
     message = update.effective_message
     text = message.text[len('/git '):]
     usr = get(f'https://api.github.com/users/{text}').json()
@@ -243,7 +245,8 @@ def github(bot: Bot, update: Update):
 
 
 @run_async
-def repo(bot: Bot, update: Update, args: List[str]):
+def repo(update, context):
+    args = context.args
     message = update.effective_message
     text = message.text[len('/repo '):]
     usr = get(f'https://api.github.com/users/{text}/repos?per_page=40').json()
@@ -256,7 +259,8 @@ def repo(bot: Bot, update: Update, args: List[str]):
 
 
 @run_async
-def paste(bot: Bot, update: Update, args: List[str]):
+def paste(update, context):
+    args = context.args
     chat = update.effective_chat  # type: Optional[Chat]
     BURL = 'https://del.dog'
     message = update.effective_message
@@ -291,7 +295,8 @@ def paste(bot: Bot, update: Update, args: List[str]):
 
 
 @run_async
-def get_paste_content(bot: Bot, update: Update, args: List[str]):
+def get_paste_content(update, context):
+    args = context.args
     BURL = 'https://del.dog'
     message = update.effective_message
     chat = update.effective_chat  # type: Optional[Chat]
@@ -331,7 +336,8 @@ def get_paste_content(bot: Bot, update: Update, args: List[str]):
 
 
 @run_async
-def get_paste_stats(bot: Bot, update: Update, args: List[str]):
+def get_paste_stats(update, context):
+    args = context.args
     BURL = 'https://del.dog'
     message = update.effective_message
     chat = update.effective_chat  # type: Optional[Chat]
@@ -373,7 +379,7 @@ def get_paste_stats(bot: Bot, update: Update, args: List[str]):
 
 
 @run_async
-def ud(bot: Bot, update: Update):
+def ud(update, context):
     message = update.effective_message
     text = message.text[len('/ud '):]
     results = get(
@@ -383,7 +389,7 @@ def ud(bot: Bot, update: Update):
 
 
 @run_async
-def wiki(bot: Bot, update: Update):
+def wiki(update, context):
     kueri = re.split(pattern="wiki", string=update.effective_message.text)
     wikipedia.set_lang("en")
     if len(str(kueri[1])) == 0:
@@ -395,10 +401,11 @@ def wiki(bot: Bot, update: Update):
                 InlineKeyboardButton(text="🔧 More Info...",
                                      url=wikipedia.page(kueri).url)
             ]])
-            bot.editMessageText(chat_id=update.effective_chat.id,
-                                message_id=pertama.message_id,
-                                text=wikipedia.summary(kueri, sentences=10),
-                                reply_markup=keyboard)
+            context.bot.editMessageText(chat_id=update.effective_chat.id,
+                                        message_id=pertama.message_id,
+                                        text=wikipedia.summary(kueri,
+                                                               sentences=10),
+                                        reply_markup=keyboard)
         except wikipedia.PageError as e:
             update.effective_message.reply_text("⚠ Error: {}".format(e))
         except BadRequest as et:

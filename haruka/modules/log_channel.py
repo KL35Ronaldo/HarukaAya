@@ -23,7 +23,7 @@ from haruka.modules.helper_funcs.chat_status import user_admin
 from haruka.modules.sql import log_channel_sql as sql
 from haruka.modules.tr_engine.strings import tld
 
-from telegram import Bot, Update, ParseMode, Message, Chat
+from telegram import Update, Bot, ParseMode, Message, Chat
 from telegram.error import BadRequest, Unauthorized
 from telegram.ext import CommandHandler, run_async
 from telegram.utils.helpers import escape_markdown
@@ -31,9 +31,9 @@ from telegram.utils.helpers import escape_markdown
 
 def loggable(func):
     @wraps(func)
-    def log_action(bot: Bot, update: Update, *args, **kwargs):
+    def log_action(update, context, *args, **kwargs):
         try:
-            result = func(bot, update, *args, **kwargs)
+            result = func(update, context, *args, **kwargs)
         except Exception:
             return
         chat = update.effective_chat  # type: Optional[Chat]
@@ -58,32 +58,34 @@ def loggable(func):
 
 def send_log(bot: Bot, log_chat_id: str, orig_chat_id: str, result: str):
     try:
-        bot.send_message(log_chat_id, result, parse_mode=ParseMode.HTML)
+        context.bot.send_message(log_chat_id,
+                                 result,
+                                 parse_mode=ParseMode.HTML)
     except BadRequest as excp:
         if excp.message == "Chat not found":
-            bot.send_message(orig_chat_id,
-                             "This log channel has been deleted - unsetting.")
+            context.bot.send_message(
+                orig_chat_id, "This log channel has been deleted - unsetting.")
             sql.stop_chat_logging(orig_chat_id)
         else:
             LOGGER.warning(excp.message)
             LOGGER.warning(result)
             LOGGER.exception("Could not parse")
 
-            bot.send_message(
+            context.bot.send_message(
                 log_chat_id, result +
                 "\n\nFormatting has been disabled due to an unexpected error.")
 
 
 @run_async
 @user_admin
-def logging(bot: Bot, update: Update):
+def logging(update, context):
     message = update.effective_message  # type: Optional[Message]
     chat = update.effective_chat  # type: Optional[Chat]
 
     log_channel = sql.get_chat_log_channel(chat.id)
     if log_channel:
         try:
-            log_channel_info = bot.get_chat(log_channel)
+            log_channel_info = context.bot.get_chat(log_channel)
             message.reply_text(tld(chat.id,
                                    "log_channel_grp_curr_conf").format(
                                        escape_markdown(log_channel_info.title),
@@ -97,7 +99,7 @@ def logging(bot: Bot, update: Update):
 
 @run_async
 @user_admin
-def setlog(bot: Bot, update: Update):
+def setlog(update, context):
     message = update.effective_message  # type: Optional[Message]
     chat = update.effective_chat  # type: Optional[Chat]
     if chat.type == chat.CHANNEL:
@@ -116,19 +118,20 @@ def setlog(bot: Bot, update: Update):
                 )
 
         try:
-            bot.send_message(
+            context.bot.send_message(
                 message.forward_from_chat.id,
                 tld(chat.id,
                     "log_channel_chn_curr_conf").format(chat.title
                                                         or chat.first_name))
         except Unauthorized as excp:
             if excp.message == "Forbidden: bot is not a member of the channel chat":
-                bot.send_message(chat.id,
-                                 tld(chat.id, "log_channel_link_success"))
+                context.bot.send_message(
+                    chat.id, tld(chat.id, "log_channel_link_success"))
             else:
                 LOGGER.exception("ERROR in setting the log channel.")
 
-        bot.send_message(chat.id, tld(chat.id, "log_channel_link_success"))
+        context.bot.send_message(chat.id,
+                                 tld(chat.id, "log_channel_link_success"))
 
     else:
         message.reply_text(tld(chat.id, "log_channel_invalid_message"),
@@ -137,14 +140,14 @@ def setlog(bot: Bot, update: Update):
 
 @run_async
 @user_admin
-def unsetlog(bot: Bot, update: Update):
+def unsetlog(update, context):
     message = update.effective_message  # type: Optional[Message]
     chat = update.effective_chat  # type: Optional[Chat]
 
     log_channel = sql.stop_chat_logging(chat.id)
     if log_channel:
         try:
-            bot.send_message(
+            context.bot.send_message(
                 log_channel,
                 tld(chat.id, "log_channel_unlink_success").format(chat.title))
             message.reply_text(tld(chat.id, "Log channel has been un-set."))

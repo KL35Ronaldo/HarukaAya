@@ -38,12 +38,13 @@ BLACKLIST_GROUP = 11
 
 
 @run_async
-def blacklist(bot: Bot, update: Update, args: List[str]):
+def blacklist(update, context):
+    args = context.args
     msg = update.effective_message
     chat = update.effective_chat
     user = update.effective_user
 
-    conn = connected(bot, update, chat, user.id, need_admin=False)
+    conn = connected(update, context, chat, user.id, need_admin=False)
     if conn:
         chat_id = conn
         chat_name = dispatcher.bot.getChat(conn).title
@@ -77,13 +78,13 @@ def blacklist(bot: Bot, update: Update, args: List[str]):
 
 @run_async
 @user_admin
-def add_blacklist(bot: Bot, update: Update):
+def add_blacklist(update, context):
     msg = update.effective_message
     chat = update.effective_chat
     user = update.effective_user
     words = msg.text.split(None, 1)
 
-    conn = connected(bot, update, chat, user.id)
+    conn = connected(update, context, chat, user.id)
     if conn:
         chat_id = conn
         chat_name = dispatcher.bot.getChat(conn).title
@@ -119,13 +120,13 @@ def add_blacklist(bot: Bot, update: Update):
 
 @run_async
 @user_admin
-def unblacklist(bot: Bot, update: Update):
+def unblacklist(update, context):
     msg = update.effective_message
     chat = update.effective_chat
     user = update.effective_user
     words = msg.text.split(None, 1)
 
-    conn = connected(bot, update, chat, user.id)
+    conn = connected(update, context, chat, user.id)
     if conn:
         chat_id = conn
         chat_name = dispatcher.bot.getChat(conn).title
@@ -179,7 +180,7 @@ def unblacklist(bot: Bot, update: Update):
 
 @run_async
 @user_not_admin
-def del_blacklist(bot: Bot, update: Update):
+def del_blacklist(update, context):
     chat = update.effective_chat
     message = update.effective_message
     to_match = extract_text(message)
@@ -222,9 +223,7 @@ UNBLACKLIST_HANDLER = CommandHandler(["unblacklist", "rmblacklist"],
                                      unblacklist)
 BLACKLIST_DEL_HANDLER = MessageHandler(
     (Filters.text | Filters.command | Filters.sticker | Filters.photo)
-    & Filters.group,
-    del_blacklist,
-    edited_updates=True)
+    & Filters.group, del_blacklist)
 
 dispatcher.add_handler(BLACKLIST_HANDLER)
 dispatcher.add_handler(ADD_BLACKLIST_HANDLER)

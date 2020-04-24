@@ -42,7 +42,8 @@ WIDE_MAP[0x20] = 0x3000
 
 
 @run_async
-def owo(bot: Bot, update: Update, args: List[str]):
+def owo(update, context):
+    args = context.args
     chat = update.effective_chat
     message = update.effective_message
 
@@ -82,7 +83,7 @@ def owo(bot: Bot, update: Update, args: List[str]):
 
 
 @run_async
-def stretch(bot: Bot, update: Update, args: List[str]):
+def stretch(update, context, args: List[str]):
     chat = update.effective_chat
     message = update.effective_message
 
@@ -106,7 +107,7 @@ def stretch(bot: Bot, update: Update, args: List[str]):
 
 
 @run_async
-def vapor(bot: Bot, update: Update, args: List[str]):
+def vapor(update, context, args: List[str]):
     message = update.effective_message
     chat = update.effective_chat
 
@@ -133,7 +134,7 @@ def vapor(bot: Bot, update: Update, args: List[str]):
 
 
 @run_async
-def mafiatext(bot: Bot, update: Update, args: List[str]):
+def mafiatext(update, context, args: List[str]):
     message = update.effective_message
     chat = update.effective_chat
 
@@ -171,7 +172,7 @@ def mafiatext(bot: Bot, update: Update, args: List[str]):
 
 
 @run_async
-def pidortext(bot: Bot, update: Update, args: List[str]):
+def pidortext(update, context, args: List[str]):
     message = update.effective_message
     chat = update.effective_chat
 
@@ -208,7 +209,7 @@ def pidortext(bot: Bot, update: Update, args: List[str]):
 
 
 @run_async
-def kimtext(bot: Bot, update: Update, args: List[str]):
+def kimtext(update, context, args: List[str]):
     message = update.effective_message
     chat = update.effective_chat
 
@@ -245,7 +246,7 @@ def kimtext(bot: Bot, update: Update, args: List[str]):
 
 
 @run_async
-def hitlertext(bot: Bot, update: Update, args: List[str]):
+def hitlertext(update, context, args: List[str]):
     message = update.effective_message
     chat = update.effective_chat
 
@@ -282,7 +283,7 @@ def hitlertext(bot: Bot, update: Update, args: List[str]):
 
 
 @run_async
-def spongemocktext(bot: Bot, update: Update, args: List[str]):
+def spongemocktext(update, context, args: List[str]):
     message = update.effective_message
     chat = update.effective_chat
 
@@ -319,7 +320,7 @@ def spongemocktext(bot: Bot, update: Update, args: List[str]):
 
 
 @run_async
-def zalgotext(bot: Bot, update: Update, args: List[str]):
+def zalgotext(update, context, args: List[str]):
     message = update.effective_message
     chat = update.effective_chat
 
@@ -345,7 +346,7 @@ def zalgotext(bot: Bot, update: Update, args: List[str]):
 
 
 @run_async
-def deepfryer(bot: Bot, update: Update):
+def deepfryer(update, context):
     message = update.effective_message
     chat = update.effective_chat
     if message.reply_to_message:
@@ -365,7 +366,7 @@ def deepfryer(bot: Bot, update: Update):
         photodata = data[len(data) - 1].get_file().download_as_bytearray()
         image = Image.open(io.BytesIO(photodata))
     elif data2:
-        sticker = bot.get_file(data2.file_id)
+        sticker = context.bot.get_file(data2.file_id)
         sticker.download('sticker.png')
         image = Image.open("sticker.png")
 
@@ -397,7 +398,7 @@ async def process_deepfry(image: Image, reply: Message, bot: Bot):
 
 
 @run_async
-def shout(bot: Bot, update: Update, args: List[str]):
+def shout(update, context, args: List[str]):
     message = update.effective_message
     chat = update.effective_chat
 
@@ -421,7 +422,7 @@ def shout(bot: Bot, update: Update, args: List[str]):
 
 
 @run_async
-def insults(bot: Bot, update: Update):
+def insults(update, context):
     message = update.effective_message
     chat = update.effective_chat
     text = random.choice(tld_list(chat.id, "memes_insults_list"))
@@ -433,14 +434,14 @@ def insults(bot: Bot, update: Update):
 
 
 @run_async
-def runs(bot: Bot, update: Update):
+def runs(update, context):
     chat = update.effective_chat
     update.effective_message.reply_text(
         random.choice(tld_list(chat.id, "memes_runs_list")))
 
 
 @run_async
-def slap(bot: Bot, update: Update, args: List[str]):
+def slap(update, context, args: List[str]):
     chat = update.effective_chat
     msg = update.effective_message
 
@@ -456,7 +457,7 @@ def slap(bot: Bot, update: Update, args: List[str]):
 
     user_id = extract_user(update.effective_message, args)
     if user_id:
-        slapped_user = bot.get_chat(user_id)
+        slapped_user = context.bot.get_chat(user_id)
         user1 = curr_user
         if slapped_user.username == "RealAkito":
             reply_text(tld(chat.id, "memes_not_doing_that"))
@@ -469,7 +470,8 @@ def slap(bot: Bot, update: Update, args: List[str]):
 
     # if no target found, bot targets the sender
     else:
-        user1 = "[{}](tg://user?id={})".format(bot.first_name, bot.id)
+        user1 = "[{}](tg://user?id={})".format(context.bot.first_name,
+                                               context.bot.id)
         user2 = curr_user
 
     temp = random.choice(tld_list(chat.id, "memes_slaps_templates_list"))

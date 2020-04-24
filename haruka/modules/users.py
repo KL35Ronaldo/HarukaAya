@@ -69,14 +69,14 @@ def get_user_id(username):
 
 
 @run_async
-def broadcast(bot: Bot, update: Update):
+def broadcast(update, context):
     to_send = update.effective_message.text.split(None, 1)
     if len(to_send) >= 2:
         chats = sql.get_all_chats() or []
         failed = 0
         for chat in chats:
             try:
-                bot.sendMessage(int(chat.chat_id), to_send[1])
+                context.bot.sendMessage(int(chat.chat_id), to_send[1])
                 sleep(0.1)
             except TelegramError:
                 failed += 1
@@ -89,7 +89,7 @@ def broadcast(bot: Bot, update: Update):
 
 
 @run_async
-def log_user(bot: Bot, update: Update):
+def log_user(update, context):
     chat = update.effective_chat
     msg = update.effective_message
 
@@ -106,17 +106,17 @@ def log_user(bot: Bot, update: Update):
 
 
 @run_async
-def chats(bot: Bot, update: Update):
+def chats(update, context):
     all_chats = sql.get_all_chats() or []
     chatfile = 'List of chats.\n0. Chat name | Chat ID | Members count | Invitelink\n'
     P = 1
     for chat in all_chats:
         try:
-            curr_chat = bot.getChat(chat.chat_id)
-            bot_member = curr_chat.get_member(bot.id)
-            chat_members = curr_chat.get_members_count(bot.id)
+            curr_chat = context.bot.getChat(chat.chat_id)
+            bot_member = curr_chat.get_member(context.bot.id)
+            chat_members = curr_chat.get_members_count(context.bot.id)
             if bot_member.can_invite_users:
-                invitelink = bot.exportChatInviteLink(chat.chat_id)
+                invitelink = context.bot.exportChatInviteLink(chat.chat_id)
             else:
                 invitelink = "0"
             chatfile += "{}. {} | {} | {} | {}\n".format(
@@ -134,7 +134,8 @@ def chats(bot: Bot, update: Update):
 
 
 @run_async
-def banall(bot: Bot, update: Update, args: List[int]):
+def banall(update, context):
+    args = context.args
     if args:
         chat_id = str(args[0])
         all_mems = sql.get_chat_members(chat_id)
@@ -143,7 +144,7 @@ def banall(bot: Bot, update: Update, args: List[int]):
         all_mems = sql.get_chat_members(chat_id)
     for mems in all_mems:
         try:
-            bot.kick_chat_member(chat_id, mems.user)
+            context.bot.kick_chat_member(chat_id, mems.user)
             update.effective_message.reply_text("Tried banning " +
                                                 str(mems.user))
             sleep(0.1)
@@ -154,7 +155,8 @@ def banall(bot: Bot, update: Update, args: List[int]):
 
 
 @run_async
-def snipe(bot: Bot, update: Update, args: List[str]):
+def snipe(update, context):
+    args = context.args
     try:
         chat_id = str(args[0])
         del args[0]
@@ -164,7 +166,7 @@ def snipe(bot: Bot, update: Update, args: List[str]):
     to_send = " ".join(args)
     if len(to_send) >= 2:
         try:
-            bot.sendMessage(int(chat_id), str(to_send))
+            context.bot.sendMessage(int(chat_id), str(to_send))
         except TelegramError:
             LOGGER.warning("Couldn't send to group %s", str(chat_id))
             update.effective_message.reply_text(
@@ -174,7 +176,8 @@ def snipe(bot: Bot, update: Update, args: List[str]):
 
 @run_async
 @bot_admin
-def getlink(bot: Bot, update: Update, args: List[int]):
+def getlink(update, context):
+    args = context.args
     message = update.effective_message
     if args:
         pattern = re.compile(r'-\d+')
@@ -183,10 +186,10 @@ def getlink(bot: Bot, update: Update, args: List[int]):
     links = "Invite link(s):\n"
     for chat_id in pattern.findall(message.text):
         try:
-            chat = bot.getChat(chat_id)
-            bot_member = chat.get_member(bot.id)
+            chat = context.bot.getChat(chat_id)
+            bot_member = chat.get_member(context.bot.id)
             if bot_member.can_invite_users:
-                invitelink = bot.exportChatInviteLink(chat_id)
+                invitelink = context.bot.exportChatInviteLink(chat_id)
                 links += str(chat_id) + ":\n" + invitelink + "\n"
             else:
                 links += str(
@@ -201,7 +204,8 @@ def getlink(bot: Bot, update: Update, args: List[int]):
 
 
 @bot_admin
-def leavechat(bot: Bot, update: Update, args: List[int]):
+def leavechat(update, context):
+    args = context.args
     if args:
         chat_id = int(args[0])
     else:
@@ -213,11 +217,11 @@ def leavechat(bot: Bot, update: Update, args: List[int]):
                 return
             chat_id = chat.id
             reply_text = "`I'll leave this group`"
-            bot.send_message(chat_id,
-                             reply_text,
-                             parse_mode='Markdown',
-                             disable_web_page_preview=True)
-            bot.leaveChat(chat_id)
+            context.bot.send_message(chat_id,
+                                     reply_text,
+                                     parse_mode='Markdown',
+                                     disable_web_page_preview=True)
+            context.bot.leaveChat(chat_id)
         except BadRequest as excp:
             if excp.message == "Chat not found":
                 update.effective_message.reply_text(
@@ -226,14 +230,14 @@ def leavechat(bot: Bot, update: Update, args: List[int]):
                 return
 
     try:
-        chat = bot.getChat(chat_id)
-        titlechat = bot.get_chat(chat_id).title
+        chat = context.bot.getChat(chat_id)
+        titlechat = context.bot.get_chat(chat_id).title
         reply_text = "`I'll Go Away!`"
-        bot.send_message(chat_id,
-                         reply_text,
-                         parse_mode='Markdown',
-                         disable_web_page_preview=True)
-        bot.leaveChat(chat_id)
+        context.bot.send_message(chat_id,
+                                 reply_text,
+                                 parse_mode='Markdown',
+                                 disable_web_page_preview=True)
+        context.bot.leaveChat(chat_id)
         update.effective_message.reply_text(
             "I'll left group {}".format(titlechat))
 
@@ -246,13 +250,13 @@ def leavechat(bot: Bot, update: Update, args: List[int]):
 
 
 @run_async
-def slist(bot: Bot, update: Update):
+def slist(update, context):
     message = update.effective_message
     text1 = "My sudo users are:"
     text2 = "My support users are:"
     for user_id in SUDO_USERS:
         try:
-            user = bot.get_chat(user_id)
+            user = context.bot.get_chat(user_id)
             name = "[{}](tg://user?id={})".format(
                 user.first_name + (user.last_name or ""), user.id)
             if user.username:
@@ -263,7 +267,7 @@ def slist(bot: Bot, update: Update):
                 text1 += "\n - ({}) - not found".format(user_id)
     for user_id in SUPPORT_USERS:
         try:
-            user = bot.get_chat(user_id)
+            user = context.bot.get_chat(user_id)
             name = "[{}](tg://user?id={})".format(
                 user.first_name + (user.last_name or ""), user.id)
             if user.username:
@@ -278,14 +282,14 @@ def slist(bot: Bot, update: Update):
 
 
 @run_async
-def chat_checker(bot: Bot, update: Update):
+def chat_checker(update, context):
     if update.effective_message.chat.get_member(
-            bot.id).can_send_messages == False:
-        bot.leaveChat(update.effective_message.chat.id)
+            context.bot.id).can_send_messages == False:
+        context.bot.leaveChat(update.effective_message.chat.id)
 
 
 def __user_info__(user_id, chat_id):
-    if user_id == dispatcher.bot.id:
+    if user_id == dispatcher.context.bot.id:
         return tld(chat_id, "users_seen_is_bot")
     num_chats = sql.get_user_num_chats(user_id)
     return tld(chat_id, "users_seen").format(num_chats)

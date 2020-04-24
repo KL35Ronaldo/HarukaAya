@@ -34,7 +34,7 @@ from haruka.modules.tr_engine.strings import tld
 
 
 @run_async
-def stickerid(bot: Bot, update: Update):
+def stickerid(update, context):
     chat = update.effective_chat
     msg = update.effective_message
     if msg.reply_to_message and msg.reply_to_message.sticker:
@@ -48,14 +48,15 @@ def stickerid(bot: Bot, update: Update):
 
 
 @run_async
-def getsticker(bot: Bot, update: Update):
+def getsticker(update, context):
     msg = update.effective_message
     chat_id = update.effective_chat.id
     if msg.reply_to_message and msg.reply_to_message.sticker:
         file_id = msg.reply_to_message.sticker.file_id
-        newFile = bot.get_file(file_id)
+        newFile = context.bot.get_file(file_id)
         newFile.download('images/sticker.png')
-        bot.send_document(chat_id, document=open('images/sticker.png', 'rb'))
+        context.bot.send_document(chat_id,
+                                  document=open('images/sticker.png', 'rb'))
         os.remove("images/sticker.png")
     else:
         update.effective_message.reply_text(
@@ -63,21 +64,22 @@ def getsticker(bot: Bot, update: Update):
 
 
 @run_async
-def kang(bot: Bot, update: Update, args: List[str]):
+def kang(update, context):
+    args = context.args
     chat = update.effective_chat
     msg = update.effective_message
     user = update.effective_user
     packnum = 0
-    packname = "c" + str(user.id) + "_by_" + bot.username
+    packname = "c" + str(user.id) + "_by_" + context.bot.username
     packname_found = 0
     max_stickers = 120
     while packname_found == 0:
         try:
-            stickerset = bot.get_sticker_set(packname)
+            stickerset = context.bot.get_sticker_set(packname)
             if len(stickerset.stickers) >= max_stickers:
                 packnum += 1
                 packname = "c" + str(packnum) + "_" + str(
-                    user.id) + "_by_" + bot.username
+                    user.id) + "_by_" + context.bot.username
             else:
                 packname_found = 1
         except TelegramError as e:
@@ -93,7 +95,7 @@ def kang(bot: Bot, update: Update, args: List[str]):
             file_id = msg.reply_to_message.document.file_id
         else:
             msg.reply_text(tld(chat.id, 'stickers_kang_error'))
-        kang_file = bot.get_file(file_id)
+        kang_file = context.bot.get_file(file_id)
         kang_file.download('images/kangsticker.png')
         if args:
             sticker_emoji = str(args[0])
@@ -123,11 +125,11 @@ def kang(bot: Bot, update: Update, args: List[str]):
                 im.thumbnail(maxsize)
             if not msg.reply_to_message.sticker:
                 im.save(kangsticker, "PNG")
-            bot.add_sticker_to_set(user_id=user.id,
-                                   name=packname,
-                                   png_sticker=open('images/kangsticker.png',
-                                                    'rb'),
-                                   emojis=sticker_emoji)
+            context.bot.add_sticker_to_set(user_id=user.id,
+                                           name=packname,
+                                           png_sticker=open(
+                                               'images/kangsticker.png', 'rb'),
+                                           emojis=sticker_emoji)
             msg.reply_text(tld(chat.id, 'stickers_kang_success').format(
                 packname, sticker_emoji),
                            parse_mode=ParseMode.MARKDOWN)
@@ -142,11 +144,12 @@ def kang(bot: Bot, update: Update, args: List[str]):
                                   sticker_emoji, bot, packname, packnum, chat)
             elif e.message == "Sticker_png_dimensions":
                 im.save(kangsticker, "PNG")
-                bot.add_sticker_to_set(user_id=user.id,
-                                       name=packname,
-                                       png_sticker=open(
-                                           'images/kangsticker.png', 'rb'),
-                                       emojis=sticker_emoji)
+                context.bot.add_sticker_to_set(user_id=user.id,
+                                               name=packname,
+                                               png_sticker=open(
+                                                   'images/kangsticker.png',
+                                                   'rb'),
+                                               emojis=sticker_emoji)
                 msg.reply_text(tld(chat.id, 'stickers_kang_success').format(
                     packname, sticker_emoji),
                                parse_mode=ParseMode.MARKDOWN)
@@ -189,11 +192,11 @@ def kang(bot: Bot, update: Update, args: List[str]):
                 im.thumbnail(maxsize)
             im.save(kangsticker, "PNG")
             msg.reply_photo(photo=open('images/kangsticker.png', 'rb'))
-            bot.add_sticker_to_set(user_id=user.id,
-                                   name=packname,
-                                   png_sticker=open('images/kangsticker.png',
-                                                    'rb'),
-                                   emojis=sticker_emoji)
+            context.bot.add_sticker_to_set(user_id=user.id,
+                                           name=packname,
+                                           png_sticker=open(
+                                               'images/kangsticker.png', 'rb'),
+                                           emojis=sticker_emoji)
             msg.reply_text(tld(chat.id, 'stickers_kang_success').format(
                 packname, sticker_emoji),
                            parse_mode=ParseMode.MARKDOWN)
@@ -208,11 +211,12 @@ def kang(bot: Bot, update: Update, args: List[str]):
                                   sticker_emoji, bot, packname, packnum, chat)
             elif e.message == "Sticker_png_dimensions":
                 im.save(kangsticker, "PNG")
-                bot.add_sticker_to_set(user_id=user.id,
-                                       name=packname,
-                                       png_sticker=open(
-                                           'images/kangsticker.png', 'rb'),
-                                       emojis=sticker_emoji)
+                context.bot.add_sticker_to_set(user_id=user.id,
+                                               name=packname,
+                                               png_sticker=open(
+                                                   'images/kangsticker.png',
+                                                   'rb'),
+                                               emojis=sticker_emoji)
                 msg.reply_text(tld(chat.id, 'stickers_kang_success').format(
                     packname, sticker_emoji),
                                parse_mode=ParseMode.MARKDOWN)
@@ -228,7 +232,7 @@ def kang(bot: Bot, update: Update, args: List[str]):
     else:
         packs = tld(chat.id, 'stickers_kang_no_reply')
         if packnum > 0:
-            firstpackname = "c" + str(user.id) + "_by_" + bot.username
+            firstpackname = "c" + str(user.id) + "_by_" + context.bot.username
             for i in range(0, packnum + 1):
                 if i == 0:
                     packs += f"[pack](t.me/addstickers/{firstpackname})\n"
@@ -249,12 +253,12 @@ def makepack_internal(msg, user, png_sticker, emoji, bot, packname, packnum,
         extra_version = ""
         if packnum > 0:
             extra_version = " " + str(packnum)
-        success = bot.create_new_sticker_set(user.id,
-                                             packname,
-                                             f"{name}s haruka pack" +
-                                             extra_version,
-                                             png_sticker=png_sticker,
-                                             emojis=emoji)
+        success = context.bot.create_new_sticker_set(user.id,
+                                                     packname,
+                                                     f"{name}s haruka pack" +
+                                                     extra_version,
+                                                     png_sticker=png_sticker,
+                                                     emojis=emoji)
     except TelegramError as e:
         print(e)
         if e.message == "Sticker set name is already occupied":
@@ -264,8 +268,9 @@ def makepack_internal(msg, user, png_sticker, emoji, bot, packname, packnum,
         elif e.message == "Peer_id_invalid":
             msg.reply_text(tld(chat.id, 'stickers_pack_contact_pm'),
                            reply_markup=InlineKeyboardMarkup([[
-                               InlineKeyboardButton(text="Start",
-                                                    url=f"t.me/{bot.username}")
+                               InlineKeyboardButton(
+                                   text="Start",
+                                   url=f"t.me/{context.bot.username}")
                            ]]))
         elif e.message == "Internal Server Error: created sticker set not found (500)":
             msg.reply_text(tld(chat.id, 'stickers_kang_success').format(

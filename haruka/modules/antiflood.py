@@ -35,7 +35,7 @@ FLOOD_GROUP = 3
 
 @run_async
 @loggable
-def check_flood(bot: Bot, update: Update) -> str:
+def check_flood(update, context) -> str:
     user = update.effective_user
     chat = update.effective_chat
     msg = update.effective_message
@@ -53,7 +53,9 @@ def check_flood(bot: Bot, update: Update) -> str:
         return ""
 
     try:
-        bot.restrict_chat_member(chat.id, user.id, can_send_messages=False)
+        context.botrestrict_chat_member(chat.id,
+                                        user.id,
+                                        can_send_messages=False)
         msg.reply_text(tld(chat.id, "flood_mute"))
 
         return tld(chat.id, "flood_logger_success").format(
@@ -69,7 +71,8 @@ def check_flood(bot: Bot, update: Update) -> str:
 @user_admin
 @can_restrict
 @loggable
-def set_flood(bot: Bot, update: Update, args: List[str]) -> str:
+def set_flood(update, context) -> str:
+    args = context.args
     chat = update.effective_chat
     user = update.effective_user
     message = update.effective_message
@@ -107,7 +110,7 @@ def set_flood(bot: Bot, update: Update, args: List[str]) -> str:
 
 
 @run_async
-def flood(bot: Bot, update: Update):
+def flood(update, context):
     chat = update.effective_chat
 
     limit = sql.get_flood_limit(chat.id)
