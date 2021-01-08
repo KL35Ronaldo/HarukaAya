@@ -18,8 +18,9 @@
 from typing import Union, List
 
 from future.utils import string_types
-from telegram import ParseMode, Update, Bot
+from telegram import ParseMode, Update
 from telegram.ext import CommandHandler, MessageHandler, Filters
+from telegram.ext.callbackcontext import CallbackContext
 from telegram.utils.helpers import escape_markdown
 
 from haruka import dispatcher
@@ -33,7 +34,6 @@ FILENAME = __name__.rsplit(".", 1)[-1]
 # If module is due to be loaded, then setup all the magical handlers
 if is_module_loaded(FILENAME):
     from haruka.modules.helper_funcs.chat_status import user_admin, is_user_admin
-    from telegram.ext.dispatcher import run_async
 
     from haruka.modules.sql import disable_sql as sql
 
@@ -92,9 +92,9 @@ if is_module_loaded(FILENAME):
                 chat = update.effective_chat
                 return self.filters(update) and not sql.is_command_disabled(chat.id, self.friendly)
 
-    @run_async
     @user_admin
-    def disable(bot: Bot, update: Update, args: List[str]):
+    def disable(update: Update, context: CallbackContext):
+        args = context.args
         chat = update.effective_chat
         if len(args) >= 1:
             disable_cmd = args[0]
@@ -114,9 +114,9 @@ if is_module_loaded(FILENAME):
             update.effective_message.reply_text(
                 tld(chat.id, "disable_err_no_cmd"))
 
-    @run_async
     @user_admin
-    def enable(bot: Bot, update: Update, args: List[str]):
+    def enable(update: Update, context: CallbackContext):
+        args = context.args
         chat = update.effective_chat
         if len(args) >= 1:
             enable_cmd = args[0]
@@ -135,9 +135,8 @@ if is_module_loaded(FILENAME):
             update.effective_message.reply_text(
                 tld(chat.id, "disable_err_no_cmd"))
 
-    @run_async
     @user_admin
-    def list_cmds(bot: Bot, update: Update):
+    def list_cmds(update: Update, context: CallbackContext):
         chat = update.effective_chat
         if DISABLE_CMDS + DISABLE_OTHER:
             result = ""
@@ -162,8 +161,7 @@ if is_module_loaded(FILENAME):
         return tld(chat_id,
                    "disable_chatsettings_list_disabled").format(result)
 
-    @run_async
-    def commands(bot: Bot, update: Update):
+    def commands(update: Update, context: CallbackContext):
         chat = update.effective_chat
         update.effective_message.reply_text(build_curr_disabled(chat.id),
                                             parse_mode=ParseMode.MARKDOWN)
@@ -180,17 +178,21 @@ if is_module_loaded(FILENAME):
     DISABLE_HANDLER = CommandHandler("disable",
                                      disable,
                                      pass_args=True,
-                                     filters=Filters.group)
+                                     run_async=True,
+                                     filters=Filters.chat_type.groups)
     ENABLE_HANDLER = CommandHandler("enable",
                                     enable,
                                     pass_args=True,
-                                    filters=Filters.group)
+                                    run_async=True,
+                                    filters=Filters.chat_type.groups)
     COMMANDS_HANDLER = CommandHandler(["cmds", "disabled"],
                                       commands,
-                                      filters=Filters.group)
+                                      run_async=True,
+                                      filters=Filters.chat_type.groups)
     TOGGLE_HANDLER = CommandHandler("listcmds",
                                     list_cmds,
-                                    filters=Filters.group)
+                                    run_async=True,
+                                    filters=Filters.chat_type.groups)
 
     dispatcher.add_handler(DISABLE_HANDLER)
     dispatcher.add_handler(ENABLE_HANDLER)
