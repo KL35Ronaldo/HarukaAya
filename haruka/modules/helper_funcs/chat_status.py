@@ -17,7 +17,8 @@
 
 from functools import wraps
 
-from telegram import Chat, ChatMember, Update, Bot
+from telegram import Chat, ChatMember, Update
+from telegram.ext.callbackcontext import CallbackContext
 
 from haruka import DEL_CMDS, SUDO_USERS, WHITELIST_USERS
 import haruka.modules.sql.admin_sql as admin_sql
@@ -76,11 +77,11 @@ def is_user_in_chat(chat: Chat, user_id: int) -> bool:
 
 def bot_can_delete(func):
     @wraps(func)
-    def delete_rights(bot: Bot, update: Update, *args, **kwargs):
+    def delete_rights(update: Update, context: CallbackContext, *args, **kwargs):
         chat = update.effective_chat
 
-        if can_delete(update.effective_chat, bot.id):
-            return func(bot, update, *args, **kwargs)
+        if can_delete(update.effective_chat, context.bot.id):
+            return func(update, context, *args, **kwargs)
         else:
             update.effective_message.reply_text(
                 tld(chat.id, 'helpers_bot_cant_delete'))
@@ -90,11 +91,11 @@ def bot_can_delete(func):
 
 def can_pin(func):
     @wraps(func)
-    def pin_rights(bot: Bot, update: Update, *args, **kwargs):
+    def pin_rights(update: Update, context: CallbackContext, *args, **kwargs):
         chat = update.effective_chat
 
-        if update.effective_chat.get_member(bot.id).can_pin_messages:
-            return func(bot, update, *args, **kwargs)
+        if update.effective_chat.get_member(context.bot.id).can_pin_messages:
+            return func(update, context, *args, **kwargs)
         else:
             update.effective_message.reply_text(
                 tld(chat.id, 'helpers_bot_cant_pin'))
@@ -104,11 +105,11 @@ def can_pin(func):
 
 def can_promote(func):
     @wraps(func)
-    def promote_rights(bot: Bot, update: Update, *args, **kwargs):
+    def promote_rights(update: Update, context: CallbackContext, *args, **kwargs):
         chat = update.effective_chat
 
-        if update.effective_chat.get_member(bot.id).can_promote_members:
-            return func(bot, update, *args, **kwargs)
+        if update.effective_chat.get_member(context.bot.id).can_promote_members:
+            return func(update, context, *args, **kwargs)
         else:
             update.effective_message.reply_text(
                 tld(chat.id, 'helpers_bot_cant_pro_demote'))
@@ -118,11 +119,11 @@ def can_promote(func):
 
 def can_restrict(func):
     @wraps(func)
-    def promote_rights(bot: Bot, update: Update, *args, **kwargs):
+    def promote_rights(update: Update, context: CallbackContext, *args, **kwargs):
         chat = update.effective_chat
 
-        if update.effective_chat.get_member(bot.id).can_restrict_members:
-            return func(bot, update, *args, **kwargs)
+        if update.effective_chat.get_member(context.bot.id).can_restrict_members:
+            return func(update, context, *args, **kwargs)
         else:
             update.effective_message.reply_text(
                 tld(chat.id, 'helpers_bot_cant_restrict'))
@@ -132,11 +133,11 @@ def can_restrict(func):
 
 def bot_admin(func):
     @wraps(func)
-    def is_admin(bot: Bot, update: Update, *args, **kwargs):
+    def is_admin(update: Update, context: CallbackContext, *args, **kwargs):
         chat = update.effective_chat
 
-        if is_bot_admin(update.effective_chat, bot.id):
-            return func(bot, update, *args, **kwargs)
+        if is_bot_admin(update.effective_chat, context.bot.id):
+            return func(update, context, *args, **kwargs)
         else:
             try:
                 update.effective_message.reply_text(
@@ -149,12 +150,12 @@ def bot_admin(func):
 
 def user_admin(func):
     @wraps(func)
-    def is_admin(bot: Bot, update: Update, *args, **kwargs):
+    def is_admin(update: Update, context: CallbackContext, *args, **kwargs):
         user = update.effective_user
         chat = update.effective_chat
         if user and is_user_admin(update.effective_chat, user.id):
             try:
-                return func(bot, update, *args, **kwargs)
+                return func(update, context, *args, **kwargs)
             except Exception:
                 return
 
@@ -173,10 +174,10 @@ def user_admin(func):
 
 def user_admin_no_reply(func):
     @wraps(func)
-    def is_admin(bot: Bot, update: Update, *args, **kwargs):
+    def is_admin(update: Update, context: CallbackContext, *args, **kwargs):
         user = update.effective_user
         if user and is_user_admin(update.effective_chat, user.id):
-            return func(bot, update, *args, **kwargs)
+            return func(update, context, *args, **kwargs)
 
         elif not user:
             pass
@@ -189,9 +190,9 @@ def user_admin_no_reply(func):
 
 def user_not_admin(func):
     @wraps(func)
-    def is_not_admin(bot: Bot, update: Update, *args, **kwargs):
+    def is_not_admin(update: Update, context: CallbackContext, *args, **kwargs):
         user = update.effective_user
         if user and not is_user_admin(update.effective_chat, user.id):
-            return func(bot, update, *args, **kwargs)
+            return func(update, context, *args, **kwargs)
 
     return is_not_admin
