@@ -42,8 +42,8 @@ if is_module_loaded(FILENAME):
     ADMIN_CMDS = []
 
     class DisableAbleCommandHandler(CommandHandler):
-        def __init__(self, command, callback, admin_ok=False, **kwargs):
-            super().__init__(command, callback, **kwargs)
+        def __init__(self, command, callback, run_async=False, admin_ok=False, **kwargs):
+            super().__init__(command, callback, run_async=run_async, **kwargs)
             self.admin_ok = admin_ok
             if isinstance(command, string_types):
                 DISABLE_CMDS.append(command)
@@ -57,19 +57,27 @@ if is_module_loaded(FILENAME):
         def check_update(self, update):
             chat = update.effective_chat
             user = update.effective_user
+
             if super().check_update(update):
+                args, filter_result = super().check_update(update)
+
+                if not filter_result:
+                    return False
+
                 # Should be safe since check_update passed.
                 command = update.effective_message.text_html.split(
                     None, 1)[0][1:].split('@')[0]
 
                 # disabled, admincmd, user admin
                 if sql.is_command_disabled(chat.id, command):
-                    return command in ADMIN_CMDS and is_user_admin(
+                    is_admin = command in ADMIN_CMDS and is_user_admin(
                         chat, user.id)
+                    if not is_admin:
+                        return None
 
-                # not disabled
-                else:
-                    return True
+                    return args, is_admin
+
+                return args, filter_result
 
             return False
 
