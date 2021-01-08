@@ -220,14 +220,11 @@ __help__ = True
 
 CONNECT_CHAT_HANDLER = CommandHandler(["connect", "connection"],
                                       connect_chat,
-                                      allow_edited=True,
                                       pass_args=True)
 DISCONNECT_CHAT_HANDLER = CommandHandler("disconnect",
-                                         disconnect_chat,
-                                         allow_edited=True)
+                                         disconnect_chat)
 ALLOW_CONNECTIONS_HANDLER = CommandHandler("allowconnect",
                                            allow_connections,
-                                           allow_edited=True,
                                            pass_args=True)
 
 dispatcher.add_handler(CONNECT_CHAT_HANDLER)

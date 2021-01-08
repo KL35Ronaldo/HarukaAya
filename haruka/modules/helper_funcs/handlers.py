@@ -67,9 +67,8 @@ class GbanLockHandler(tg.CommandHandler):
         super().__init__(command, callback, **kwargs)
 
     def check_update(self, update):
-        if (isinstance(update, Update) and
-            (update.message or update.edited_message and self.allow_edited)):
-            message = update.message or update.edited_message
+        if isinstance(update, Update) and update.effective_message:
+            message = update.effective_message
             if sql.is_user_gbanned(update.effective_user.id):
                 return False
             if message.text and message.text.startswith('/') and len(
