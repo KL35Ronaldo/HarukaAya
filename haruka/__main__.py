@@ -28,6 +28,7 @@ from telegram.error import (Unauthorized, BadRequest, TimedOut, NetworkError,
 from telegram.ext import CommandHandler, Filters, MessageHandler, CallbackQueryHandler
 from telegram.ext.dispatcher import DispatcherHandlerStop, Dispatcher
 from telegram.ext.callbackcontext import CallbackContext
+from telegram.utils.helpers import DEFAULT_FALSE
 
 # Needed to dynamically load modules
 # NOTE: Module order is not guaranteed, specify that in the config file!
@@ -354,7 +355,6 @@ def main():
 CHATS_CNT = {}
 CHATS_TIME = {}
 
-
 def process_update(self, update):
     # An error happened while polling
     if isinstance(update, TelegramError):
@@ -389,37 +389,49 @@ def process_update(self, update):
 
     CHATS_CNT[update.effective_chat.id] = cnt
 
+    context = None
+    handled = False
+    sync_modes = []
+
     for group in self.groups:
         try:
-            for handler in (x for x in self.handlers[group]
-                            if x.check_update(update)):
-                handler.handle_update(update, self)
-                break
+            for handler in self.handlers[group]:
+                check = handler.check_update(update)
+                if check is not None and check is not False:
+                    if not context and self.use_context:
+                        context = CallbackContext.from_update(update, self)
+                    handled = True
+                    sync_modes.append(handler.run_async)
+                    handler.handle_update(update, self, check, context)
+                    break
 
         # Stop processing with any other handler.
         except DispatcherHandlerStop:
-            self.logger.debug(
-                'Stopping further handlers due to DispatcherHandlerStop')
+            self.logger.debug('Stopping further handlers due to DispatcherHandlerStop')
+            self.update_persistence(update=update)
             break
 
         # Dispatch any error.
-        except TelegramError as te:
-            self.logger.warning(
-                'A TelegramError was raised while processing the Update')
-
+        except Exception as exc:
             try:
-                self.dispatch_error(update, te)
+                self.dispatch_error(update, exc)
             except DispatcherHandlerStop:
                 self.logger.debug('Error handler stopped further handlers')
                 break
+            # Errors should not stop the thread.
             except Exception:
-                self.logger.exception(
-                    'An uncaught error was raised while handling the error')
+                self.logger.exception('An uncaught error was raised while handling the error.')
 
-        # Errors should not stop the thread.
-        except Exception:
-            self.logger.exception(
-                'An uncaught error was raised while processing the update')
+    # Update persistence, if handled
+    handled_only_async = all(sync_modes)
+    if handled:
+        # Respect default settings
+        if all(mode is DEFAULT_FALSE for mode in sync_modes) and self.bot.defaults:
+            handled_only_async = self.bot.defaults.run_async
+        # If update was only handled by async handlers, we don't need to update here
+        if not handled_only_async:
+            self.update_persistence(update=update)
+
 
 
 if __name__ == '__main__':
