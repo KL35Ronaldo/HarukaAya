@@ -19,9 +19,10 @@ import html
 import re
 from typing import List
 
-from telegram import Update, Bot, ParseMode
+from telegram import Update, ParseMode
 from telegram.error import BadRequest
-from telegram.ext import CommandHandler, MessageHandler, Filters, run_async
+from telegram.ext import CommandHandler, MessageHandler, Filters
+from telegram.ext.callbackcontext import CallbackContext
 
 import haruka.modules.sql.blacklist_sql as sql
 from haruka import dispatcher, LOGGER
@@ -37,8 +38,8 @@ from haruka.modules.tr_engine.strings import tld
 BLACKLIST_GROUP = 11
 
 
-@run_async
-def blacklist(bot: Bot, update: Update, args: List[str]):
+def blacklist(update: Update, context: CallbackContext):
+    args = context.args
     msg = update.effective_message
     chat = update.effective_chat
     user = update.effective_user
@@ -75,9 +76,8 @@ def blacklist(bot: Bot, update: Update, args: List[str]):
         msg.reply_text(text, parse_mode=ParseMode.HTML)
 
 
-@run_async
 @user_admin
-def add_blacklist(bot: Bot, update: Update):
+def add_blacklist(update: Update, context: CallbackContext):
     msg = update.effective_message
     chat = update.effective_chat
     user = update.effective_user
@@ -117,9 +117,8 @@ def add_blacklist(bot: Bot, update: Update):
         msg.reply_text(tld(chat.id, "blacklist_err_add_no_args"))
 
 
-@run_async
 @user_admin
-def unblacklist(bot: Bot, update: Update):
+def unblacklist(update: Update, context: CallbackContext):
     msg = update.effective_message
     chat = update.effective_chat
     user = update.effective_user
@@ -177,9 +176,8 @@ def unblacklist(bot: Bot, update: Update):
         msg.reply_text(tld(chat.id, "blacklist_err_del_no_args"))
 
 
-@run_async
 @user_not_admin
-def del_blacklist(bot: Bot, update: Update):
+def del_blacklist(update: Update, context: CallbackContext):
     chat = update.effective_chat
     message = update.effective_message
     to_match = extract_text(message)
@@ -216,15 +214,17 @@ __help__ = True
 BLACKLIST_HANDLER = DisableAbleCommandHandler("blacklist",
                                               blacklist,
                                               pass_args=True,
+                                              run_async=True,
                                               admin_ok=True)
-ADD_BLACKLIST_HANDLER = CommandHandler("addblacklist", add_blacklist)
+ADD_BLACKLIST_HANDLER = CommandHandler("addblacklist", add_blacklist, run_async=True)
 UNBLACKLIST_HANDLER = CommandHandler(["unblacklist", "rmblacklist"],
-                                     unblacklist)
+                                     unblacklist,
+                                     run_async=True)
 BLACKLIST_DEL_HANDLER = MessageHandler(
     (Filters.text | Filters.command | Filters.sticker | Filters.photo)
-    & Filters.group,
+    & Filters.chat_type.groups,
     del_blacklist,
-    edited_updates=True)
+    run_async=True)
 
 dispatcher.add_handler(BLACKLIST_HANDLER)
 dispatcher.add_handler(ADD_BLACKLIST_HANDLER)
