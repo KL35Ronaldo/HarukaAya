@@ -44,7 +44,7 @@ def blacklist(update: Update, context: CallbackContext):
     chat = update.effective_chat
     user = update.effective_user
 
-    conn = connected(bot, update, chat, user.id, need_admin=False)
+    conn = connected(update, context, user.id, need_admin=False)
     if conn:
         chat_id = conn
         chat_name = dispatcher.bot.getChat(conn).title
@@ -83,7 +83,7 @@ def add_blacklist(update: Update, context: CallbackContext):
     user = update.effective_user
     words = msg.text.split(None, 1)
 
-    conn = connected(bot, update, chat, user.id)
+    conn = connected(update, context, user.id)
     if conn:
         chat_id = conn
         chat_name = dispatcher.bot.getChat(conn).title
@@ -124,7 +124,7 @@ def unblacklist(update: Update, context: CallbackContext):
     user = update.effective_user
     words = msg.text.split(None, 1)
 
-    conn = connected(bot, update, chat, user.id)
+    conn = connected(update, context, user.id)
     if conn:
         chat_id = conn
         chat_name = dispatcher.bot.getChat(conn).title
