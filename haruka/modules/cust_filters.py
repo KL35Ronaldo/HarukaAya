@@ -19,9 +19,10 @@ import re
 
 import telegram
 from telegram import ParseMode, InlineKeyboardMarkup
-from telegram import Update, Bot
+from telegram import Update
 from telegram.error import BadRequest
-from telegram.ext import MessageHandler, DispatcherHandlerStop, run_async
+from telegram.ext import MessageHandler, DispatcherHandlerStop
+from telegram.ext.callbackcontext import CallbackContext
 from telegram.utils.helpers import escape_markdown
 
 from haruka import dispatcher
@@ -40,12 +41,11 @@ from haruka.modules.connection import connected
 HANDLER_GROUP = 15
 
 
-@run_async
-def list_handlers(bot: Bot, update: Update):
+def list_handlers(update: Update, context: CallbackContext):
     chat = update.effective_chat
     user = update.effective_user
 
-    conn = connected(bot, update, chat, user.id, need_admin=False)
+    conn = connected(update, context, user.id, need_admin=False)
     if conn:
         chat_id = conn
         chat_name = dispatcher.bot.getChat(conn).title
@@ -82,7 +82,7 @@ def list_handlers(bot: Bot, update: Update):
 
 # NOT ASYNC BECAUSE DISPATCHER HANDLER RAISED
 @user_admin
-def filters(bot: Bot, update: Update):
+def filters(update: Update, context: CallbackContext):
     chat = update.effective_chat
     user = update.effective_user
     msg = update.effective_message
@@ -90,7 +90,7 @@ def filters(bot: Bot, update: Update):
         None,
         1)  # use python's maxsplit to separate Cmd, keyword, and reply_text
 
-    conn = connected(bot, update, chat, user.id)
+    conn = connected(update, context, user.id)
     if conn:
         chat_id = conn
         chat_name = dispatcher.bot.getChat(conn).title
@@ -175,12 +175,12 @@ def filters(bot: Bot, update: Update):
 
 # NOT ASYNC BECAUSE DISPATCHER HANDLER RAISED
 @user_admin
-def stop_filter(bot: Bot, update: Update):
+def stop_filter(update: Update, context: CallbackContext):
     chat = update.effective_chat
     user = update.effective_user
     args = update.effective_message.text.split(None, 1)
 
-    conn = connected(bot, update, chat, user.id)
+    conn = connected(update, context, user.id)
     if conn:
         chat_id = conn
         chat_name = dispatcher.bot.getChat(conn).title
@@ -213,8 +213,7 @@ def stop_filter(bot: Bot, update: Update):
         tld(chat.id, "cust_filters_err_wrong_filter"))
 
 
-@run_async
-def reply_filter(bot: Bot, update: Update):
+def reply_filter(update: Update, context: CallbackContext):
     chat = update.effective_chat
     message = update.effective_message
 
@@ -268,7 +267,7 @@ def reply_filter(bot: Bot, update: Update):
                         message.reply_text(
                             tld(chat.id, "cust_filters_err_protocol"))
                     elif excp.message == "Reply message not found":
-                        bot.send_message(chat.id,
+                        context.bot.send_message(chat.id,
                                          filt.reply,
                                          parse_mode=ParseMode.MARKDOWN,
                                          disable_web_page_preview=True,
@@ -286,9 +285,8 @@ def reply_filter(bot: Bot, update: Update):
             break
 
 
-@run_async
 @user_admin
-def stop_all_filters(bot: Bot, update: Update):
+def stop_all_filters(update: Update, context: CallbackContext):
     chat = update.effective_chat
     user = update.effective_user
     message = update.effective_message
@@ -334,11 +332,12 @@ __help__ = True
 
 FILTER_HANDLER = DisableAbleCommandHandler("filter", filters)
 STOP_HANDLER = DisableAbleCommandHandler("stop", stop_filter)
-STOPALL_HANDLER = DisableAbleCommandHandler("stopall", stop_all_filters)
+STOPALL_HANDLER = DisableAbleCommandHandler("stopall", stop_all_filters, run_async=True)
 LIST_HANDLER = DisableAbleCommandHandler("filters",
                                          list_handlers,
+                                         run_async=True,
                                          admin_ok=True)
-CUST_FILTER_HANDLER = MessageHandler(CustomFilters.has_text, reply_filter)
+CUST_FILTER_HANDLER = MessageHandler(CustomFilters.has_text, reply_filter, run_async=True)
 
 dispatcher.add_handler(FILTER_HANDLER)
 dispatcher.add_handler(STOP_HANDLER)
