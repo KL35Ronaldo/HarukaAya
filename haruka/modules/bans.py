@@ -18,9 +18,10 @@
 import html
 from typing import Optional, List
 
-from telegram import Message, Chat, Update, Bot, User, ParseMode
+from telegram import Message, Chat, Update, User, ParseMode
 from telegram.error import BadRequest
-from telegram.ext import run_async, Filters
+from telegram.ext import Filters
+from telegram.ext.callbackcontext import CallbackContext
 from telegram.utils.helpers import mention_html
 
 from haruka import dispatcher, LOGGER
@@ -34,12 +35,12 @@ from haruka.modules.log_channel import loggable
 from haruka.modules.tr_engine.strings import tld
 
 
-@run_async
 @bot_admin
 @can_restrict
 @user_admin
 @loggable
-def ban(bot: Bot, update: Update, args: List[str]) -> str:
+def ban(update: Update, context: CallbackContext) -> str:
+    args = context.args
     chat = update.effective_chat  # type: Optional[Chat]
     user = update.effective_user  # type: Optional[User]
     message = update.effective_message  # type: Optional[Message]
@@ -59,7 +60,7 @@ def ban(bot: Bot, update: Update, args: List[str]) -> str:
         else:
             raise
 
-    if user_id == bot.id:
+    if user_id == context.bot.id:
         message.reply_text(tld(chat.id, "bans_err_usr_is_bot"))
         return ""
 
@@ -100,12 +101,12 @@ def ban(bot: Bot, update: Update, args: List[str]) -> str:
     return ""
 
 
-@run_async
 @bot_admin
 @can_restrict
 @user_admin
 @loggable
-def temp_ban(bot: Bot, update: Update, args: List[str]) -> str:
+def temp_ban(update: Update, context: CallbackContext) -> str:
+    args = context.args
     chat = update.effective_chat  # type: Optional[Chat]
     user = update.effective_user  # type: Optional[User]
     message = update.effective_message  # type: Optional[Message]
@@ -129,7 +130,7 @@ def temp_ban(bot: Bot, update: Update, args: List[str]) -> str:
         message.reply_text(tld(chat.id, "bans_err_usr_is_admin"))
         return ""
 
-    if user_id == bot.id:
+    if user_id == context.bot.id:
         message.reply_text(tld(chat.id, "bans_err_usr_is_bot"))
         return ""
 
@@ -186,12 +187,12 @@ def temp_ban(bot: Bot, update: Update, args: List[str]) -> str:
     return ""
 
 
-@run_async
 @bot_admin
 @can_restrict
 @user_admin
 @loggable
-def kick(bot: Bot, update: Update, args: List[str]) -> str:
+def kick(update: Update, context: CallbackContext) -> str:
+    args = context.args
     chat = update.effective_chat  # type: Optional[Chat]
     user = update.effective_user  # type: Optional[User]
     message = update.effective_message  # type: Optional[Message]
@@ -211,7 +212,7 @@ def kick(bot: Bot, update: Update, args: List[str]) -> str:
         else:
             raise
 
-    if user_id == bot.id:
+    if user_id == context.bot.id:
         message.reply_text(tld(chat.id, "bans_kick_is_bot"))
         return ""
 
@@ -245,10 +246,9 @@ def kick(bot: Bot, update: Update, args: List[str]) -> str:
     return ""
 
 
-@run_async
 @bot_admin
 @can_restrict
-def kickme(bot: Bot, update: Update):
+def kickme(update: Update, context: CallbackContext):
     chat = update.effective_chat  # type: Optional[Chat]
 
     user_id = update.effective_message.from_user.id
@@ -265,11 +265,10 @@ def kickme(bot: Bot, update: Update):
         update.effective_message.reply_text(tld(chat.id, "bans_kickme_failed"))
 
 
-@run_async
 @bot_admin
 @can_restrict
 @loggable
-def banme(bot: Bot, update: Update):
+def banme(update: Update, context: CallbackContext):
     user_id = update.effective_message.from_user.id
     chat = update.effective_chat
     if is_user_admin(update.effective_chat, user_id):
@@ -286,12 +285,12 @@ def banme(bot: Bot, update: Update):
         update.effective_message.reply_text(tld(chat.id, "bans_kickme_failed"))
 
 
-@run_async
 @bot_admin
 @can_restrict
 @user_admin
 @loggable
-def unban(bot: Bot, update: Update, args: List[str]) -> str:
+def unban(update: Update, context: CallbackContext) -> str:
+    args = context.args
     message = update.effective_message  # type: Optional[Message]
     user = update.effective_user  # type: Optional[User]
     chat = update.effective_chat  # type: Optional[Chat]
@@ -326,12 +325,12 @@ def unban(bot: Bot, update: Update, args: List[str]) -> str:
     return log
 
 
-@run_async
 @bot_admin
 @can_restrict
 @user_admin
 @loggable
-def sban(bot: Bot, update: Update, args: List[str]) -> str:
+def sban(update: Update, context: CallbackContext) -> str:
+    args = context.args
     chat = update.effective_chat  # type: Optional[Chat]
     user = update.effective_user  # type: Optional[User]
     message = update.effective_message  # type: Optional[Message]
@@ -354,7 +353,7 @@ def sban(bot: Bot, update: Update, args: List[str]) -> str:
     if is_user_ban_protected(chat, user_id, member):
         return ""
 
-    if user_id == bot.id:
+    if user_id == context.bot.id:
         return ""
 
     log = tld(chat.id, "bans_sban_logger").format(
@@ -382,34 +381,40 @@ __help__ = True
 BAN_HANDLER = DisableAbleCommandHandler("ban",
                                         ban,
                                         pass_args=True,
-                                        filters=Filters.group,
+                                        run_async=True,
+                                        filters=Filters.chat_type.groups,
                                         admin_ok=True)
 TEMPBAN_HANDLER = DisableAbleCommandHandler(["tban", "tempban"],
                                             temp_ban,
                                             pass_args=True,
-                                            filters=Filters.group,
+                                            run_async=True,
+                                            filters=Filters.chat_type.groups,
                                             admin_ok=True)
 KICK_HANDLER = DisableAbleCommandHandler("kick",
                                          kick,
                                          pass_args=True,
-                                         filters=Filters.group,
+                                         run_async=True,
+                                         filters=Filters.chat_type.groups,
                                          admin_ok=True)
 UNBAN_HANDLER = DisableAbleCommandHandler("unban",
                                           unban,
                                           pass_args=True,
-                                          filters=Filters.group,
+                                          run_async=True,
+                                          filters=Filters.chat_type.groups,
                                           admin_ok=True)
 KICKME_HANDLER = DisableAbleCommandHandler("kickme",
                                            kickme,
-                                           filters=Filters.group)
+                                           filters=Filters.chat_type.groups)
 SBAN_HANDLER = DisableAbleCommandHandler("sban",
                                          sban,
                                          pass_args=True,
-                                         filters=Filters.group,
+                                         run_async=True,
+                                         filters=Filters.chat_type.groups,
                                          admin_ok=True)
 BANME_HANDLER = DisableAbleCommandHandler("banme",
                                           banme,
-                                          filters=Filters.group)
+                                          run_async=True,
+                                          filters=Filters.chat_type.groups)
 
 dispatcher.add_handler(BAN_HANDLER)
 dispatcher.add_handler(TEMPBAN_HANDLER)
