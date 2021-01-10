@@ -19,11 +19,10 @@ import html
 from typing import List
 
 import telegram.ext as tg
-from telegram import Update, Bot, ParseMode, MessageEntity
-from telegram import TelegramError
+from telegram import ChatPermissions, MessageEntity, ParseMode, TelegramError, Update
 from telegram.error import BadRequest
 from telegram.ext import CommandHandler, MessageHandler, Filters
-from telegram.ext.dispatcher import run_async
+from telegram.ext.callbackcontext import CallbackContext
 from telegram.utils.helpers import mention_html
 
 import haruka.modules.sql.locks_sql as sql
@@ -88,9 +87,17 @@ class CustomCommandHandler(tg.CommandHandler):
         super().__init__(command, callback, **kwargs)
 
     def check_update(self, update):
-        return super().check_update(update) and not (
-            sql.is_restr_locked(update.effective_chat.id, 'messages') and
-            not is_user_admin(update.effective_chat, update.effective_user.id))
+        if super().check_update(update):
+            args, filter_result = super().check_update(update)
+
+            if not filter_result:
+                return False
+
+            return args, filter_result and not (
+                sql.is_restr_locked(update.effective_chat.id, 'messages') and
+                not is_user_admin(update.effective_chat, update.effective_user.id))
+
+        return False
 
 
 tg.CommandHandler = CustomCommandHandler
@@ -110,10 +117,10 @@ def restr_members(bot,
         try:
             bot.restrict_chat_member(chat_id,
                                      mem.user,
-                                     can_send_messages=messages,
-                                     can_send_media_messages=media,
-                                     can_send_other_messages=other,
-                                     can_add_web_page_previews=previews)
+                                     ChatPermissions(can_send_messages=messages,
+                                                     can_send_media_messages=media,
+                                                     can_send_other_messages=other,
+                                                     can_add_web_page_previews=previews))
         except TelegramError:
             pass
 
@@ -130,16 +137,15 @@ def unrestr_members(bot,
         try:
             bot.restrict_chat_member(chat_id,
                                      mem.user,
-                                     can_send_messages=messages,
-                                     can_send_media_messages=media,
-                                     can_send_other_messages=other,
-                                     can_add_web_page_previews=previews)
+                                     ChatPermissions(can_send_messages=messages,
+                                                     can_send_media_messages=media,
+                                                     can_send_other_messages=other,
+                                                     can_add_web_page_previews=previews))
         except TelegramError:
             pass
 
 
-@run_async
-def locktypes(bot: Bot, update: Update):
+def locktypes(update: Update, context: CallbackContext):
     chat = update.effective_chat
     update.effective_message.reply_text(
         "\n - ".join([tld(chat.id, "locks_list_title")] +
@@ -149,11 +155,12 @@ def locktypes(bot: Bot, update: Update):
 @user_admin
 @bot_can_delete
 @loggable
-def lock(bot: Bot, update: Update, args: List[str]) -> str:
+def lock(update: Update, context: CallbackContext) -> str:
+    args = context.args
     chat = update.effective_chat
     user = update.effective_user
     message = update.effective_message
-    if can_delete(chat, bot.id):
+    if can_delete(chat, context.bot.id):
         if len(args) >= 1:
             if args[0] in LOCK_TYPES:
                 sql.update_lock(chat.id, args[0], locked=True)
@@ -189,10 +196,10 @@ def lock(bot: Bot, update: Update, args: List[str]) -> str:
     return ""
 
 
-@run_async
 @user_admin
 @loggable
-def unlock(bot: Bot, update: Update, args: List[str]) -> str:
+def unlock(update: Update, context: CallbackContext) -> str:
+    args = context.args
     chat = update.effective_chat
     user = update.effective_user
     message = update.effective_message
@@ -241,25 +248,24 @@ def unlock(bot: Bot, update: Update, args: List[str]) -> str:
                 message.reply_text(tld(chat.id, "locks_type_invalid"))
 
         else:
-            bot.sendMessage(chat.id, tld(chat.id, "locks_unlock_no_type"))
+            context.bot.sendMessage(chat.id, tld(chat.id, "locks_unlock_no_type"))
 
     return ""
 
 
-@run_async
 @user_not_admin
-def del_lockables(bot: Bot, update: Update):
+def del_lockables(update: Update, context: CallbackContext):
     chat = update.effective_chat
     message = update.effective_message
 
     for lockable, filter in LOCK_TYPES.items():
-        if filter(message) and sql.is_locked(chat.id, lockable) and can_delete(
-                chat, bot.id):
+        if filter(update) and sql.is_locked(chat.id, lockable) and can_delete(
+                chat, context.bot.id):
             if lockable == "bots":
                 new_members = update.effective_message.new_chat_members
                 for new_mem in new_members:
                     if new_mem.is_bot:
-                        if not is_bot_admin(chat, bot.id):
+                        if not is_bot_admin(chat, context.bot.id):
                             message.reply_text(
                                 tld(chat.id, "locks_lock_bots_no_admin"))
                             return
@@ -279,14 +285,13 @@ def del_lockables(bot: Bot, update: Update):
             break
 
 
-@run_async
 @user_not_admin
-def rest_handler(bot: Bot, update: Update):
+def rest_handler(update: Update, context: CallbackContext):
     msg = update.effective_message
     chat = update.effective_chat
     for restriction, filter in RESTRICTION_TYPES.items():
-        if filter(msg) and sql.is_restr_locked(
-                chat.id, restriction) and can_delete(chat, bot.id):
+        if filter(update) and sql.is_restr_locked(
+                chat.id, restriction) and can_delete(chat, context.bot.id):
             try:
                 msg.delete()
             except BadRequest as excp:
@@ -317,9 +322,8 @@ def build_lock_message(chat, chatP, user, chatname):
     return res
 
 
-@run_async
 @user_admin
-def list_locks(bot: Bot, update: Update):
+def list_locks(update: Update, context: CallbackContext):
     chat = update.effective_chat
     user = update.effective_user
 
@@ -335,16 +339,17 @@ def __migrate__(old_chat_id, new_chat_id):
 
 __help__ = True
 
-LOCKTYPES_HANDLER = DisableAbleCommandHandler("locktypes", locktypes)
+LOCKTYPES_HANDLER = DisableAbleCommandHandler("locktypes", locktypes, run_async=True)
 LOCK_HANDLER = CommandHandler("lock",
                               lock,
                               pass_args=True,
-                              filters=Filters.group)
+                              filters=Filters.chat_type.groups)
 UNLOCK_HANDLER = CommandHandler("unlock",
                                 unlock,
                                 pass_args=True,
-                                filters=Filters.group)
-LOCKED_HANDLER = CommandHandler("locks", list_locks, filters=Filters.group)
+                                run_async=True,
+                                filters=Filters.chat_type.groups)
+LOCKED_HANDLER = CommandHandler("locks", list_locks, run_async=True, filters=Filters.chat_type.groups)
 
 dispatcher.add_handler(LOCK_HANDLER)
 dispatcher.add_handler(UNLOCK_HANDLER)
@@ -352,6 +357,6 @@ dispatcher.add_handler(LOCKTYPES_HANDLER)
 dispatcher.add_handler(LOCKED_HANDLER)
 
 dispatcher.add_handler(
-    MessageHandler(Filters.all & Filters.group, del_lockables), PERM_GROUP)
+    MessageHandler(Filters.all & Filters.chat_type.groups, del_lockables, run_async=True), PERM_GROUP)
 dispatcher.add_handler(
-    MessageHandler(Filters.all & Filters.group, rest_handler), REST_GROUP)
+    MessageHandler(Filters.all & Filters.chat_type.groups, rest_handler, run_async=True), REST_GROUP)
