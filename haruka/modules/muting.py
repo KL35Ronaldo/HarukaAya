@@ -18,12 +18,11 @@
 import html
 from typing import List
 
-from telegram import Update, Bot
+from telegram import ChatPermissions, ParseMode, Update
 from telegram.error import BadRequest
 from telegram.ext import Filters
-from telegram.ext.dispatcher import run_async
+from telegram.ext.callbackcontext import CallbackContext
 from telegram.utils.helpers import mention_html
-from telegram import ParseMode
 
 from haruka import dispatcher, LOGGER, SUDO_USERS
 from haruka.modules.helper_funcs.chat_status import bot_admin, user_admin, is_user_admin, can_restrict, is_user_ban_protected
@@ -36,16 +35,16 @@ from haruka.modules.connection import connected
 from haruka.modules.disable import DisableAbleCommandHandler
 
 
-@run_async
 @bot_admin
 @user_admin
 @loggable
-def mute(bot: Bot, update: Update, args: List[str]) -> str:
+def mute(update: Update, context: CallbackContext) -> str:
+    args = context.args
     chat = update.effective_chat
     user = update.effective_user
     message = update.effective_message
 
-    conn = connected(bot, update, chat, user.id)
+    conn = connected(update, context, user.id)
     if conn:
         chatD = dispatcher.bot.getChat(conn)
     else:
@@ -59,7 +58,7 @@ def mute(bot: Bot, update: Update, args: List[str]) -> str:
         message.reply_text(tld(chat.id, "mute_invalid"))
         return ""
 
-    if user_id == bot.id:
+    if user_id == context.bot.id:
         message.reply_text(tld(chat.id, "mute_not_myself"))
         return ""
 
@@ -74,15 +73,13 @@ def mute(bot: Bot, update: Update, args: List[str]) -> str:
             message.reply_text(tld(chat.id, "mute_not_m_admin"))
 
         elif member.can_send_messages is None or member.can_send_messages:
-            bot.restrict_chat_member(chatD.id,
-                                     user_id,
-                                     can_send_messages=False)
-            keyboard = []
+            context.bot.restrict_chat_member(chatD.id,
+                                             user_id,
+                                             ChatPermissions(can_send_messages=False))
             reply = tld(chat.id, "mute_success").format(
                 mention_html(member.user.id, member.user.first_name),
                 chatD.title)
             message.reply_text(reply,
-                               reply_markup=keyboard,
                                parse_mode=ParseMode.HTML)
             return "<b>{}:</b>" \
                    "\n#MUTE" \
@@ -101,16 +98,16 @@ def mute(bot: Bot, update: Update, args: List[str]) -> str:
     return ""
 
 
-@run_async
 @bot_admin
 @user_admin
 @loggable
-def unmute(bot: Bot, update: Update, args: List[str]) -> str:
+def unmute(update: Update, context: CallbackContext) -> str:
+    args = context.args
     chat = update.effective_chat
     user = update.effective_user
     message = update.effective_message
 
-    conn = connected(bot, update, chat, user.id)
+    conn = connected(update, context, user.id)
     if conn:
         chatD = dispatcher.bot.getChat(conn)
     else:
@@ -148,18 +145,16 @@ def unmute(bot: Bot, update: Update, args: List[str]) -> str:
             message.reply_text(
                 tld(chat.id, "unmute_not_muted").format(chatD.title))
         else:
-            bot.restrict_chat_member(chatD.id,
-                                     int(user_id),
-                                     can_send_messages=True,
-                                     can_send_media_messages=True,
-                                     can_send_other_messages=True,
-                                     can_add_web_page_previews=True)
-            keyboard = []
+            context.bot.restrict_chat_member(chatD.id,
+                                             int(user_id),
+                                             ChatPermissions(can_send_messages=True,
+                                                            can_send_media_messages=True,
+                                                            can_send_other_messages=True,
+                                                            can_add_web_page_previews=True))
             reply = tld(chat.id, "unmute_success").format(
                 mention_html(member.user.id, member.user.first_name),
                 chatD.title)
             message.reply_text(reply,
-                               reply_markup=keyboard,
                                parse_mode=ParseMode.HTML)
             return "<b>{}:</b>" \
                    "\n#UNMUTE" \
@@ -174,17 +169,17 @@ def unmute(bot: Bot, update: Update, args: List[str]) -> str:
     return ""
 
 
-@run_async
 @bot_admin
 @can_restrict
 @user_admin
 @loggable
-def temp_mute(bot: Bot, update: Update, args: List[str]) -> str:
+def temp_mute(update: Update, context: CallbackContext) -> str:
+    args = context.args
     chat = update.effective_chat
     user = update.effective_user
     message = update.effective_message
 
-    conn = connected(bot, update, chat, user.id)
+    conn = connected(update, context, user.id)
     if conn:
         chatD = dispatcher.bot.getChat(conn)
     else:
@@ -212,7 +207,7 @@ def temp_mute(bot: Bot, update: Update, args: List[str]) -> str:
         message.reply_text(tld(chat.id, "mute_is_admin"))
         return ""
 
-    if user_id == bot.id:
+    if user_id == context.bot.id:
         message.reply_text(tld(chat.id, "mute_is_bot"))
         return ""
 
@@ -244,10 +239,10 @@ def temp_mute(bot: Bot, update: Update, args: List[str]) -> str:
 
     try:
         if member.can_send_messages is None or member.can_send_messages:
-            bot.restrict_chat_member(chat.id,
-                                     user_id,
-                                     until_date=mutetime,
-                                     can_send_messages=False)
+            context.bot.restrict_chat_member(chat.id,
+                                             user_id,
+                                             ChatPermissions(can_send_messages=False),
+                                             until_date=mutetime)
             message.reply_text(
                 tld(chat.id, "tmute_success").format(time_val, chatD.title))
             return log
@@ -271,16 +266,16 @@ def temp_mute(bot: Bot, update: Update, args: List[str]) -> str:
     return ""
 
 
-@run_async
 @bot_admin
 @user_admin
 @loggable
-def nomedia(bot: Bot, update: Update, args: List[str]) -> str:
+def nomedia(update: Update, context: CallbackContext) -> str:
+    args = context.args
     chat = update.effective_chat
     user = update.effective_user
     message = update.effective_message
 
-    conn = connected(bot, update, chat, user.id)
+    conn = connected(update, context, user.id)
     if conn:
         chatD = dispatcher.bot.getChat(conn)
     else:
@@ -294,7 +289,7 @@ def nomedia(bot: Bot, update: Update, args: List[str]) -> str:
         message.reply_text(tld(chat.id, "restrict_invalid"))
         return ""
 
-    if user_id == bot.id:
+    if user_id == context.bot.id:
         message.reply_text(tld(chat.id, "restrict_is_bot"))
         return ""
 
@@ -305,18 +300,16 @@ def nomedia(bot: Bot, update: Update, args: List[str]) -> str:
             message.reply_text(tld(chat.id, "restrict_is_admin"))
 
         elif member.can_send_messages is None or member.can_send_messages:
-            bot.restrict_chat_member(chatD.id,
-                                     user_id,
-                                     can_send_messages=True,
-                                     can_send_media_messages=False,
-                                     can_send_other_messages=False,
-                                     can_add_web_page_previews=False)
-            keyboard = []
+            context.bot.restrict_chat_member(chatD.id,
+                                             user_id,
+                                             ChatPermissions(can_send_messages=True,
+                                                            can_send_media_messages=False,
+                                                            can_send_other_messages=False,
+                                                            can_add_web_page_previews=False))
             reply = tld(chat.id, "restrict_success").format(
                 mention_html(member.user.id, member.user.first_name),
                 chatD.title)
             message.reply_text(reply,
-                               reply_markup=keyboard,
                                parse_mode=ParseMode.HTML)
             return "<b>{}:</b>" \
                    "\n#RESTRICTED" \
@@ -335,16 +328,16 @@ def nomedia(bot: Bot, update: Update, args: List[str]) -> str:
     return ""
 
 
-@run_async
 @bot_admin
 @user_admin
 @loggable
-def media(bot: Bot, update: Update, args: List[str]) -> str:
+def media(update: Update, context: CallbackContext) -> str:
+    args = context.args
     chat = update.effective_chat
     user = update.effective_user
     message = update.effective_message
 
-    conn = connected(bot, update, chat, user.id)
+    conn = connected(update, context, user.id)
     if conn:
         chatD = dispatcher.bot.getChat(conn)
     else:
@@ -371,18 +364,16 @@ def media(bot: Bot, update: Update, args: List[str]) -> str:
             message.reply_text(
                 tld(chat.id, "unrestrict_not_restricted").format(chatD.title))
         else:
-            bot.restrict_chat_member(chatD.id,
-                                     int(user_id),
-                                     can_send_messages=True,
-                                     can_send_media_messages=True,
-                                     can_send_other_messages=True,
-                                     can_add_web_page_previews=True)
-            keyboard = []
+            context.bot.restrict_chat_member(chatD.id,
+                                             int(user_id),
+                                             ChatPermissions(can_send_messages=True,
+                                                            can_send_media_messages=True,
+                                                            can_send_other_messages=True,
+                                                            can_add_web_page_previews=True))
             reply = tld(chat.id, "unrestrict_success").format(
                 mention_html(member.user.id, member.user.first_name),
                 chatD.title)
             message.reply_text(reply,
-                               reply_markup=keyboard,
                                parse_mode=ParseMode.HTML)
             return "<b>{}:</b>" \
                    "\n#UNRESTRICTED" \
@@ -397,17 +388,17 @@ def media(bot: Bot, update: Update, args: List[str]) -> str:
     return ""
 
 
-@run_async
 @bot_admin
 @can_restrict
 @user_admin
 @loggable
-def temp_nomedia(bot: Bot, update: Update, args: List[str]) -> str:
+def temp_nomedia(update: Update, context: CallbackContext) -> str:
+    args = context.args
     chat = update.effective_chat
     user = update.effective_user
     message = update.effective_message
 
-    conn = connected(bot, update, chat, user.id)
+    conn = connected(update, context, user.id)
     if conn:
         chatD = dispatcher.bot.getChat(conn)
     else:
@@ -435,7 +426,7 @@ def temp_nomedia(bot: Bot, update: Update, args: List[str]) -> str:
         message.reply_text(tld(chat.id, "restrict_is_admin"))
         return ""
 
-    if user_id == bot.id:
+    if user_id == context.bot.id:
         message.reply_text(tld(chat.id, "restrict_is_bot"))
         return ""
 
@@ -468,13 +459,13 @@ def temp_nomedia(bot: Bot, update: Update, args: List[str]) -> str:
 
     try:
         if member.can_send_messages is None or member.can_send_messages:
-            bot.restrict_chat_member(chat.id,
-                                     user_id,
-                                     until_date=mutetime,
-                                     can_send_messages=True,
-                                     can_send_media_messages=False,
-                                     can_send_other_messages=False,
-                                     can_add_web_page_previews=False)
+            context.bot.restrict_chat_member(chat.id,
+                                             user_id,
+                                             ChatPermissions(can_send_messages=True,
+                                                             can_send_media_messages=False,
+                                                             can_send_other_messages=False,
+                                                             can_add_web_page_previews=False),
+                                             until_date=mutetime)
             message.reply_text(
                 tld(chat.id, "nomedia_success").format(time_val, chatD.title))
             return log
@@ -499,10 +490,9 @@ def temp_nomedia(bot: Bot, update: Update, args: List[str]) -> str:
     return ""
 
 
-@run_async
 @bot_admin
 @can_restrict
-def muteme(bot: Bot, update: Update, args: List[str]) -> str:
+def muteme(update: Update, context: CallbackContext) -> str:
     user_id = update.effective_message.from_user.id
     chat = update.effective_chat
     user = update.effective_user
@@ -510,7 +500,7 @@ def muteme(bot: Bot, update: Update, args: List[str]) -> str:
         update.effective_message.reply_text(tld(chat.id, "mute_is_admin"))
         return
 
-    res = bot.restrict_chat_member(chat.id, user_id, can_send_messages=False)
+    res = context.bot.restrict_chat_member(chat.id, user_id, ChatPermissions(can_send_messages=False))
     if res:
         update.effective_message.reply_text(tld(chat.id, "muteme_muted"))
         log = "<b>{}:</b>" \
@@ -527,31 +517,38 @@ def muteme(bot: Bot, update: Update, args: List[str]) -> str:
 MUTE_HANDLER = DisableAbleCommandHandler("mute",
                                          mute,
                                          pass_args=True,
+                                         run_async=True,
                                          admin_ok=True)
 UNMUTE_HANDLER = DisableAbleCommandHandler("unmute",
                                            unmute,
                                            pass_args=True,
+                                           run_async=True,
                                            admin_ok=True)
 TEMPMUTE_HANDLER = DisableAbleCommandHandler(["tmute", "tempmute"],
                                              temp_mute,
                                              pass_args=True,
+                                             run_async=True,
                                              admin_ok=True)
 TEMP_NOMEDIA_HANDLER = DisableAbleCommandHandler(["trestrict", "temprestrict"],
                                                  temp_nomedia,
                                                  pass_args=True,
+                                                 run_async=True,
                                                  admin_ok=True)
 NOMEDIA_HANDLER = DisableAbleCommandHandler(["restrict", "nomedia"],
                                             nomedia,
                                             pass_args=True,
+                                            run_async=True,
                                             admin_ok=True)
 MEDIA_HANDLER = DisableAbleCommandHandler("unrestrict",
                                           media,
                                           pass_args=True,
+                                          run_async=True,
                                           admin_ok=True)
 MUTEME_HANDLER = DisableAbleCommandHandler("muteme",
                                            muteme,
                                            pass_args=True,
-                                           filters=Filters.group,
+                                           run_async=True,
+                                           filters=Filters.chat_type.groups,
                                            admin_ok=True)
 
 dispatcher.add_handler(MUTE_HANDLER)
