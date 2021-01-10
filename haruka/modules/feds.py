@@ -21,8 +21,9 @@ import uuid
 import re
 
 from telegram.error import BadRequest, TelegramError, Unauthorized
-from telegram import ParseMode, Update, Bot, MessageEntity, InlineKeyboardMarkup, InlineKeyboardButton
-from telegram.ext import run_async, CommandHandler, CallbackQueryHandler
+from telegram import ParseMode, Update, MessageEntity, InlineKeyboardMarkup, InlineKeyboardButton
+from telegram.ext import CommandHandler, CallbackQueryHandler
+from telegram.ext.callbackcontext import CallbackContext
 from telegram.utils.helpers import mention_html, mention_markdown
 
 from haruka import dispatcher, OWNER_ID, SUDO_USERS, WHITELIST_USERS, MESSAGE_DUMP, LOGGER
@@ -67,8 +68,8 @@ UNFBAN_ERRORS = {
 }
 
 
-@run_async
-def new_fed(bot: Bot, update: Update, args: List[str]):
+def new_fed(update: Update, context: CallbackContext):
+    args = context.args
     chat = update.effective_chat
     user = update.effective_user
     message = update.effective_message
@@ -99,7 +100,7 @@ def new_fed(bot: Bot, update: Update, args: List[str]):
                                                     fed_name, fed_id, fed_id),
                                             parse_mode=ParseMode.MARKDOWN)
         try:
-            bot.send_message(MESSAGE_DUMP,
+            context.bot.send_message(MESSAGE_DUMP,
                              tld(chat.id, "feds_create_success_logger").format(
                                  fed_name, fed_id),
                              parse_mode=ParseMode.HTML)
@@ -109,8 +110,8 @@ def new_fed(bot: Bot, update: Update, args: List[str]):
         update.effective_message.reply_text(tld(chat.id, "feds_err_no_args"))
 
 
-@run_async
-def del_fed(bot: Bot, update: Update, args: List[str]):
+def del_fed(update: Update, context: CallbackContext):
+    args = context.args
     chat = update.effective_chat
     user = update.effective_user
     if chat.type != "private":
@@ -146,9 +147,9 @@ def del_fed(bot: Bot, update: Update, args: List[str]):
                                  callback_data="rmfed_cancel")]]))
 
 
-@run_async
 #@user_admin
-def fed_chat(bot: Bot, update: Update, args: List[str]):
+def fed_chat(update: Update, context: CallbackContext):
+    args = context.args
     chat = update.effective_chat
     fed_id = sql.get_fed_id(chat.id)
 
@@ -166,7 +167,8 @@ def fed_chat(bot: Bot, update: Update, args: List[str]):
     update.effective_message.reply_text(text, parse_mode=ParseMode.HTML)
 
 
-def join_fed(bot: Bot, update: Update, args: List[str]):
+def join_fed(update: Update, context: CallbackContext):
+    args = context.args
     chat = update.effective_chat
     user = update.effective_user
     message = update.effective_message
@@ -205,15 +207,15 @@ def join_fed(bot: Bot, update: Update, args: List[str]):
         message.reply_text(tld(chat.id, "feds_join_success"))
 
 
-@run_async
-def leave_fed(bot: Bot, update: Update, args: List[str]):
+def leave_fed(update: Update, context: CallbackContext):
+    args = context.args
     chat = update.effective_chat
     user = update.effective_user
     fed_id = sql.get_fed_id(chat.id)
     fed_info = sql.get_fed_info(fed_id)
 
     # administrators = chat.get_administrators().status
-    getuser = bot.get_chat_member(chat.id, user.id).status
+    getuser = context.bot.get_chat_member(chat.id, user.id).status
     if getuser in 'creator' or user.id in SUDO_USERS:
         if sql.chat_leave_fed(chat.id) == True:
             update.effective_message.reply_text(
@@ -226,8 +228,8 @@ def leave_fed(bot: Bot, update: Update, args: List[str]):
             tld(chat.id, "common_group_creator_only"))
 
 
-@run_async
-def user_join_fed(bot: Bot, update: Update, args: List[str]):
+def user_join_fed(update: Update, context: CallbackContext):
+    args = context.args
     chat = update.effective_chat
     user = update.effective_user
     msg = update.effective_message
@@ -236,7 +238,7 @@ def user_join_fed(bot: Bot, update: Update, args: List[str]):
     if is_user_fed_owner(fed_id, user.id):
         user_id = extract_user(msg, args)
         if user_id:
-            user = bot.get_chat(user_id)
+            user = context.bot.get_chat(user_id)
         elif not msg.reply_to_message and not args:
             user = msg.from_user
         elif not msg.reply_to_message and (
@@ -252,7 +254,7 @@ def user_join_fed(bot: Bot, update: Update, args: List[str]):
         fed_id = sql.get_fed_id(chat.id)
         info = sql.get_fed_info(fed_id)
         get_owner = eval(info['fusers'])['owner']
-        get_owner = bot.get_chat(get_owner).id
+        get_owner = context.bot.get_chat(get_owner).id
         if user_id == get_owner:
             update.effective_message.reply_text(
                 tld(chat.id, "feds_promote_owner"))
@@ -261,7 +263,7 @@ def user_join_fed(bot: Bot, update: Update, args: List[str]):
             update.effective_message.reply_text(
                 tld(chat.id, "feds_promote_owner"))
             return
-        if user_id == bot.id:
+        if user_id == context.bot.id:
             update.effective_message.reply_text(
                 tld(chat.id, "feds_promote_bot"))
             return
@@ -275,8 +277,8 @@ def user_join_fed(bot: Bot, update: Update, args: List[str]):
         update.effective_message.reply_text(tld(chat.id, "feds_owner_only"))
 
 
-@run_async
-def user_demote_fed(bot: Bot, update: Update, args: List[str]):
+def user_demote_fed(update: Update, context: CallbackContext):
+    args = context.args
     chat = update.effective_chat
     user = update.effective_user
     fed_id = sql.get_fed_id(chat.id)
@@ -285,7 +287,7 @@ def user_demote_fed(bot: Bot, update: Update, args: List[str]):
         msg = update.effective_message
         user_id = extract_user(msg, args)
         if user_id:
-            user = bot.get_chat(user_id)
+            user = context.bot.get_chat(user_id)
 
         elif not msg.reply_to_message and not args:
             user = msg.from_user
@@ -300,7 +302,7 @@ def user_demote_fed(bot: Bot, update: Update, args: List[str]):
         else:
             LOGGER.warning('error')
 
-        if user_id == bot.id:
+        if user_id == context.bot.id:
             update.effective_message.reply_text(tld(chat.id,
                                                     "feds_demote_bot"))
             return
@@ -322,8 +324,8 @@ def user_demote_fed(bot: Bot, update: Update, args: List[str]):
         return
 
 
-@run_async
-def fed_info(bot: Bot, update: Update, args: List[str]):
+def fed_info(update: Update, context: CallbackContext):
+    args = context.args
     chat = update.effective_chat
     user = update.effective_user
     fed_id = sql.get_fed_id(chat.id)
@@ -338,7 +340,7 @@ def fed_info(bot: Bot, update: Update, args: List[str]):
         update.effective_message.reply_text(tld(chat.id, "feds_fedadmin_only"))
         return
 
-    owner = bot.get_chat(info['owner'])
+    owner = context.bot.get_chat(info['owner'])
     try:
         owner_name = owner.first_name + " " + owner.last_name
     except Exception:
@@ -362,8 +364,8 @@ def fed_info(bot: Bot, update: Update, args: List[str]):
     update.effective_message.reply_text(text, parse_mode=ParseMode.HTML)
 
 
-@run_async
-def fed_admin(bot: Bot, update: Update, args: List[str]):
+def fed_admin(update: Update, context: CallbackContext):
+    args = context.args
     chat = update.effective_chat
     user = update.effective_user
     fed_id = sql.get_fed_id(chat.id)
@@ -383,7 +385,7 @@ def fed_admin(bot: Bot, update: Update, args: List[str]):
 
     text = tld(chat.id, "feds_admins").format(info['fname'])
     text += "👑 Owner:\n"
-    owner = bot.get_chat(info['owner'])
+    owner = context.bot.get_chat(info['owner'])
     try:
         owner_name = owner.first_name + " " + owner.last_name
     except Exception:
@@ -396,14 +398,14 @@ def fed_admin(bot: Bot, update: Update, args: List[str]):
     else:
         text += "\n🔱 Admin:\n"
         for x in members:
-            user = bot.get_chat(x)
+            user = context.bot.get_chat(x)
             text += " • {}\n".format(mention_html(user.id, user.first_name))
 
     update.effective_message.reply_text(text, parse_mode=ParseMode.HTML)
 
 
-@run_async
-def fed_ban(bot: Bot, update: Update, args: List[str]):
+def fed_ban(update: Update, context: CallbackContext):
+    args = context.args
     chat = update.effective_chat
     user = update.effective_user
     fed_id = sql.get_fed_id(chat.id)
@@ -414,7 +416,7 @@ def fed_ban(bot: Bot, update: Update, args: List[str]):
         return
 
     info = sql.get_fed_info(fed_id)
-    OW = bot.get_chat(info['owner'])
+    OW = context.bot.get_chat(info['owner'])
     HAHA = OW.id
     FEDADMIN = sql.all_fed_users(fed_id)
     FEDADMIN.append(int(HAHA))
@@ -434,7 +436,7 @@ def fed_ban(bot: Bot, update: Update, args: List[str]):
         message.reply_text("You don't seem to be referring to a user")
         return
 
-    if user_id == bot.id:
+    if user_id == context.bot.id:
         message.reply_text(
             "What is funnier than fbanning the bot? Self sacrifice.")
         return
@@ -462,7 +464,7 @@ def fed_ban(bot: Bot, update: Update, args: List[str]):
         return
 
     try:
-        user_chat = bot.get_chat(user_id)
+        user_chat = context.bot.get_chat(user_id)
     except BadRequest as excp:
         message.reply_text(excp.message)
         return
@@ -497,7 +499,7 @@ def fed_ban(bot: Bot, update: Update, args: List[str]):
         fed_chats = sql.all_fed_chats(fed_id)
         for chat in fed_chats:
             try:
-                bot.kick_chat_member(chat, user_id)
+                context.bot.kick_chat_member(chat, user_id)
             except BadRequest as excp:
                 if excp.message in FBAN_ERRORS:
                     pass
@@ -507,7 +509,7 @@ def fed_ban(bot: Bot, update: Update, args: List[str]):
             except TelegramError:
                 pass
 
-        send_to_list(bot, FEDADMIN,
+        send_to_list(context.bot, FEDADMIN,
            "<b>FedBan reason updated</b>" \
               "\n<b>Federation:</b> {}" \
               "\n<b>Federation Admin:</b> {}" \
@@ -541,7 +543,7 @@ def fed_ban(bot: Bot, update: Update, args: List[str]):
     fed_chats = sql.all_fed_chats(fed_id)
     for chat in fed_chats:
         try:
-            bot.kick_chat_member(chat, user_id)
+            context.bot.kick_chat_member(chat, user_id)
         except BadRequest as excp:
             if excp.message in FBAN_ERRORS:
                 try:
@@ -558,7 +560,7 @@ def fed_ban(bot: Bot, update: Update, args: List[str]):
         except TelegramError:
             pass
 
-    send_to_list(bot, FEDADMIN,
+    send_to_list(context.bot, FEDADMIN,
        "<b>New FedBan</b>" \
        "\n<b>Federation:</b> {}" \
        "\n<b>Federation Admin:</b> {}" \
@@ -571,8 +573,8 @@ def fed_ban(bot: Bot, update: Update, args: List[str]):
     message.reply_text("This person has been fbanned")
 
 
-@run_async
-def unfban(bot: Bot, update: Update, args: List[str]):
+def unfban(update: Update, context: CallbackContext):
+    args = context.args
     chat = update.effective_chat
     user = update.effective_user
     message = update.effective_message
@@ -593,7 +595,7 @@ def unfban(bot: Bot, update: Update, args: List[str]):
         message.reply_text("You do not seem to be referring to a user.")
         return
 
-    user_chat = bot.get_chat(user_id)
+    user_chat = context.bot.get_chat(user_id)
     if user_chat.type != 'private':
         message.reply_text("That's not a user!")
         return
@@ -613,9 +615,9 @@ def unfban(bot: Bot, update: Update, args: List[str]):
 
     for chat in chat_list:
         try:
-            member = bot.get_chat_member(chat, user_id)
+            member = context.bot.get_chat_member(chat, user_id)
             if member.status == 'kicked':
-                bot.unban_chat_member(chat, user_id)
+                context.bot.unban_chat_member(chat, user_id)
         except BadRequest as excp:
             if excp.message in UNFBAN_ERRORS:
                 pass
@@ -637,8 +639,8 @@ def unfban(bot: Bot, update: Update, args: List[str]):
     message.reply_text("This person is un-fbanned.")
 
 
-@run_async
-def set_frules(bot: Bot, update: Update, args: List[str]):
+def set_frules(update: Update, context: CallbackContext):
+    args = context.args
     chat = update.effective_chat
     user = update.effective_user
     fed_id = sql.get_fed_id(chat.id)
@@ -678,8 +680,8 @@ def set_frules(bot: Bot, update: Update, args: List[str]):
         update.effective_message.reply_text("Please write rules to set it up!")
 
 
-@run_async
-def get_frules(bot: Bot, update: Update, args: List[str]):
+def get_frules(update: Update, context: CallbackContext):
+    args = context.args
     chat = update.effective_chat
     fed_id = sql.get_fed_id(chat.id)
     if not fed_id:
@@ -694,8 +696,8 @@ def get_frules(bot: Bot, update: Update, args: List[str]):
     return
 
 
-@run_async
-def fed_notif(bot: Bot, update: Update, args: List[str]):
+def fed_notif(update: Update, context: CallbackContext):
+    args = context.args
     chat = update.effective_chat
     user = update.effective_user
     msg = update.effective_message
@@ -728,8 +730,8 @@ def fed_notif(bot: Bot, update: Update, args: List[str]):
             parse_mode="markdown")
 
 
-@run_async
-def fed_chats(bot: Bot, update: Update, args: List[str]):
+def fed_chats(update: Update, context: CallbackContext):
+    args = context.args
     chat = update.effective_chat
     user = update.effective_user
     fed_id = sql.get_fed_id(chat.id)
@@ -773,8 +775,7 @@ def fed_chats(bot: Bot, update: Update, args: List[str]):
                 .format(info['fname']))
 
 
-@run_async
-def del_fed_button(bot, update):
+def del_fed_button(update: Update, context: CallbackContext):
     query = update.callback_query
     fed_id = query.data.split("_")[1]
 
@@ -818,8 +819,7 @@ def is_user_fed_owner(fed_id, user_id):
         return False
 
 
-@run_async
-def welcome_fed(bot, update):
+def welcome_fed(update: Update, context: CallbackContext):
     chat = update.effective_chat
     user = update.effective_user
 
@@ -828,7 +828,7 @@ def welcome_fed(bot, update):
     if fban:
         update.effective_message.reply_text(
             "This user is banned in current federation! I will remove him.")
-        bot.kick_chat_member(chat.id, user.id)
+        context.bot.kick_chat_member(chat.id, user.id)
         return True
     else:
         return False
@@ -886,25 +886,26 @@ def get_chat(chat_id, chat_data):
 
 __help__ = True
 
-NEW_FED_HANDLER = CommandHandler("newfed", new_fed, pass_args=True)
-DEL_FED_HANDLER = CommandHandler("delfed", del_fed, pass_args=True)
+NEW_FED_HANDLER = CommandHandler("newfed", new_fed, pass_args=True, run_async=True)
+DEL_FED_HANDLER = CommandHandler("delfed", del_fed, pass_args=True, run_async=True)
 JOIN_FED_HANDLER = CommandHandler("joinfed", join_fed, pass_args=True)
-LEAVE_FED_HANDLER = CommandHandler("leavefed", leave_fed, pass_args=True)
-PROMOTE_FED_HANDLER = CommandHandler("fpromote", user_join_fed, pass_args=True)
-DEMOTE_FED_HANDLER = CommandHandler("fdemote", user_demote_fed, pass_args=True)
-INFO_FED_HANDLER = CommandHandler("fedinfo", fed_info, pass_args=True)
+LEAVE_FED_HANDLER = CommandHandler("leavefed", leave_fed, pass_args=True, run_async=True)
+PROMOTE_FED_HANDLER = CommandHandler("fpromote", user_join_fed, pass_args=True, run_async=True)
+DEMOTE_FED_HANDLER = CommandHandler("fdemote", user_demote_fed, pass_args=True, run_async=True)
+INFO_FED_HANDLER = CommandHandler("fedinfo", fed_info, pass_args=True, run_async=True)
 BAN_FED_HANDLER = DisableAbleCommandHandler(["fban", "fedban"],
                                             fed_ban,
-                                            pass_args=True)
-UN_BAN_FED_HANDLER = CommandHandler("unfban", unfban, pass_args=True)
-FED_SET_RULES_HANDLER = CommandHandler("setfrules", set_frules, pass_args=True)
-FED_GET_RULES_HANDLER = CommandHandler("frules", get_frules, pass_args=True)
-FED_CHAT_HANDLER = CommandHandler("chatfed", fed_chat, pass_args=True)
-FED_ADMIN_HANDLER = CommandHandler("fedadmins", fed_admin, pass_args=True)
-FED_NOTIF_HANDLER = CommandHandler("fednotif", fed_notif, pass_args=True)
-FED_CHATLIST_HANDLER = CommandHandler("fedchats", fed_chats, pass_args=True)
+                                            pass_args=True,
+                                            run_async=True)
+UN_BAN_FED_HANDLER = CommandHandler("unfban", unfban, pass_args=True, run_async=True)
+FED_SET_RULES_HANDLER = CommandHandler("setfrules", set_frules, pass_args=True, run_async=True)
+FED_GET_RULES_HANDLER = CommandHandler("frules", get_frules, pass_args=True, run_async=True)
+FED_CHAT_HANDLER = CommandHandler("chatfed", fed_chat, pass_args=True, run_async=True)
+FED_ADMIN_HANDLER = CommandHandler("fedadmins", fed_admin, pass_args=True, run_async=True)
+FED_NOTIF_HANDLER = CommandHandler("fednotif", fed_notif, pass_args=True, run_async=True)
+FED_CHATLIST_HANDLER = CommandHandler("fedchats", fed_chats, pass_args=True, run_async=True)
 
-DELETEBTN_FED_HANDLER = CallbackQueryHandler(del_fed_button, pattern=r"rmfed_")
+DELETEBTN_FED_HANDLER = CallbackQueryHandler(del_fed_button, pattern=r"rmfed_", run_async=True)
 
 dispatcher.add_handler(NEW_FED_HANDLER)
 dispatcher.add_handler(DEL_FED_HANDLER)
