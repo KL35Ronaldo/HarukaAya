@@ -123,7 +123,7 @@ def connect_chat(update: Update, context: CallbackContext):
                     else:
                         sql.add_history(user.id, connect_chat, "0", "0", 2)
                     # Rebuild user's keyboard
-                    keyboard(context.bot, update)
+                    keyboard(update, context)
 
                 else:
                     update.effective_message.reply_text(
@@ -174,7 +174,7 @@ def disconnect_chat(update: Update, context: CallbackContext):
             sql.disconnected_chat = update.effective_message.reply_text(
                 tld(chat.id, "connection_dis_success"))
             #Rebuild user's keyboard
-            keyboard(context.bot, update)
+            keyboard(update, context)
         else:
             update.effective_message.reply_text(
                 tld(chat.id, "connection_dis_fail"))

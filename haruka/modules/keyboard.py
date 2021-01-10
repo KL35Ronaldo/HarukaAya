@@ -19,12 +19,14 @@ from telegram import ReplyKeyboardMarkup, KeyboardButton
 
 from haruka import dispatcher
 from haruka.modules.tr_engine.strings import tld
+from telegram import Update
 from telegram.ext import CommandHandler
+from telegram.ext.callbackcontext import CallbackContext
 
 import haruka.modules.sql.connection_sql as con_sql
 
 
-def keyboard(bot, update):
+def keyboard(update: Update, context: CallbackContext):
     chat = update.effective_chat
     user = update.effective_user
     conn_id = con_sql.get_connected_chat(user.id)
