@@ -23,9 +23,10 @@ from typing import Optional, List
 from covid import Covid
 
 import requests
-from telegram import Message, Chat, Update, Bot, MessageEntity
+from telegram import Message, Chat, Update, MessageEntity
 from telegram import ParseMode, ReplyKeyboardRemove, InlineKeyboardMarkup, InlineKeyboardButton
-from telegram.ext import CommandHandler, run_async, Filters
+from telegram.ext import CommandHandler, Filters
+from telegram.ext.callbackcontext import CallbackContext
 from telegram.utils.helpers import escape_markdown, mention_html
 from telegram.error import BadRequest
 
@@ -42,8 +43,8 @@ from requests import get
 cvid = Covid(source="worldometers")
 
 
-@run_async
-def get_id(bot: Bot, update: Update, args: List[str]):
+def get_id(update: Update, context: CallbackContext):
+    args = context.args
     user_id = extract_user(update.effective_message, args)
     chat = update.effective_chat  # type: Optional[Chat]
     if user_id:
@@ -57,7 +58,7 @@ def get_id(bot: Bot, update: Update, args: List[str]):
                                             escape_markdown(user1.first_name),
                                             user1.id))
         else:
-            user = bot.get_chat(user_id)
+            user = context.bot.get_chat(user_id)
             update.effective_message.reply_markdown(
                 tld(chat.id,
                     "misc_get_id_2").format(escape_markdown(user.first_name),
@@ -73,14 +74,14 @@ def get_id(bot: Bot, update: Update, args: List[str]):
                 tld(chat.id, "misc_id_2").format(chat.id))
 
 
-@run_async
-def info(bot: Bot, update: Update, args: List[str]):
+def info(update: Update, context: CallbackContext):
+    args = context.args
     msg = update.effective_message  # type: Optional[Message]
     user_id = extract_user(update.effective_message, args)
     chat = update.effective_chat  # type: Optional[Chat]
 
     if user_id:
-        user = bot.get_chat(user_id)
+        user = context.bot.get_chat(user_id)
 
     elif not msg.reply_to_message and not args:
         user = msg.from_user
@@ -132,22 +133,20 @@ def info(bot: Bot, update: Update, args: List[str]):
     update.effective_message.reply_text(text, parse_mode=ParseMode.HTML)
 
 
-@run_async
-def reply_keyboard_remove(bot: Bot, update: Update):
+def reply_keyboard_remove(update: Update, context: CallbackContext):
     reply_keyboard = []
     reply_keyboard.append([ReplyKeyboardRemove(remove_keyboard=True)])
     reply_markup = ReplyKeyboardRemove(remove_keyboard=True)
-    old_message = bot.send_message(
+    old_message = context.bot.send_message(
         chat_id=update.message.chat_id,
         text='trying',  # This text will not get translated
         reply_markup=reply_markup,
         reply_to_message_id=update.message.message_id)
-    bot.delete_message(chat_id=update.message.chat_id,
+    context.bot.delete_message(chat_id=update.message.chat_id,
                        message_id=old_message.message_id)
 
 
-@run_async
-def gdpr(bot: Bot, update: Update):
+def gdpr(update: Update, context: CallbackContext):
     update.effective_message.reply_text(
         tld(update.effective_chat.id, "misc_gdpr"))
     for mod in GDPR:
@@ -157,8 +156,7 @@ def gdpr(bot: Bot, update: Update):
                                         parse_mode=ParseMode.MARKDOWN)
 
 
-@run_async
-def markdown_help(bot: Bot, update: Update):
+def markdown_help(update: Update, context: CallbackContext):
     chat = update.effective_chat  # type: Optional[Chat]
     update.effective_message.reply_text(tld(chat.id, "misc_md_list"),
                                         parse_mode=ParseMode.HTML)
@@ -166,16 +164,14 @@ def markdown_help(bot: Bot, update: Update):
     update.effective_message.reply_text(tld(chat.id, "misc_md_help"))
 
 
-@run_async
-def stats(bot: Bot, update: Update):
+def stats(update: Update, context: CallbackContext):
     update.effective_message.reply_text(
         # This text doesn't get translated as it is internal message.
         "*Current Stats:*\n" + "\n".join([mod.__stats__() for mod in STATS]),
         parse_mode=ParseMode.MARKDOWN)
 
 
-@run_async
-def github(bot: Bot, update: Update):
+def github(update: Update, context: CallbackContext):
     message = update.effective_message
     text = message.text[len('/git '):]
     usr = get(f'https://api.github.com/users/{text}').json()
@@ -224,8 +220,7 @@ def github(bot: Bot, update: Update):
                        disable_web_page_preview=True)
 
 
-@run_async
-def repo(bot: Bot, update: Update, args: List[str]):
+def repo(update: Update, context: CallbackContext):
     message = update.effective_message
     text = message.text[len('/repo '):]
     usr = get(f'https://api.github.com/users/{text}/repos?per_page=40').json()
@@ -237,8 +232,8 @@ def repo(bot: Bot, update: Update, args: List[str]):
                        disable_web_page_preview=True)
 
 
-@run_async
-def paste(bot: Bot, update: Update, args: List[str]):
+def paste(update: Update, context: CallbackContext):
+    args = context.args
     chat = update.effective_chat  # type: Optional[Chat]
     BURL = 'https://del.dog'
     message = update.effective_message
@@ -272,8 +267,8 @@ def paste(bot: Bot, update: Update, args: List[str]):
                                         disable_web_page_preview=True)
 
 
-@run_async
-def get_paste_content(bot: Bot, update: Update, args: List[str]):
+def get_paste_content(update: Update, context: CallbackContext):
+    args = context.args
     BURL = 'https://del.dog'
     message = update.effective_message
     chat = update.effective_chat  # type: Optional[Chat]
@@ -312,8 +307,8 @@ def get_paste_content(bot: Bot, update: Update, args: List[str]):
                                         parse_mode=ParseMode.MARKDOWN)
 
 
-@run_async
-def get_paste_stats(bot: Bot, update: Update, args: List[str]):
+def get_paste_stats(update: Update, context: CallbackContext):
+    args = context.args
     BURL = 'https://del.dog'
     message = update.effective_message
     chat = update.effective_chat  # type: Optional[Chat]
@@ -354,8 +349,7 @@ def get_paste_stats(bot: Bot, update: Update, args: List[str]):
     update.effective_message.reply_text(reply, parse_mode=ParseMode.MARKDOWN)
 
 
-@run_async
-def ud(bot: Bot, update: Update):
+def ud(update: Update, context: CallbackContext):
     message = update.effective_message
     text = message.text[len('/ud '):]
     if text == '':
@@ -366,8 +360,7 @@ def ud(bot: Bot, update: Update):
     message.reply_text(reply_text)
 
 
-@run_async
-def wiki(bot: Bot, update: Update):
+def wiki(update: Update, context: CallbackContext):
     kueri = re.split(pattern="wiki", string=update.effective_message.text)
     wikipedia.set_lang("en")
     if len(str(kueri[1])) == 0:
@@ -379,7 +372,7 @@ def wiki(bot: Bot, update: Update):
                 InlineKeyboardButton(text="🔧 More Info...",
                                      url=wikipedia.page(kueri).url)
             ]])
-            bot.editMessageText(chat_id=update.effective_chat.id,
+            context.bot.editMessageText(chat_id=update.effective_chat.id,
                                 message_id=pertama.message_id,
                                 text=wikipedia.summary(kueri, sentences=10),
                                 reply_markup=keyboard)
@@ -393,8 +386,7 @@ def wiki(bot: Bot, update: Update):
                 .format(eet))
 
 
-@run_async
-def covid(bot: Bot, update: Update):
+def covid(update: Update, context: CallbackContext):
     message = update.effective_message
     chat = update.effective_chat
     country = str(message.text[len('/covid '):])
@@ -452,32 +444,38 @@ __help__ = True
 ID_HANDLER = DisableAbleCommandHandler("id",
                                        get_id,
                                        pass_args=True,
+                                       run_async=True,
                                        admin_ok=True)
 INFO_HANDLER = DisableAbleCommandHandler("info",
                                          info,
                                          pass_args=True,
+                                         run_async=True,
                                          admin_ok=True)
 GITHUB_HANDLER = DisableAbleCommandHandler("git", github, admin_ok=True)
 REPO_HANDLER = DisableAbleCommandHandler("repo",
                                          repo,
                                          pass_args=True,
+                                         run_async=True,
                                          admin_ok=True)
 MD_HELP_HANDLER = CommandHandler("markdownhelp",
                                  markdown_help,
-                                 filters=Filters.private)
+                                 run_async=True,
+                                 filters=Filters.chat_type.private)
 
-STATS_HANDLER = CommandHandler("stats", stats, filters=Filters.user(OWNER_ID))
-GDPR_HANDLER = CommandHandler("gdpr", gdpr, filters=Filters.private)
-PASTE_HANDLER = DisableAbleCommandHandler("paste", paste, pass_args=True)
+STATS_HANDLER = CommandHandler("stats", stats, run_async=True, filters=Filters.user(OWNER_ID))
+GDPR_HANDLER = CommandHandler("gdpr", gdpr, run_async=True, filters=Filters.chat_type.private)
+PASTE_HANDLER = DisableAbleCommandHandler("paste", paste, pass_args=True, run_async=True)
 GET_PASTE_HANDLER = DisableAbleCommandHandler("getpaste",
                                               get_paste_content,
-                                              pass_args=True)
+                                              pass_args=True,
+                                              run_async=True)
 PASTE_STATS_HANDLER = DisableAbleCommandHandler("pastestats",
                                                 get_paste_stats,
-                                                pass_args=True)
-UD_HANDLER = DisableAbleCommandHandler("ud", ud)
-WIKI_HANDLER = DisableAbleCommandHandler("wiki", wiki)
-COVID_HANDLER = DisableAbleCommandHandler("covid", covid, admin_ok=True)
+                                                pass_args=True,
+                                                run_async=True)
+UD_HANDLER = DisableAbleCommandHandler("ud", ud, run_async=True)
+WIKI_HANDLER = DisableAbleCommandHandler("wiki", wiki, run_async=True)
+COVID_HANDLER = DisableAbleCommandHandler("covid", covid, run_async=True, admin_ok=True)
 
 dispatcher.add_handler(UD_HANDLER)
 dispatcher.add_handler(PASTE_HANDLER)
