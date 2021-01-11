@@ -19,10 +19,10 @@ import re
 from typing import List
 
 from telegram import MAX_MESSAGE_LENGTH, ParseMode, InlineKeyboardMarkup
-from telegram import Bot, Update
+from telegram import Update
 from telegram.error import BadRequest
-from telegram.ext import CommandHandler, RegexHandler
-from telegram.ext.dispatcher import run_async
+from telegram.ext import CommandHandler, Filters, MessageHandler
+from telegram.ext.callbackcontext import CallbackContext
 
 import haruka.modules.sql.notes_sql as sql
 from haruka import dispatcher, MESSAGE_DUMP, LOGGER
@@ -58,10 +58,10 @@ ENUM_FUNC_MAP = {
 
 
 # Do not async
-def get(bot, update, notename, show_none=True, no_format=False):
+def get(update: Update, context: CallbackContext, notename, show_none=True, no_format=False):
     chat = update.effective_chat
     user = update.effective_user
-    conn = connected(bot, update, chat, user.id, need_admin=False)
+    conn = connected(update, context, user.id, need_admin=False)
     if conn:
         chat_id = conn
         send_id = user.id
@@ -87,9 +87,9 @@ def get(bot, update, notename, show_none=True, no_format=False):
     if note and note.is_reply:
         if MESSAGE_DUMP:
             try:
-                bot.forward_message(chat_id=chat_id,
-                                    from_chat_id=MESSAGE_DUMP,
-                                    message_id=note.value)
+                context.bot.forward_message(chat_id=chat_id,
+                                            from_chat_id=MESSAGE_DUMP,
+                                            message_id=note.value)
             except BadRequest as excp:
                 if excp.message == "Message to forward not found":
                     message.reply_text(tld(chat.id, "note_lost"))
@@ -98,9 +98,9 @@ def get(bot, update, notename, show_none=True, no_format=False):
                     raise
         else:
             try:
-                bot.forward_message(chat_id=chat_id,
-                                    from_chat_id=chat_id,
-                                    message_id=note.value)
+                context.bot.forward_message(chat_id=chat_id,
+                                            from_chat_id=chat_id,
+                                            message_id=note.value)
 
             except BadRequest as excp:
                 if excp.message == "Message to forward not found":
@@ -130,12 +130,12 @@ def get(bot, update, notename, show_none=True, no_format=False):
             if note and note.msgtype in (sql.Types.BUTTON_TEXT,
                                          sql.Types.TEXT):
                 try:
-                    bot.send_message(send_id,
-                                     text,
-                                     reply_to_message_id=reply_id,
-                                     parse_mode=parseMode,
-                                     disable_web_page_preview=True,
-                                     reply_markup=keyboard)
+                    context.bot.send_message(send_id,
+                                             text,
+                                             reply_to_message_id=reply_id,
+                                             parse_mode=parseMode,
+                                             disable_web_page_preview=True,
+                                             reply_markup=keyboard)
                 except BadRequest as excp:
                     if excp.message == "Wrong http url":
                         failtext = tld(chat.id, "note_url_invalid")
@@ -169,32 +169,30 @@ def get(bot, update, notename, show_none=True, no_format=False):
     return
 
 
-@run_async
-def cmd_get(bot: Bot, update: Update, args: List[str]):
+def cmd_get(update: Update, context: CallbackContext):
+    args = context.args
     chat = update.effective_chat
     if len(args) >= 2 and args[1].lower() == "noformat":
-        get(bot, update, args[0].lower(), show_none=True, no_format=True)
+        get(update, context, args[0].lower(), show_none=True, no_format=True)
     elif len(args) >= 1:
-        get(bot, update, args[0].lower(), show_none=True)
+        get(update, context, args[0].lower(), show_none=True)
     else:
         update.effective_message.reply_text(tld(chat.id, "get_invalid"))
 
 
-@run_async
-def hash_get(bot: Bot, update: Update):
+def hash_get(update: Update, context: CallbackContext):
     message = update.effective_message.text
     fst_word = message.split()[0]
     no_hash = fst_word[1:].lower()
-    get(bot, update, no_hash, show_none=False)
+    get(update, context, no_hash, show_none=False)
 
 
 # TODO: FIX THIS
-@run_async
 @user_admin
-def save(bot: Bot, update: Update):
+def save(update: Update, context: CallbackContext):
     chat = update.effective_chat
     user = update.effective_user
-    conn = connected(bot, update, chat, user.id)
+    conn = connected(update, context, user.id)
     if conn:
         chat_id = conn
         chat_name = dispatcher.bot.getChat(conn).title
@@ -238,12 +236,12 @@ def save(bot: Bot, update: Update):
                        parse_mode=ParseMode.MARKDOWN)
 
 
-@run_async
 @user_admin
-def clear(bot: Bot, update: Update, args: List[str]):
+def clear(update: Update, context: CallbackContext):
+    args = context.args
     chat = update.effective_chat
     user = update.effective_user
-    conn = connected(bot, update, chat, user.id)
+    conn = connected(update, context, user.id)
     if conn:
         chat_id = conn
         chat_name = dispatcher.bot.getChat(conn).title
@@ -266,11 +264,10 @@ def clear(bot: Bot, update: Update, args: List[str]):
                 tld(chat.id, "note_not_existed"))
 
 
-@run_async
-def list_notes(bot: Bot, update: Update):
+def list_notes(update: Update, context: CallbackContext):
     chat = update.effective_chat
     user = update.effective_user
-    conn = connected(bot, update, chat, user.id, need_admin=False)
+    conn = connected(update, context, user.id, need_admin=False)
     if conn:
         chat_id = conn
         chat_name = dispatcher.bot.getChat(conn).title
@@ -308,9 +305,8 @@ def list_notes(bot: Bot, update: Update):
             return
 
 
-@run_async
 @user_admin
-def remove_all_notes(bot: Bot, update: Update):
+def remove_all_notes(update: Update, context: CallbackContext):
     chat = update.effective_chat
     user = update.effective_user
     message = update.effective_message
@@ -355,12 +351,12 @@ def __migrate__(old_chat_id, new_chat_id):
 
 __help__ = True
 
-GET_HANDLER = CommandHandler("get", cmd_get, pass_args=True)
-HASH_GET_HANDLER = RegexHandler(r"^#[^\s]+", hash_get)
+GET_HANDLER = CommandHandler("get", cmd_get, pass_args=True, run_async=True)
+HASH_GET_HANDLER = MessageHandler(Filters.regex(r"^#[^\s]+"), hash_get, run_async=True)
 
-SAVE_HANDLER = CommandHandler("save", save)
-REMOVE_ALL_NOTES_HANDLER = CommandHandler("clearall", remove_all_notes)
-DELETE_HANDLER = CommandHandler("clear", clear, pass_args=True)
+SAVE_HANDLER = CommandHandler("save", save, run_async=True)
+REMOVE_ALL_NOTES_HANDLER = CommandHandler("clearall", remove_all_notes, run_async=True)
+DELETE_HANDLER = CommandHandler("clear", clear, pass_args=True, run_async=True)
 
 LIST_HANDLER = DisableAbleCommandHandler(["notes", "saved"],
                                          list_notes,
