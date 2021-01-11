@@ -16,15 +16,15 @@
 #    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import html
-from typing import Optional, List
+import logging
+from typing import Optional
 
 from telegram import Message, Chat, Update, User, ParseMode
 from telegram.error import BadRequest
 from telegram.ext import Filters
 from telegram.ext.callbackcontext import CallbackContext
 from telegram.utils.helpers import mention_html
-
-from haruka import dispatcher, LOGGER
+from haruka import CONFIG
 from haruka.modules.disable import DisableAbleCommandHandler
 from haruka.modules.helper_funcs.chat_status import bot_admin, user_admin, is_user_ban_protected, can_restrict, \
     is_user_admin, is_user_in_chat
@@ -92,8 +92,8 @@ def ban(update: Update, context: CallbackContext) -> str:
             message.reply_text(reply, quote=False, parse_mode=ParseMode.HTML)
             return log
         else:
-            LOGGER.warning(update)
-            LOGGER.exception("ERROR banning user %s in chat %s (%s) due to %s",
+            logging.warning(update)
+            logging.error("ERROR banning user %s in chat %s (%s) due to %s",
                              user_id, chat.title, chat.id, excp.message)
             message.reply_text(
                 tld(chat.id, "bans_err_unknown").format("banning"))
@@ -178,8 +178,8 @@ def temp_ban(update: Update, context: CallbackContext) -> str:
                                quote=False)
             return log
         else:
-            LOGGER.warning(update)
-            LOGGER.exception("ERROR banning user %s in chat %s (%s) due to %s",
+            logging.warning(update)
+            logging.error("ERROR banning user %s in chat %s (%s) due to %s",
                              user_id, chat.title, chat.id, excp.message)
             message.reply_text(
                 tld(chat.id, "bans_err_unknown").format("tbanning"))
@@ -370,8 +370,8 @@ def sban(update: Update, context: CallbackContext) -> str:
         if excp.message == "Reply message not found":
             return log
         else:
-            LOGGER.warning(update)
-            LOGGER.exception("ERROR banning user %s in chat %s (%s) due to %s",
+            logging.warning(update)
+            logging.exception("ERROR banning user %s in chat %s (%s) due to %s",
                              user_id, chat.title, chat.id, excp.message)
     return ""
 
@@ -416,10 +416,10 @@ BANME_HANDLER = DisableAbleCommandHandler("banme",
                                           run_async=True,
                                           filters=Filters.chat_type.groups)
 
-dispatcher.add_handler(BAN_HANDLER)
-dispatcher.add_handler(TEMPBAN_HANDLER)
-dispatcher.add_handler(KICK_HANDLER)
-dispatcher.add_handler(UNBAN_HANDLER)
-dispatcher.add_handler(KICKME_HANDLER)
-dispatcher.add_handler(BANME_HANDLER)
-dispatcher.add_handler(SBAN_HANDLER)
+CONFIG.dispatcher.add_handler(BAN_HANDLER)
+CONFIG.dispatcher.add_handler(TEMPBAN_HANDLER)
+CONFIG.dispatcher.add_handler(KICK_HANDLER)
+CONFIG.dispatcher.add_handler(UNBAN_HANDLER)
+CONFIG.dispatcher.add_handler(KICKME_HANDLER)
+CONFIG.dispatcher.add_handler(BANME_HANDLER)
+CONFIG.dispatcher.add_handler(SBAN_HANDLER)

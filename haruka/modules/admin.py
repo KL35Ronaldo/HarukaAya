@@ -16,7 +16,6 @@
 #    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import html
-from typing import List
 
 from telegram import Update
 from telegram import ParseMode
@@ -25,7 +24,7 @@ from telegram.ext import CommandHandler, Filters
 from telegram.utils.helpers import mention_html, escape_markdown
 from telegram.ext.callbackcontext import CallbackContext
 
-from haruka import dispatcher
+from haruka import CONFIG
 from haruka.modules.disable import DisableAbleCommandHandler
 from haruka.modules.helper_funcs.chat_status import bot_admin, user_admin, can_pin
 from haruka.modules.helper_funcs.extraction import extract_user
@@ -46,7 +45,7 @@ def promote(update: Update, context: CallbackContext) -> str:
     chat = update.effective_chat
     conn = connected(update, context, user.id)
     if conn:
-        chatD = dispatcher.bot.getChat(conn)
+        chatD = context.bot.getChat(conn)
     else:
         chatD = update.effective_chat
         if chat.type == "private":
@@ -111,7 +110,7 @@ def demote(update: Update, context: CallbackContext) -> str:
     user = update.effective_user
     conn = connected(update, context, user.id)
     if conn:
-        chatD = dispatcher.bot.getChat(conn)
+        chatD = context.bot.getChat(conn)
     else:
         chatD = update.effective_chat
         if chat.type == "private":
@@ -234,7 +233,7 @@ def invite(update: Update, context: CallbackContext):
     user = update.effective_user
     conn = connected(update, context, user.id, need_admin=False)
     if conn:
-        chatP = dispatcher.bot.getChat(conn)
+        chatP = context.bot.getChat(conn)
     else:
         chatP = update.effective_chat
         if chat.type == "private":
@@ -333,10 +332,10 @@ REACT_HANDLER = DisableAbleCommandHandler("reaction",
 ADMINLIST_HANDLER = DisableAbleCommandHandler(["adminlist", "admins"],
                                               adminlist, admin_ok=True, run_async=True)
 
-dispatcher.add_handler(PIN_HANDLER)
-dispatcher.add_handler(UNPIN_HANDLER)
-dispatcher.add_handler(INVITE_HANDLER)
-dispatcher.add_handler(PROMOTE_HANDLER)
-dispatcher.add_handler(DEMOTE_HANDLER)
-dispatcher.add_handler(ADMINLIST_HANDLER)
-dispatcher.add_handler(REACT_HANDLER)
+CONFIG.dispatcher.add_handler(PIN_HANDLER)
+CONFIG.dispatcher.add_handler(UNPIN_HANDLER)
+CONFIG.dispatcher.add_handler(INVITE_HANDLER)
+CONFIG.dispatcher.add_handler(PROMOTE_HANDLER)
+CONFIG.dispatcher.add_handler(DEMOTE_HANDLER)
+CONFIG.dispatcher.add_handler(ADMINLIST_HANDLER)
+CONFIG.dispatcher.add_handler(REACT_HANDLER)

@@ -17,7 +17,7 @@
 
 from telegram import ReplyKeyboardMarkup, KeyboardButton
 
-from haruka import dispatcher
+from haruka import CONFIG
 from haruka.modules.tr_engine.strings import tld
 from telegram import Update
 from telegram.ext import CommandHandler
@@ -38,17 +38,17 @@ def keyboard(update: Update, context: CallbackContext):
         if con_sql.get_history(user.id):
             history = con_sql.get_history(user.id)
         try:
-            chat_name1 = dispatcher.bot.getChat(history.chat_id1).title
+            chat_name1 = context.bot.getChat(history.chat_id1).title
         except Exception:
             chat_name1 = ""
 
         try:
-            chat_name2 = dispatcher.bot.getChat(history.chat_id2).title
+            chat_name2 = context.bot.getChat(history.chat_id2).title
         except Exception:
             chat_name2 = ""
 
         try:
-            chat_name3 = dispatcher.bot.getChat(history.chat_id3).title
+            chat_name3 = context.bot.getChat(history.chat_id3).title
         except Exception:
             chat_name3 = ""
 
@@ -78,4 +78,4 @@ def keyboard(update: Update, context: CallbackContext):
 
 
 KEYBOARD_HANDLER = CommandHandler(["keyboard"], keyboard)
-dispatcher.add_handler(KEYBOARD_HANDLER)
+CONFIG.dispatcher.add_handler(KEYBOARD_HANDLER)

@@ -18,98 +18,74 @@
 import logging
 import sys
 import yaml
+from pydantic import BaseModel, ValidationError
+from typing import Optional, List, Set, Any
 
 from telethon import TelegramClient
 import telegram.ext as tg
 
-#Enable logging
+
+class HarukaConfig(BaseModel):
+    """
+    Haruka configuration class
+    """
+
+    api_id: int
+    api_hash: str
+    bot_token: str
+    database_url: str
+    load: List[str]
+    no_load: List[str]
+    del_cmds: Optional[bool] = False
+    strict_antispam: Optional[bool] = False
+    workers: Optional[int] = 4
+    owner_id: int
+    sudo_users: Set[int]
+    whitelist_users: Set[int]
+    message_dump: Optional[int] = 0
+    spamwatch_api: Optional[str] = ""
+    spamwatch_client: Optional[Any] = None
+    telethon_client: Optional[Any] = None
+    updater: Optional[Any] = None
+    dispatcher: Optional[Any] = None
+
+
 logging.basicConfig(
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    format="[%(levelname)s %(asctime)s] Module '%(module)s', function '%(funcName)s' at line %(lineno)d -> %(message)s",
     level=logging.INFO)
+logging.info("Starting haruka...")
 
-LOGGER = logging.getLogger(__name__)
-
-LOGGER.info("Starting haruka...")
-
-# If Python version is < 3.6, stops the bot.
-if sys.version_info[0] < 3 or sys.version_info[1] < 8:
-    LOGGER.error(
-        "You MUST have a python version of at least 3.8! Multiple features depend on this. Bot quitting."
-    )
-    quit(1)
-
-# Load config
-try:
-    CONFIG = yaml.load(open('config.yml', 'r'), Loader=yaml.SafeLoader)
-except FileNotFoundError:
-    print("Are you dumb? C'mon start using your brain!")
-    quit(1)
-except Exception as eee:
-    print(
-        f"Ah, look like there's error(s) while trying to load your config. It is\n!!!! ERROR BELOW !!!!\n {eee} \n !!! ERROR END !!!"
-    )
-    quit(1)
-
-if not CONFIG['is_example_config_or_not'] == "not_sample_anymore":
-    print("Please, use your eyes and stop being blinded.")
-    quit(1)
-
-TOKEN = CONFIG['bot_token']
-API_KEY = CONFIG['api_key']
-API_HASH = CONFIG['api_hash']
+if sys.version_info < (3, 8, 0):
+    logging.error("Your Python version is too old for Haruka to run, please update to Python 3.8 or above")
+    exit(1)
 
 try:
-    OWNER_ID = int(CONFIG['owner_id'])
-except ValueError:
-    raise Exception("Your 'owner_id' variable is not a valid integer.")
+    config_file = dict(yaml.load(open('config.yml', 'r'), Loader=yaml.SafeLoader))
+except Exception as error:
+    logging.error(f"Could not load config file due to a {type(error).__name__}: {error}")
+    exit(1)
+
+if not config_file['is_example_config_or_not'] == "not_sample_anymore":
+    logging.warning("Please make sure that your configuration file is correct, refusing to start")
+    exit(1)
+config_file.pop("is_example_config_or_not")
 
 try:
-    MESSAGE_DUMP = CONFIG['message_dump']
-except ValueError:
-    raise Exception("Your 'message_dump' must be set.")
+    CONFIG = HarukaConfig(**config_file)
+except ValidationError as validation_error:
+    logging.error(f"Something went wrong when parsing config.yml: {validation_error}")
+    exit(1)
+
+CONFIG.sudo_users.add(CONFIG.owner_id)
 
 try:
-    OWNER_USERNAME = CONFIG['owner_username']
-except ValueError:
-    raise Exception("Your 'owner_username' must be set.")
+    CONFIG.updater = tg.Updater(CONFIG.bot_token, workers=CONFIG.workers)
+    CONFIG.dispatcher = CONFIG.updater.dispatcher
+    CONFIG.telethon_client = TelegramClient("haruka", CONFIG.api_id, CONFIG.api_hash)
 
-try:
-    SUDO_USERS = set(int(x) for x in CONFIG['sudo_users'] or [])
-except ValueError:
-    raise Exception("Your sudo users list does not contain valid integers.")
-
-try:
-    WHITELIST_USERS = set(int(x) for x in CONFIG['whitelist_users'] or [])
-except ValueError:
-    raise Exception(
-        "Your whitelisted users list does not contain valid integers.")
-
-DB_URI = CONFIG['database_url']
-LOAD = CONFIG['load']
-NO_LOAD = CONFIG['no_load']
-DEL_CMDS = CONFIG['del_cmds']
-STRICT_ANTISPAM = CONFIG['strict_antispam']
-WORKERS = CONFIG['workers']
-
-# Append OWNER_ID to SUDO_USERS
-SUDO_USERS.add(OWNER_ID)
-
-# SpamWatch
-spamwatch_api = CONFIG['sw_api']
-
-if spamwatch_api == "None":
-    spamwatch_api == None
-
-updater = tg.Updater(TOKEN, workers=WORKERS)
-
-dispatcher = updater.dispatcher
-
-tbot = TelegramClient("haruka", API_KEY, API_HASH)
-
-SUDO_USERS = list(SUDO_USERS)
-WHITELIST_USERS = list(WHITELIST_USERS)
-
-# Load at end to ensure all prev variables have been set
-from haruka.modules.helper_funcs.handlers import CustomCommandHandler
-
-tg.CommandHandler = CustomCommandHandler
+    # We import it now to ensure that all previous variables have been set
+    from haruka.modules.helper_funcs.handlers import CustomCommandHandler
+    tg.CommandHandler = CustomCommandHandler
+except Exception as telegram_error:
+    logging.error(f"Could not initialize Telegram client due to a {type(telegram_error).__name__}: {telegram_error}")
+    exit(1)

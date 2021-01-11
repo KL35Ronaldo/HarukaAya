@@ -16,7 +16,6 @@
 #    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import html
-from typing import List
 
 from telegram import Update, ChatPermissions
 from telegram.error import BadRequest
@@ -24,7 +23,7 @@ from telegram.ext import Filters, MessageHandler, CommandHandler
 from telegram.ext.callbackcontext import CallbackContext
 from telegram.utils.helpers import mention_html
 
-from haruka import dispatcher
+from haruka import CONFIG
 from haruka.modules.helper_funcs.chat_status import is_user_admin, user_admin, can_restrict
 from haruka.modules.log_channel import loggable
 from haruka.modules.sql import antiflood_sql as sql
@@ -134,6 +133,6 @@ SET_FLOOD_HANDLER = CommandHandler("setflood",
                                    filters=Filters.chat_type.groups)
 FLOOD_HANDLER = CommandHandler("flood", flood, run_async=True, filters=Filters.chat_type.groups)
 
-dispatcher.add_handler(FLOOD_BAN_HANDLER, FLOOD_GROUP)
-dispatcher.add_handler(SET_FLOOD_HANDLER)
-dispatcher.add_handler(FLOOD_HANDLER)
+CONFIG.dispatcher.add_handler(FLOOD_BAN_HANDLER, FLOOD_GROUP)
+CONFIG.dispatcher.add_handler(SET_FLOOD_HANDLER)
+CONFIG.dispatcher.add_handler(FLOOD_HANDLER)

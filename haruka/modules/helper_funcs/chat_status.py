@@ -20,7 +20,7 @@ from functools import wraps
 from telegram import Chat, ChatMember, Update
 from telegram.ext.callbackcontext import CallbackContext
 
-from haruka import DEL_CMDS, SUDO_USERS, WHITELIST_USERS
+from haruka import CONFIG
 import haruka.modules.sql.admin_sql as admin_sql
 from haruka.modules.tr_engine.strings import tld
 
@@ -33,8 +33,8 @@ def is_user_ban_protected(chat: Chat,
                           user_id: int,
                           member: ChatMember = None) -> bool:
     if chat.type == 'private' \
-            or user_id in SUDO_USERS \
-            or user_id in WHITELIST_USERS \
+            or user_id in CONFIG.sudo_users \
+            or user_id in CONFIG.whitelist_users \
             or user_id == 777000 \
             or user_id == 1087968824 \
             or chat.all_members_are_administrators:
@@ -47,12 +47,11 @@ def is_user_ban_protected(chat: Chat,
 
 def is_user_admin(chat: Chat, user_id: int, member: ChatMember = None) -> bool:
     if chat.type == 'private' \
-            or user_id in SUDO_USERS \
+            or user_id in CONFIG.sudo_users \
             or user_id == 777000 \
             or user_id == 1087968824 \
             or chat.all_members_are_administrators:
         return True
-
     if not member:
         member = chat.get_member(user_id)
     return member.status in ('administrator', 'creator')
@@ -162,7 +161,7 @@ def user_admin(func):
         elif not user:
             pass
 
-        elif DEL_CMDS and " " not in update.effective_message.text:
+        elif CONFIG.del_cmds and " " not in update.effective_message.text:
             update.effective_message.delete()
 
         elif (admin_sql.command_reaction(chat.id) == True):
@@ -182,7 +181,7 @@ def user_admin_no_reply(func):
         elif not user:
             pass
 
-        elif DEL_CMDS and " " not in update.effective_message.text:
+        elif CONFIG.del_cmds and " " not in update.effective_message.text:
             update.effective_message.delete()
 
     return is_admin

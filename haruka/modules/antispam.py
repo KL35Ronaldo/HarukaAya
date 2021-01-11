@@ -15,7 +15,6 @@
 #    You should have received a copy of the GNU Affero General Public License
 #    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-from typing import List
 import json
 import requests
 
@@ -24,7 +23,7 @@ from telegram.ext import CommandHandler, MessageHandler, Filters
 from telegram.ext.callbackcontext import CallbackContext
 
 import haruka.modules.sql.antispam_sql as sql
-from haruka import dispatcher, STRICT_ANTISPAM, spamwatch_api
+from haruka import CONFIG
 from haruka.modules.helper_funcs.chat_status import user_admin, is_user_admin
 
 from haruka.modules.tr_engine.strings import tld
@@ -36,8 +35,8 @@ def check_and_ban(update, user_id, should_message=True):
     chat = update.effective_chat
     message = update.effective_message
     try:
-        if spamwatch_api != None:
-            headers = {'Authorization': f'Bearer {spamwatch_api}'}
+        if CONFIG.spamwatch_api is not None:
+            headers = {'Authorization': f'Bearer {CONFIG.spamwatch_api}'}
             resp = requests.get("https://api.spamwat.ch/banlist/{user_id}",
                                 headers=headers,
                                 timeout=5)
@@ -119,7 +118,7 @@ ANTISPAM_STATUS = CommandHandler("antispam",
 
 GBAN_ENFORCER = MessageHandler(Filters.all & Filters.chat_type.groups, enforce_gban, run_async=True)
 
-dispatcher.add_handler(ANTISPAM_STATUS)
+CONFIG.dispatcher.add_handler(ANTISPAM_STATUS)
 
-if STRICT_ANTISPAM:  # enforce GBANS if this is set
-    dispatcher.add_handler(GBAN_ENFORCER, GBAN_ENFORCE_GROUP)
+if CONFIG.strict_antispam:  # enforce GBANS if this is set
+    CONFIG.dispatcher.add_handler(GBAN_ENFORCER, GBAN_ENFORCE_GROUP)

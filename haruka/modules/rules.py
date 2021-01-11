@@ -23,7 +23,7 @@ from telegram.ext.callbackcontext import CallbackContext
 from telegram.utils.helpers import escape_markdown
 
 import haruka.modules.sql.rules_sql as sql
-from haruka import dispatcher
+from haruka import CONFIG
 from haruka.modules.helper_funcs.chat_status import user_admin
 from haruka.modules.helper_funcs.string_handling import markdown_parser
 
@@ -43,7 +43,7 @@ def get_rules(update: Update, context: CallbackContext):
         from_pm = True
     else:
         if chat.type == 'private':
-            msg.reply_text(tld(chat.id, 'common_cmd_group_only'))
+            update.effective_message.reply_text(tld(chat.id, 'common_cmd_group_only'))
             return
         chat_id = chat.id
 
@@ -52,7 +52,7 @@ def get_rules(update: Update, context: CallbackContext):
 
 # Do not async - not from a handler
 def send_rules(update, chat_id, from_pm=False):
-    bot = dispatcher.bot
+    bot = CONFIG.dispatcher.bot
     chat = update.effective_chat
     user = update.effective_user
     try:
@@ -147,6 +147,6 @@ GET_RULES_HANDLER = CommandHandler("rules", get_rules, run_async=True)
 SET_RULES_HANDLER = CommandHandler("setrules", set_rules, run_async=True)
 RESET_RULES_HANDLER = CommandHandler("clearrules", clear_rules, run_async=True)
 
-dispatcher.add_handler(GET_RULES_HANDLER)
-dispatcher.add_handler(SET_RULES_HANDLER)
-dispatcher.add_handler(RESET_RULES_HANDLER)
+CONFIG.dispatcher.add_handler(GET_RULES_HANDLER)
+CONFIG.dispatcher.add_handler(SET_RULES_HANDLER)
+CONFIG.dispatcher.add_handler(RESET_RULES_HANDLER)

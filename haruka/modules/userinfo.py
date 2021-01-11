@@ -23,7 +23,7 @@ from telegram.ext.callbackcontext import CallbackContext
 from telegram.utils.helpers import escape_markdown
 
 import haruka.modules.sql.userinfo_sql as sql
-from haruka import dispatcher, SUDO_USERS, OWNER_ID
+from haruka import CONFIG
 from haruka.modules.disable import DisableAbleCommandHandler
 from haruka.modules.helper_funcs.extraction import extract_user
 
@@ -117,13 +117,13 @@ def set_about_bio(update: Update, context: CallbackContext):
         if user_id == message.from_user.id:
             message.reply_text(tld(chat.id, 'userinfo_bio_you_cant_set'))
             return
-        elif user_id == context.bot.id and sender.id not in SUDO_USERS:
+        elif user_id == context.bot.id and sender.id not in CONFIG.sudo_users:
             message.reply_text(tld(chat.id, 'userinfo_bio_bot_sudo_only'))
             return
-        elif user_id in SUDO_USERS and sender.id not in SUDO_USERS:
+        elif user_id in CONFIG.sudo_users and sender.id not in CONFIG.sudo_users:
             message.reply_text(tld(chat.id, 'userinfo_bio_sudo_sudo_only'))
             return
-        elif user_id == OWNER_ID:
+        elif user_id == CONFIG.owner_id:
             message.reply_text(tld(chat.id, 'userinfo_bio_owner_nobio'))
             return
 
@@ -170,7 +170,7 @@ GET_BIO_HANDLER = DisableAbleCommandHandler("bio", about_bio, pass_args=True, ru
 SET_ABOUT_HANDLER = DisableAbleCommandHandler("setme", set_about_me, run_async=True)
 GET_ABOUT_HANDLER = DisableAbleCommandHandler("me", about_me, pass_args=True, run_async=True)
 
-dispatcher.add_handler(SET_BIO_HANDLER)
-dispatcher.add_handler(GET_BIO_HANDLER)
-dispatcher.add_handler(SET_ABOUT_HANDLER)
-dispatcher.add_handler(GET_ABOUT_HANDLER)
+CONFIG.dispatcher.add_handler(SET_BIO_HANDLER)
+CONFIG.dispatcher.add_handler(GET_BIO_HANDLER)
+CONFIG.dispatcher.add_handler(SET_ABOUT_HANDLER)
+CONFIG.dispatcher.add_handler(GET_ABOUT_HANDLER)

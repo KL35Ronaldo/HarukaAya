@@ -21,7 +21,7 @@ from typing import List, Dict
 from telegram import MAX_MESSAGE_LENGTH, InlineKeyboardButton, Bot, ParseMode, Update
 from telegram.error import TelegramError
 
-from haruka import LOAD, NO_LOAD, OWNER_ID
+from haruka import CONFIG
 from haruka.modules.tr_engine.strings import tld
 
 
@@ -159,14 +159,14 @@ def revert_buttons(buttons):
 
 
 def is_module_loaded(name):
-    return (not LOAD or name in LOAD) and name not in NO_LOAD
+    return (not CONFIG.load or name in CONFIG.load) and name not in CONFIG.no_load
 
 
 def user_bot_owner(func):
     @wraps(func)
     def is_user_bot_owner(bot: Bot, update: Update, *args, **kwargs):
         user = update.effective_user
-        if user and user.id == OWNER_ID:
+        if user and user.id == CONFIG.owner_id:
             return func(bot, update, *args, **kwargs)
         else:
             pass

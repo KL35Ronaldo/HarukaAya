@@ -20,7 +20,7 @@ from typing import List, Optional
 from telegram import Message, MessageEntity
 from telegram.error import BadRequest
 
-from haruka import LOGGER
+import logging
 from haruka.modules.users import get_user_id
 from haruka.modules.tr_engine.strings import tld
 
@@ -97,7 +97,7 @@ def extract_user_and_text(message: Message,
         if excp.message in ("User_id_invalid", "Chat not found"):
             message.reply_text(tld(chat.id, 'helpers_user_not_in_db'))
         else:
-            LOGGER.exception("Exception %s on user %s", excp.message, user_id)
+            logging.error("Exception %s on user %s", excp.message, user_id)
 
         return None, None
 

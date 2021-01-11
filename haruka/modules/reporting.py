@@ -16,14 +16,15 @@
 #    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import html
-from typing import List, Optional
+import logging
+from typing import Optional
 from telegram import Message, Chat, Update, User, ParseMode, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.error import BadRequest, Unauthorized
 from telegram.ext import CommandHandler, CallbackQueryHandler, Filters, MessageHandler
 from telegram.ext.callbackcontext import CallbackContext
 from telegram.utils.helpers import mention_html
 
-from haruka import dispatcher, LOGGER
+from haruka import CONFIG
 from haruka.modules.helper_funcs.chat_status import user_not_admin, user_admin
 from haruka.modules.log_channel import loggable
 from haruka.modules.sql import reporting_sql as sql
@@ -183,7 +184,7 @@ def report(update: Update, context: CallbackContext) -> str:
                 except Unauthorized:
                     pass
                 except BadRequest as excp:  # TODO: cleanup exceptions
-                    LOGGER.exception(
+                    logging.error(
                         f"Exception while reporting user : {excp}")
 
         message.reply_to_message.reply_text(tld(
@@ -243,8 +244,8 @@ SETTING_HANDLER = CommandHandler("reports", report_setting, pass_args=True, run_
 ADMIN_REPORT_HANDLER = MessageHandler(Filters.regex("(?i)@admin(s)?"), report, run_async=True)
 
 report_button_user_handler = CallbackQueryHandler(buttons, pattern=r"report_")
-dispatcher.add_handler(report_button_user_handler)
+CONFIG.dispatcher.add_handler(report_button_user_handler)
 
-dispatcher.add_handler(REPORT_HANDLER, REPORT_GROUP)
-dispatcher.add_handler(ADMIN_REPORT_HANDLER, REPORT_GROUP)
-dispatcher.add_handler(SETTING_HANDLER)
+CONFIG.dispatcher.add_handler(REPORT_HANDLER, REPORT_GROUP)
+CONFIG.dispatcher.add_handler(ADMIN_REPORT_HANDLER, REPORT_GROUP)
+CONFIG.dispatcher.add_handler(SETTING_HANDLER)

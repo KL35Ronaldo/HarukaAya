@@ -18,14 +18,14 @@
 from telegram import Message
 from telegram.ext import MessageFilter
 
-from haruka import SUDO_USERS
+from haruka import CONFIG
 
 
 class CustomFilters(object):
     class _Sudoers(MessageFilter):
         def filter(self, message: Message):
             return bool(message.from_user
-                        and message.from_user.id in SUDO_USERS)
+                        and message.from_user.id in CONFIG.sudo_users)
 
     sudo_filter = _Sudoers()
 

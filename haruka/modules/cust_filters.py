@@ -15,6 +15,7 @@
 #    You should have received a copy of the GNU Affero General Public License
 #    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+import logging
 import re
 
 import telegram
@@ -24,8 +25,7 @@ from telegram.error import BadRequest
 from telegram.ext import MessageHandler, DispatcherHandlerStop
 from telegram.ext.callbackcontext import CallbackContext
 from telegram.utils.helpers import escape_markdown
-
-from haruka import dispatcher
+from haruka import CONFIG
 from haruka.modules.disable import DisableAbleCommandHandler
 from haruka.modules.helper_funcs.chat_status import user_admin
 from haruka.modules.helper_funcs.extraction import extract_text
@@ -48,7 +48,7 @@ def list_handlers(update: Update, context: CallbackContext):
     conn = connected(update, context, user.id, need_admin=False)
     if conn:
         chat_id = conn
-        chat_name = dispatcher.bot.getChat(conn).title
+        chat_name = context.bot.getChat(conn).title
         filter_list = tld(chat.id, "cust_filters_list")
     else:
         chat_id = update.effective_chat.id
@@ -93,7 +93,7 @@ def filters(update: Update, context: CallbackContext):
     conn = connected(update, context, user.id)
     if conn:
         chat_id = conn
-        chat_name = dispatcher.bot.getChat(conn).title
+        chat_name = context.bot.getChat(conn).title
     else:
         chat_id = update.effective_chat.id
         if chat.type == "private":
@@ -160,9 +160,9 @@ def filters(update: Update, context: CallbackContext):
 
     # Add the filter
     # Note: perhaps handlers can be removed somehow using sql.get_chat_filters
-    for handler in dispatcher.handlers.get(HANDLER_GROUP, []):
+    for handler in CONFIG.dispatcher.handlers.get(HANDLER_GROUP, []):
         if handler.filters == (keyword, chat_id):
-            dispatcher.remove_handler(handler, HANDLER_GROUP)
+            CONFIG.dispatcher.remove_handler(handler, HANDLER_GROUP)
 
     sql.add_filter(chat_id, keyword, content, is_sticker, is_document,
                    is_image, is_audio, is_voice, is_video, buttons)
@@ -183,7 +183,7 @@ def stop_filter(update: Update, context: CallbackContext):
     conn = connected(update, context, user.id)
     if conn:
         chat_id = conn
-        chat_name = dispatcher.bot.getChat(conn).title
+        chat_name = context.bot.getChat(conn).title
     else:
         chat_id = update.effective_chat.id
         if chat.type == "private":
@@ -339,8 +339,8 @@ LIST_HANDLER = DisableAbleCommandHandler("filters",
                                          admin_ok=True)
 CUST_FILTER_HANDLER = MessageHandler(CustomFilters.has_text, reply_filter, run_async=True)
 
-dispatcher.add_handler(FILTER_HANDLER)
-dispatcher.add_handler(STOP_HANDLER)
-dispatcher.add_handler(STOPALL_HANDLER)
-dispatcher.add_handler(LIST_HANDLER)
-dispatcher.add_handler(CUST_FILTER_HANDLER, HANDLER_GROUP)
+CONFIG.dispatcher.add_handler(FILTER_HANDLER)
+CONFIG.dispatcher.add_handler(STOP_HANDLER)
+CONFIG.dispatcher.add_handler(STOPALL_HANDLER)
+CONFIG.dispatcher.add_handler(LIST_HANDLER)
+CONFIG.dispatcher.add_handler(CUST_FILTER_HANDLER, HANDLER_GROUP)

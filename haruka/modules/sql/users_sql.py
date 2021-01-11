@@ -19,7 +19,7 @@ import threading
 
 from sqlalchemy import Column, Integer, UnicodeText, String, ForeignKey, UniqueConstraint, func
 
-from haruka import dispatcher
+from haruka import CONFIG
 from haruka.modules.sql import BASE, SESSION
 
 
@@ -85,7 +85,7 @@ INSERTION_LOCK = threading.RLock()
 
 def ensure_bot_in_db():
     with INSERTION_LOCK:
-        bot = Users(dispatcher.bot.id, dispatcher.bot.username)
+        bot = Users(CONFIG.dispatcher.bot.id, CONFIG.dispatcher.bot.username)
         SESSION.merge(bot)
         SESSION.commit()
 

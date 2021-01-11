@@ -16,7 +16,7 @@
 #    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import html
-from typing import List
+import logging
 
 import telegram.ext as tg
 from telegram import ChatPermissions, MessageEntity, ParseMode, TelegramError, Update
@@ -26,7 +26,7 @@ from telegram.ext.callbackcontext import CallbackContext
 from telegram.utils.helpers import mention_html
 
 import haruka.modules.sql.locks_sql as sql
-from haruka import dispatcher, SUDO_USERS, LOGGER
+from haruka import CONFIG
 from haruka.modules.disable import DisableAbleCommandHandler
 from haruka.modules.helper_funcs.chat_status import can_delete, is_user_admin, user_not_admin, user_admin, \
     bot_can_delete, is_bot_admin
@@ -112,7 +112,7 @@ def restr_members(bot,
                   other=False,
                   previews=False):
     for mem in members:
-        if mem.user in SUDO_USERS:
+        if mem.user in CONFIG.sudo_users:
             pass
         try:
             bot.restrict_chat_member(chat_id,
@@ -280,7 +280,7 @@ def del_lockables(update: Update, context: CallbackContext):
                     if excp.message == "Message to delete not found":
                         pass
                     else:
-                        LOGGER.exception("ERROR in lockables")
+                        logging.exception("ERROR in lockables")
 
             break
 
@@ -298,7 +298,7 @@ def rest_handler(update: Update, context: CallbackContext):
                 if excp.message == "Message to delete not found":
                     pass
                 else:
-                    LOGGER.exception("ERROR in restrictions")
+                    logging.exception("ERROR in restrictions")
             break
 
 
@@ -351,12 +351,12 @@ UNLOCK_HANDLER = CommandHandler("unlock",
                                 filters=Filters.chat_type.groups)
 LOCKED_HANDLER = CommandHandler("locks", list_locks, run_async=True, filters=Filters.chat_type.groups)
 
-dispatcher.add_handler(LOCK_HANDLER)
-dispatcher.add_handler(UNLOCK_HANDLER)
-dispatcher.add_handler(LOCKTYPES_HANDLER)
-dispatcher.add_handler(LOCKED_HANDLER)
+CONFIG.dispatcher.add_handler(LOCK_HANDLER)
+CONFIG.dispatcher.add_handler(UNLOCK_HANDLER)
+CONFIG.dispatcher.add_handler(LOCKTYPES_HANDLER)
+CONFIG.dispatcher.add_handler(LOCKED_HANDLER)
 
-dispatcher.add_handler(
+CONFIG.dispatcher.add_handler(
     MessageHandler(Filters.all & Filters.chat_type.groups, del_lockables, run_async=True), PERM_GROUP)
-dispatcher.add_handler(
+CONFIG.dispatcher.add_handler(
     MessageHandler(Filters.all & Filters.chat_type.groups, rest_handler, run_async=True), REST_GROUP)

@@ -17,14 +17,15 @@
 
 import re
 from time import sleep
-from typing import List
+import logging
+
 from telegram import TelegramError, Update, ParseMode
 from telegram.ext.callbackcontext import CallbackContext
 from telegram.error import BadRequest
 from telegram.ext import MessageHandler, Filters, CommandHandler
 
 import haruka.modules.sql.users_sql as sql
-from haruka import dispatcher, OWNER_ID, LOGGER, SUDO_USERS
+from haruka import CONFIG
 from telegram.utils.helpers import escape_markdown
 from haruka.modules.helper_funcs.filters import CustomFilters
 from haruka.modules.helper_funcs.chat_status import bot_admin
@@ -54,7 +55,7 @@ def get_user_id(username):
     else:
         for user_obj in users:
             try:
-                userdat = dispatcher.bot.get_chat(user_obj.user_id)
+                userdat = CONFIG.dispatcher.bot.get_chat(user_obj.user_id)
                 if userdat.username == username:
                     return userdat.id
 
@@ -62,7 +63,7 @@ def get_user_id(username):
                 if excp.message == 'Chat not found':
                     pass
                 else:
-                    LOGGER.exception("Error extracting user ID")
+                    logging.error("Error extracting user ID")
 
     return None
 
@@ -78,7 +79,7 @@ def broadcast(update: Update, context: CallbackContext):
                 sleep(0.1)
             except TelegramError:
                 failed += 1
-                LOGGER.warning("Couldn't send broadcast to %s, group name %s",
+                logging.warning("Couldn't send broadcast to %s, group name %s",
                                str(chat.chat_id), str(chat.chat_name))
 
         update.effective_message.reply_text(
@@ -116,7 +117,7 @@ def snipe(update: Update, context: CallbackContext):
         try:
             context.bot.sendMessage(int(chat_id), str(to_send))
         except TelegramError:
-            LOGGER.warning("Couldn't send to group %s", str(chat_id))
+            logging.warning("Couldn't send to group %s", str(chat_id))
             update.effective_message.reply_text(
                 "Couldn't send the message. Perhaps I'm not part of that group?"
             )
@@ -200,7 +201,7 @@ def leavechat(update: Update, context: CallbackContext):
 def slist(update: Update, context: CallbackContext):
     message = update.effective_message
     text1 = "My sudo users are:"
-    for user_id in SUDO_USERS:
+    for user_id in CONFIG.sudo_users:
         try:
             user = context.bot.get_chat(user_id)
             name = "[{}](tg://user?id={})".format(
@@ -222,7 +223,7 @@ def chat_checker(update: Update, context: CallbackContext):
 
 
 def __user_info__(user_id, chat_id):
-    if user_id == dispatcher.bot.id:
+    if user_id == CONFIG.dispatcher.bot.id:
         return tld(chat_id, "users_seen_is_bot")
     num_chats = sql.get_user_num_chats(user_id)
     return tld(chat_id, "users_seen").format(num_chats)
@@ -244,23 +245,23 @@ def __migrate__(old_chat_id, new_chat_id):
 BROADCAST_HANDLER = CommandHandler("broadcasts",
                                    broadcast,
                                    run_async=True,
-                                   filters=Filters.user(OWNER_ID))
+                                   filters=Filters.user(CONFIG.owner_id))
 USER_HANDLER = MessageHandler(Filters.all & Filters.chat_type.groups, log_user)
 SNIPE_HANDLER = CommandHandler("snipe",
                                snipe,
                                pass_args=True,
                                run_async=True,
-                               filters=Filters.user(OWNER_ID))
+                               filters=Filters.user(CONFIG.owner_id))
 GETLINK_HANDLER = CommandHandler("getlink",
                                  getlink,
                                  pass_args=True,
                                  run_async=True,
-                                 filters=Filters.user(OWNER_ID))
+                                 filters=Filters.user(CONFIG.owner_id))
 LEAVECHAT_HANDLER = CommandHandler("leavechat",
                                    leavechat,
                                    pass_args=True,
                                    run_async=True,
-                                   filters=Filters.user(OWNER_ID))
+                                   filters=Filters.user(CONFIG.owner_id))
 SLIST_HANDLER = CommandHandler("slist",
                                slist,
                                run_async=True,
@@ -268,10 +269,10 @@ SLIST_HANDLER = CommandHandler("slist",
 CHAT_CHECKER_HANDLER = MessageHandler(Filters.all & Filters.chat_type.groups,
                                       chat_checker)
 
-dispatcher.add_handler(SNIPE_HANDLER)
-dispatcher.add_handler(GETLINK_HANDLER)
-dispatcher.add_handler(LEAVECHAT_HANDLER)
-dispatcher.add_handler(SLIST_HANDLER)
-dispatcher.add_handler(USER_HANDLER, USERS_GROUP)
-dispatcher.add_handler(BROADCAST_HANDLER)
-dispatcher.add_handler(CHAT_CHECKER_HANDLER, CHAT_GROUP)
+CONFIG.dispatcher.add_handler(SNIPE_HANDLER)
+CONFIG.dispatcher.add_handler(GETLINK_HANDLER)
+CONFIG.dispatcher.add_handler(LEAVECHAT_HANDLER)
+CONFIG.dispatcher.add_handler(SLIST_HANDLER)
+CONFIG.dispatcher.add_handler(USER_HANDLER, USERS_GROUP)
+CONFIG.dispatcher.add_handler(BROADCAST_HANDLER)
+CONFIG.dispatcher.add_handler(CHAT_CHECKER_HANDLER, CHAT_GROUP)

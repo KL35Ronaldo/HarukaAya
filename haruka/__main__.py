@@ -19,12 +19,13 @@ import datetime
 from sys import argv
 import importlib
 import re
-from typing import List
+from os.path import dirname, basename, isfile
+import glob
+import logging
 
 from telegram import Update
 from telegram import ParseMode, InlineKeyboardMarkup, InlineKeyboardButton
-from telegram.error import (Unauthorized, BadRequest, TimedOut, NetworkError,
-                            ChatMigrated, TelegramError)
+from telegram.error import BadRequest, NetworkError, TelegramError
 from telegram.ext import CommandHandler, Filters, MessageHandler, CallbackQueryHandler
 from telegram.ext.dispatcher import DispatcherHandlerStop, Dispatcher
 from telegram.ext.callbackcontext import CallbackContext
@@ -32,10 +33,10 @@ from telegram.utils.helpers import DEFAULT_FALSE
 
 # Needed to dynamically load modules
 # NOTE: Module order is not guaranteed, specify that in the config file!
-from haruka.modules import ALL_MODULES
-from haruka import dispatcher, updater, LOGGER, TOKEN, tbot
+from haruka import CONFIG
 from haruka.modules.helper_funcs.misc import paginate_modules
 from haruka.modules.tr_engine.strings import tld
+
 
 IMPORTED = {}
 MIGRATEABLE = []
@@ -44,75 +45,40 @@ STATS = []
 USER_INFO = []
 DATA_IMPORT = []
 DATA_EXPORT = []
-
 GDPR = []
-
-importlib.import_module("haruka.modules.tr_engine.language")
-
-for module_name in ALL_MODULES:
-    imported_module = importlib.import_module("haruka.modules." + module_name)
-    modname = imported_module.__name__.split('.')[2]
-
-    if not modname.lower() in IMPORTED:
-        IMPORTED[modname.lower()] = imported_module
-    else:
-        raise Exception(
-            "Can't have two modules with the same name! Please change one")
-
-    if hasattr(imported_module, "__help__") and imported_module.__help__:
-        HELPABLE[modname.lower()] = tld(0, "modname_" + modname).strip()
-
-    # Chats to migrate on chat_migrated events
-    if hasattr(imported_module, "__migrate__"):
-        MIGRATEABLE.append(imported_module)
-
-    if hasattr(imported_module, "__stats__"):
-        STATS.append(imported_module)
-
-    if hasattr(imported_module, "__gdpr__"):
-        GDPR.append(imported_module)
-
-    if hasattr(imported_module, "__user_info__"):
-        USER_INFO.append(imported_module)
-
-    if hasattr(imported_module, "__import_data__"):
-        DATA_IMPORT.append(imported_module)
-
-    if hasattr(imported_module, "__export_data__"):
-        DATA_EXPORT.append(imported_module)
 
 
 # Do NOT async this!
 def send_help(chat_id, text, keyboard=None):
+    """
+    Sends the help message
+    """
+
     if not keyboard:
         keyboard = InlineKeyboardMarkup(
             paginate_modules(chat_id, 0, HELPABLE, "help"))
 
-    dispatcher.bot.send_message(chat_id=chat_id,
-                                text=text,
-                                parse_mode=ParseMode.MARKDOWN,
-                                reply_markup=keyboard,
-                                disable_web_page_preview=True)
-
-
-def test(update: Update, context: CallbackContext):
-    # pprint(eval(str(update)))
-    # update.effective_message.reply_text("Hola tester! _I_ *have* `markdown`", parse_mode=ParseMode.MARKDOWN)
-    update.effective_message.reply_text("This person edited a message")
-    print(update.effective_message)
+    CONFIG.dispatcher.bot.send_message(chat_id=chat_id,
+                                       text=text,
+                                       parse_mode=ParseMode.MARKDOWN,
+                                       reply_markup=keyboard,
+                                       disable_web_page_preview=True)
 
 
 def start(update: Update, context: CallbackContext):
+    """
+    Handles /start
+    """
+
     args = context.args
     chat = update.effective_chat
-    # query = update.callback_query #Unused variable
     if update.effective_chat.type == "private":
         if len(args) >= 1:
             if args[0].lower() == "help":
                 send_help(
                     update.effective_chat.id,
                     tld(chat.id,
-                        "send-help").format(dispatcher.bot.first_name,
+                        "send-help").format(context.bot.first_name,
                                             tld(chat.id, "cmd_multitrigger")))
 
             elif args[0][1:].isdigit() and "rules" in IMPORTED:
@@ -124,14 +90,17 @@ def start(update: Update, context: CallbackContext):
         try:
             update.effective_message.reply_text(
                 tld(chat.id, 'main_start_group'))
-        except Exception:
-            return
+        except Exception as error:
+            logging.error(f"An exception occurred, {type(error).__name__}: {error}")
 
 
 def send_start(update: Update, context: CallbackContext):
-    chat = update.effective_chat
+    """
+    Sends a properly formatted and translated
+    start message to a given user
+    """
 
-    # chat = update.effective_chat and unused variable
+    chat = update.effective_chat
     text = tld(chat.id, 'main_start_pm')
 
     keyboard = [[
@@ -147,60 +116,38 @@ def send_start(update: Update, context: CallbackContext):
 
     try:
         query = update.callback_query
-        # query.message.delete()
         context.bot.edit_message_text(chat_id=query.message.chat_id,
-                              message_id=query.message.message_id,
-                              text=text,
-                              parse_mode=ParseMode.MARKDOWN,
-                              reply_markup=InlineKeyboardMarkup(keyboard),
-                              disable_web_page_preview=True)
-    except Exception:
-        pass
+                                      message_id=query.message.message_id,
+                                      text=text,
+                                      parse_mode=ParseMode.MARKDOWN,
+                                      reply_markup=InlineKeyboardMarkup(keyboard),
+                                      disable_web_page_preview=True)
+    except (TelegramError, NetworkError, AttributeError) as error:
+        logging.error(f"An exception occurred, {type(error).__name__}: {error}")
 
-    if query:
-        try:
+    try:
+        if query:
             context.bot.edit_message_text(chat_id=query.message.chat_id,
                                   message_id=query.message.message_id,
                                   text=text,
                                   parse_mode=ParseMode.MARKDOWN,
                                   reply_markup=InlineKeyboardMarkup(keyboard),
                                   disable_web_page_preview=True)
-        except Exception:
-            return
-    else:
-        update.effective_message.reply_text(
-            text,
-            reply_markup=InlineKeyboardMarkup(keyboard),
-            parse_mode=ParseMode.MARKDOWN,
-            disable_web_page_preview=True)
-
-
-# for test purposes
-def error_callback(update: Update, context: CallbackContext):
-    try:
-        raise context.error
-    except Unauthorized:
-        LOGGER.warning(context.error)
-        # remove update.message.chat_id from conversation list
-    except BadRequest:
-        LOGGER.warning(context.error)
-
-        # handle malformed requests - read more below!
-    except TimedOut:
-        LOGGER.warning("NO NONO3")
-        # handle slow connection problems
-    except NetworkError:
-        LOGGER.warning("NO NONO4")
-        # handle other connection problems
-    except ChatMigrated as err:
-        LOGGER.warning(err)
-        # the chat_id of a group has changed, use e.new_chat_id instead
-    except TelegramError:
-        LOGGER.warning(context.error)
-        # handle all other telegram related errors
+        else:
+            update.effective_message.reply_text(
+                text,
+                reply_markup=InlineKeyboardMarkup(keyboard),
+                parse_mode=ParseMode.MARKDOWN,
+                disable_web_page_preview=True)
+    except (TelegramError, NetworkError) as error:
+        logging.error(f"An exception occurred, {type(error).__name__}: {error}")
 
 
 def help_button(update: Update, context: CallbackContext):
+    """
+    Answers callback queries for the help button
+    """
+
     query = update.callback_query
     chat = update.effective_chat
     back_match = re.match(r"help_back", query.data)
@@ -211,49 +158,42 @@ def help_button(update: Update, context: CallbackContext):
             mod_name = tld(chat.id, "modname_" + module).strip()
             help_txt = tld(
                 chat.id, module +
-                "_help")  # tld_help(chat.id, HELPABLE[module].__mod_name__)
-
+                         "_help")  # tld_help(chat.id, HELPABLE[module].__mod_name__)
             if not help_txt:
-                LOGGER.exception(f"Help string for {module} not found!")
-
+                logging.warning(f"Help string for {module} not found!")
             text = tld(chat.id, "here_is_help").format(mod_name, help_txt)
-
             context.bot.edit_message_text(chat_id=query.message.chat_id,
-                                  message_id=query.message.message_id,
-                                  text=text,
-                                  parse_mode=ParseMode.MARKDOWN,
-                                  reply_markup=InlineKeyboardMarkup([[
-                                      InlineKeyboardButton(
-                                          text=tld(chat.id, "btn_go_back"),
-                                          callback_data="help_back")
-                                  ]]),
-                                  disable_web_page_preview=True)
+                                          message_id=query.message.message_id,
+                                          text=text,
+                                          parse_mode=ParseMode.MARKDOWN,
+                                          reply_markup=InlineKeyboardMarkup([[
+                                              InlineKeyboardButton(
+                                                  text=tld(chat.id, "btn_go_back"),
+                                                  callback_data="help_back")
+                                          ]]),
+                                          disable_web_page_preview=True)
 
         elif back_match:
             context.bot.edit_message_text(chat_id=query.message.chat_id,
-                                  message_id=query.message.message_id,
-                                  text=tld(chat.id, "send-help").format(
-                                      dispatcher.bot.first_name,
-                                      tld(chat.id, "cmd_multitrigger")),
-                                  parse_mode=ParseMode.MARKDOWN,
-                                  reply_markup=InlineKeyboardMarkup(
-                                      paginate_modules(chat.id, 0, HELPABLE,
-                                                       "help")),
-                                  disable_web_page_preview=True)
+                                          message_id=query.message.message_id,
+                                          text=tld(chat.id, "send-help").format(
+                                              context.bot.first_name,
+                                              tld(chat.id, "cmd_multitrigger")),
+                                          parse_mode=ParseMode.MARKDOWN,
+                                          reply_markup=InlineKeyboardMarkup(
+                                              paginate_modules(chat.id, 0, HELPABLE,
+                                                               "help")),
+                                          disable_web_page_preview=True)
 
-        # ensure no spinny white circle
         context.bot.answer_callback_query(query.id)
-        # query.message.delete()
-
     except BadRequest:
         pass
 
 
 def get_help(update: Update, context: CallbackContext):
+    # TODO -> Docstring
     chat = update.effective_chat
     args = update.effective_message.text.split(None, 1)
-
-    # ONLY send help in PM
     if chat.type != chat.PRIVATE:
         update.effective_message.reply_text(
             tld(chat.id, 'help_pm_only'),
@@ -263,20 +203,20 @@ def get_help(update: Update, context: CallbackContext):
                                          context.bot.username))
             ]]))
         return
-
     if len(args) >= 2:
         mod_name = None
-        for x in HELPABLE:
-            if args[1].lower() == HELPABLE[x].lower():
-                mod_name = tld(chat.id, "modname_" + x).strip()
-                module = x
+        for module in HELPABLE:
+            if args[1].lower() == HELPABLE[module].lower():
+                mod_name = tld(chat.id, "modname_" + module).strip()
                 break
 
-        if mod_name:
+        else:
+            module = ""
+        if module:
             help_txt = tld(chat.id, module + "_help")
 
             if not help_txt:
-                LOGGER.exception(f"Help string for {module} not found!")
+                logging.warning(f"Help string for {module} not found!")
 
             text = tld(chat.id, "here_is_help").format(mod_name, help_txt)
             send_help(
@@ -295,11 +235,12 @@ def get_help(update: Update, context: CallbackContext):
 
     send_help(
         chat.id,
-        tld(chat.id, "send-help").format(dispatcher.bot.first_name,
+        tld(chat.id, "send-help").format(context.bot.first_name,
                                          tld(chat.id, "cmd_multitrigger")))
 
 
 def migrate_chats(update: Update, context: CallbackContext):
+    # TODO -> Docstring
     msg = update.effective_message
     if msg.migrate_to_chat_id:
         old_chat = update.effective_chat.id
@@ -309,60 +250,56 @@ def migrate_chats(update: Update, context: CallbackContext):
         new_chat = update.effective_chat.id
     else:
         return
-
     for mod in MIGRATEABLE:
-        mod.__migrate__(old_chat, new_chat)
-
+        mod.__dict__["__migrate__"](old_chat, new_chat)
     raise DispatcherHandlerStop
 
 
 def main():
-    # test_handler = CommandHandler("test", test) #Unused variable
-    start_handler = CommandHandler("start", start, pass_args=True, run_async=True)
+    """
+    Starts Haruka
+    """
 
+    start_handler = CommandHandler("start", start, pass_args=True, run_async=True)
     help_handler = CommandHandler("help", get_help, run_async=True)
     help_callback_handler = CallbackQueryHandler(help_button, pattern=r"help_", run_async=True)
-
     start_callback_handler = CallbackQueryHandler(send_start,
                                                   pattern=r"bot_start")
-
     migrate_handler = MessageHandler(Filters.status_update.migrate,
                                      migrate_chats)
 
-    # dispatcher.add_handler(test_handler)
-    dispatcher.add_handler(start_handler)
-    dispatcher.add_handler(start_callback_handler)
-    dispatcher.add_handler(help_handler)
-    dispatcher.add_handler(help_callback_handler)
-    dispatcher.add_handler(migrate_handler)
-    # dispatcher.add_error_handler(error_callback)
+    CONFIG.dispatcher.add_handler(start_handler)
+    CONFIG.dispatcher.add_handler(start_callback_handler)
+    CONFIG.dispatcher.add_handler(help_handler)
+    CONFIG.dispatcher.add_handler(help_callback_handler)
+    CONFIG.dispatcher.add_handler(migrate_handler)
 
-    # add antiflood processor
+    # Add an antiflood processor
     Dispatcher.process_update = process_update
 
-    LOGGER.info("Using long polling.")
-    updater.start_polling(timeout=15, read_latency=4, clean=True)
+    logging.info("Using long polling.")
+    CONFIG.updater.start_polling(timeout=15, read_latency=4, clean=True)
 
-    LOGGER.info("Successfully loaded")
+    logging.info("Successfully loaded")
     if len(argv) not in (1, 3, 4):
-        tbot.disconnect()
+        CONFIG.telethon_client.disconnect()
     else:
-        tbot.run_until_disconnected()
-
-    updater.idle()
+        CONFIG.telethon_client.run_until_disconnected()
+    CONFIG.updater.idle()
 
 
 CHATS_CNT = {}
 CHATS_TIME = {}
+
 
 def process_update(self, update):
     # An error happened while polling
     if isinstance(update, TelegramError):
         try:
             self.dispatch_error(None, update)
-        except Exception:
+        except Exception as dispatch_error:
             self.logger.exception(
-                'An uncaught error was raised while handling the error')
+                f'An uncaught error was raised while handling the error -> {type(dispatch_error).__name__}: {dispatch_error}')
         return
 
     if update.effective_chat:  # Checks if update contains chat object
@@ -374,7 +311,7 @@ def process_update(self, update):
             return
     except AttributeError:
         self.logger.exception(
-            'An uncaught error was raised while updating process')
+        'An uncaught error was raised while updating process')
         return
 
     t = CHATS_TIME.get(update.effective_chat.id, datetime.datetime(1970, 1, 1))
@@ -433,8 +370,73 @@ def process_update(self, update):
             self.update_persistence(update=update)
 
 
+def __list_all_modules():
+    """
+    Loads modules in the order set
+    by the config file, making sure
+    to exclude modules that have
+    been set not to be loaded
+    """
 
-if __name__ == '__main__':
-    LOGGER.info("Successfully loaded modules: " + str(ALL_MODULES))
-    tbot.start(bot_token=TOKEN)
+    # This generates a list of modules in this folder for the * in __main__ to work.
+    paths = glob.glob(dirname(__file__) + "/modules/*.py")
+    all_modules = [basename(f)[:-3] for f in paths if isfile(f) and f.endswith(".py") and not f.endswith('__init__.py') and not f.endswith('__main__.py')]
+
+    if CONFIG.load or CONFIG.no_load:
+        to_load = CONFIG.load
+        if to_load:
+            if not all(any(mod == module_name for module_name in all_modules) for mod in to_load):
+                logging.error("Invalid load order names. Quitting.")
+                quit(1)
+        else:
+            to_load = all_modules
+
+        if CONFIG.no_load:
+            logging.info(f"Not loading: {CONFIG.no_load}")
+            return list(filter(lambda m: m not in CONFIG.no_load, [item for item in to_load]))
+
+        return to_load
+
+    return all_modules
+
+
+if __name__ == "__main__":
+    # TODO -> Make a proper startup function for this
+    importlib.import_module("haruka.modules.tr_engine.language")
+
+    ALL_MODULES = sorted(__list_all_modules())
+    logging.info("Modules to load: %s", str(ALL_MODULES))
+
+    for module_name in ALL_MODULES:
+        imported_module = importlib.import_module(f"haruka.modules.{module_name}")
+        modname = imported_module.__name__.split('.')[2]
+
+        if modname.lower() in IMPORTED:
+            logging.error("Cannot have two modules with identical names, quitting")
+            exit(1)
+        IMPORTED[modname.lower()] = imported_module
+
+        if hasattr(imported_module, "__help__") and imported_module.__help__:
+            HELPABLE[modname.lower()] = tld(0, "modname_" + modname).strip()
+
+        if hasattr(imported_module, "__migrate__"):
+            MIGRATEABLE.append(imported_module)
+
+        if hasattr(imported_module, "__stats__"):
+            STATS.append(imported_module)
+
+        if hasattr(imported_module, "__gdpr__"):
+            GDPR.append(imported_module)
+
+        if hasattr(imported_module, "__user_info__"):
+            USER_INFO.append(imported_module)
+
+        if hasattr(imported_module, "__import_data__"):
+            DATA_IMPORT.append(imported_module)
+
+        if hasattr(imported_module, "__export_data__"):
+            DATA_EXPORT.append(imported_module)
+
+    logging.info("Successfully loaded modules: " + str(ALL_MODULES))
+    CONFIG.telethon_client.start(bot_token=CONFIG.bot_token)
     main()

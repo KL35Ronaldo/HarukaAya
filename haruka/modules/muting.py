@@ -16,7 +16,7 @@
 #    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import html
-from typing import List
+import logging
 
 from telegram import ChatPermissions, ParseMode, Update
 from telegram.error import BadRequest
@@ -24,7 +24,7 @@ from telegram.ext import Filters
 from telegram.ext.callbackcontext import CallbackContext
 from telegram.utils.helpers import mention_html
 
-from haruka import dispatcher, LOGGER, SUDO_USERS
+from haruka import CONFIG
 from haruka.modules.helper_funcs.chat_status import bot_admin, user_admin, is_user_admin, can_restrict, is_user_ban_protected
 from haruka.modules.helper_funcs.extraction import extract_user, extract_user_and_text
 from haruka.modules.helper_funcs.string_handling import extract_time
@@ -46,7 +46,7 @@ def mute(update: Update, context: CallbackContext) -> str:
 
     conn = connected(update, context, user.id)
     if conn:
-        chatD = dispatcher.bot.getChat(conn)
+        chatD = context.bot.getChat(conn)
     else:
         if chat.type == "private":
             return
@@ -66,7 +66,7 @@ def mute(update: Update, context: CallbackContext) -> str:
 
     if member:
 
-        if user_id in SUDO_USERS:
+        if user_id in CONFIG.sudo_users:
             message.reply_text(tld(chat.id, "mute_not_sudo"))
 
         elif is_user_admin(chatD, user_id, member=member):
@@ -109,7 +109,7 @@ def unmute(update: Update, context: CallbackContext) -> str:
 
     conn = connected(update, context, user.id)
     if conn:
-        chatD = dispatcher.bot.getChat(conn)
+        chatD = context.bot.getChat(conn)
     else:
         if chat.type == "private":
             return
@@ -181,7 +181,7 @@ def temp_mute(update: Update, context: CallbackContext) -> str:
 
     conn = connected(update, context, user.id)
     if conn:
-        chatD = dispatcher.bot.getChat(conn)
+        chatD = context.bot.getChat(conn)
     else:
         if chat.type == "private":
             return
@@ -258,8 +258,8 @@ def temp_mute(update: Update, context: CallbackContext) -> str:
                                quote=False)
             return log
         else:
-            LOGGER.warning(update)
-            LOGGER.exception("ERROR muting user %s in chat %s (%s) due to %s",
+            logging.warning(update)
+            logging.error("ERROR muting user %s in chat %s (%s) due to %s",
                              user_id, chat.title, chat.id, excp.message)
             message.reply_text(tld(chat.id, "mute_cant_mute"))
 
@@ -277,7 +277,7 @@ def nomedia(update: Update, context: CallbackContext) -> str:
 
     conn = connected(update, context, user.id)
     if conn:
-        chatD = dispatcher.bot.getChat(conn)
+        chatD = context.bot.getChat(conn)
     else:
         if chat.type == "private":
             return
@@ -339,7 +339,7 @@ def media(update: Update, context: CallbackContext) -> str:
 
     conn = connected(update, context, user.id)
     if conn:
-        chatD = dispatcher.bot.getChat(conn)
+        chatD = context.bot.getChat(conn)
     else:
         if chat.type == "private":
             return
@@ -400,7 +400,7 @@ def temp_nomedia(update: Update, context: CallbackContext) -> str:
 
     conn = connected(update, context, user.id)
     if conn:
-        chatD = dispatcher.bot.getChat(conn)
+        chatD = context.bot.getChat(conn)
     else:
         if chat.type == "private":
             return
@@ -482,8 +482,8 @@ def temp_nomedia(update: Update, context: CallbackContext) -> str:
                                quote=False)
             return log
         else:
-            LOGGER.warning(update)
-            LOGGER.exception("ERROR muting user %s in chat %s (%s) due to %s",
+            logging.warning(update)
+            logging.error("ERROR muting user %s in chat %s (%s) due to %s",
                              user_id, chat.title, chat.id, excp.message)
             message.reply_text(tld(chat.id, "restrict_cant_restricted"))
 
@@ -551,10 +551,10 @@ MUTEME_HANDLER = DisableAbleCommandHandler("muteme",
                                            filters=Filters.chat_type.groups,
                                            admin_ok=True)
 
-dispatcher.add_handler(MUTE_HANDLER)
-dispatcher.add_handler(UNMUTE_HANDLER)
-dispatcher.add_handler(TEMPMUTE_HANDLER)
-dispatcher.add_handler(TEMP_NOMEDIA_HANDLER)
-dispatcher.add_handler(NOMEDIA_HANDLER)
-dispatcher.add_handler(MEDIA_HANDLER)
-dispatcher.add_handler(MUTEME_HANDLER)
+CONFIG.dispatcher.add_handler(MUTE_HANDLER)
+CONFIG.dispatcher.add_handler(UNMUTE_HANDLER)
+CONFIG.dispatcher.add_handler(TEMPMUTE_HANDLER)
+CONFIG.dispatcher.add_handler(TEMP_NOMEDIA_HANDLER)
+CONFIG.dispatcher.add_handler(NOMEDIA_HANDLER)
+CONFIG.dispatcher.add_handler(MEDIA_HANDLER)
+CONFIG.dispatcher.add_handler(MUTEME_HANDLER)

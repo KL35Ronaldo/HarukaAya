@@ -21,7 +21,7 @@ from telegram import InlineKeyboardMarkup, InlineKeyboardButton, ParseMode, Upda
 from telegram.ext import CommandHandler, CallbackQueryHandler
 from telegram.ext.callbackcontext import CallbackContext
 
-from haruka import dispatcher
+from haruka import CONFIG
 from haruka.modules.connection import connected
 from haruka.modules.helper_funcs.chat_status import user_admin
 from haruka.modules.sql.locales_sql import switch_to_locale, prev_locale
@@ -38,7 +38,6 @@ def locale(update: Update, context: CallbackContext):
         locale = args[0].lower()
         if locale == 'en-us':
             locale = 'en-US'
-
         if locale in list_locales:
             if locale in LANGUAGES:
                 switch_to_locale(chat.id, locale)
@@ -142,6 +141,6 @@ LOCALE_HANDLER = CommandHandler(["set_locale", "locale", "lang", "setlang"],
 locale_handler = CallbackQueryHandler(locale_button, pattern="chng_lang")
 set_locale_handler = CallbackQueryHandler(locale_button, pattern=r"set_lang_")
 
-dispatcher.add_handler(LOCALE_HANDLER)
-dispatcher.add_handler(locale_handler)
-dispatcher.add_handler(set_locale_handler)
+CONFIG.dispatcher.add_handler(LOCALE_HANDLER)
+CONFIG.dispatcher.add_handler(locale_handler)
+CONFIG.dispatcher.add_handler(set_locale_handler)

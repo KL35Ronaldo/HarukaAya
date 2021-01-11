@@ -15,7 +15,7 @@
 #    You should have received a copy of the GNU Affero General Public License
 #    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-from typing import Union, List
+from typing import Union
 
 from future.utils import string_types
 from telegram import ParseMode, Update
@@ -23,7 +23,7 @@ from telegram.ext import CommandHandler, MessageHandler, Filters
 from telegram.ext.callbackcontext import CallbackContext
 from telegram.utils.helpers import escape_markdown
 
-from haruka import dispatcher
+from haruka import CONFIG
 from haruka.modules.helper_funcs.handlers import CMD_STARTERS
 from haruka.modules.helper_funcs.misc import is_module_loaded
 
@@ -194,10 +194,10 @@ if is_module_loaded(FILENAME):
                                     run_async=True,
                                     filters=Filters.chat_type.groups)
 
-    dispatcher.add_handler(DISABLE_HANDLER)
-    dispatcher.add_handler(ENABLE_HANDLER)
-    dispatcher.add_handler(COMMANDS_HANDLER)
-    # dispatcher.add_handler(TOGGLE_HANDLER)
+    CONFIG.dispatcher.add_handler(DISABLE_HANDLER)
+    CONFIG.dispatcher.add_handler(ENABLE_HANDLER)
+    CONFIG.dispatcher.add_handler(COMMANDS_HANDLER)
+    # CONFIG.dispatcher.add_handler(TOGGLE_HANDLER)
 
 else:
     DisableAbleCommandHandler = CommandHandler

@@ -15,7 +15,7 @@
 #    You should have received a copy of the GNU Affero General Public License
 #    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-from typing import Optional, List
+from typing import Optional
 
 from telegram import ParseMode
 from telegram import Chat, Update, User
@@ -23,7 +23,7 @@ from telegram.ext import CommandHandler
 from telegram.ext.callbackcontext import CallbackContext
 
 import haruka.modules.sql.connection_sql as sql
-from haruka import dispatcher, SUDO_USERS
+from haruka import CONFIG
 from haruka.modules.helper_funcs.chat_status import user_admin
 
 from haruka.modules.tr_engine.strings import tld
@@ -77,22 +77,22 @@ def connect_chat(update: Update, context: CallbackContext):
                     and context.bot.get_chat_member(
                         connect_chat,
                         update.effective_message.from_user.id).status in
-                ('member')) or (user.id in SUDO_USERS):
+                ('member')) or (user.id in CONFIG.sudo_users):
 
                 connection_status = sql.connect(
                     update.effective_message.from_user.id, connect_chat)
                 if connection_status:
-                    chat_name = dispatcher.bot.getChat(
+                    chat_name = CONFIG.dispatcher.bot.getChat(
                         connected(update, context, user.id,
                                   need_admin=False)).title
                     update.effective_message.reply_text(
                         tld(chat.id, "connection_success").format(chat_name),
                         parse_mode=ParseMode.MARKDOWN)
 
-                    #Add chat to connection history
+                    # Add chat to connection history
                     history = sql.get_history(user.id)
                     if history:
-                        #Vars
+                        # Vars
                         if history.chat_id1:
                             history1 = int(history.chat_id1)
                         if history.chat_id2:
@@ -145,7 +145,7 @@ def connect_chat(update: Update, context: CallbackContext):
             (sql.allow_connect_to_chat(connect_chat) == True)
                 and context.bot.get_chat_member(
                     connect_chat, update.effective_message.from_user.id).status
-                in 'member') or (user.id in SUDO_USERS):
+                in 'member') or (user.id in CONFIG.sudo_users):
 
             connection_status = sql.connect(
                 update.effective_message.from_user.id, connect_chat)
@@ -193,13 +193,13 @@ def connected(update: Update, context: CallbackContext, user_id, need_admin=True
             (sql.allow_connect_to_chat(connect_chat) == True)
                 and context.bot.get_chat_member(
                     user_id, update.effective_message.from_user.id).status in
-            ('member')) or (user_id in SUDO_USERS):
+            ('member')) or (user_id in CONFIG.sudo_users):
             if need_admin:
                 if context.bot.get_chat_member(
                         conn_id,
                         update.effective_message.from_user.id).status in (
                             'administrator',
-                            'creator') or user_id in SUDO_USERS:
+                            'creator') or user_id in CONFIG.sudo_users:
                     return conn_id
                 else:
                     update.effective_message.reply_text(
@@ -229,6 +229,6 @@ ALLOW_CONNECTIONS_HANDLER = CommandHandler("allowconnect",
                                            pass_args=True,
                                            run_async=True)
 
-dispatcher.add_handler(CONNECT_CHAT_HANDLER)
-dispatcher.add_handler(DISCONNECT_CHAT_HANDLER)
-dispatcher.add_handler(ALLOW_CONNECTIONS_HANDLER)
+CONFIG.dispatcher.add_handler(CONNECT_CHAT_HANDLER)
+CONFIG.dispatcher.add_handler(DISCONNECT_CHAT_HANDLER)
+CONFIG.dispatcher.add_handler(ALLOW_CONNECTIONS_HANDLER)

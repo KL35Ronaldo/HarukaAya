@@ -16,7 +16,7 @@
 #    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 from io import BytesIO
-from typing import List
+import logging
 import uuid
 import re
 
@@ -26,7 +26,7 @@ from telegram.ext import CommandHandler, CallbackQueryHandler
 from telegram.ext.callbackcontext import CallbackContext
 from telegram.utils.helpers import mention_html, mention_markdown
 
-from haruka import dispatcher, OWNER_ID, SUDO_USERS, WHITELIST_USERS, MESSAGE_DUMP, LOGGER
+from haruka import CONFIG
 from haruka.modules.helper_funcs.misc import send_to_list
 from haruka.modules.helper_funcs.extraction import extract_user, extract_user_and_text
 from haruka.modules.helper_funcs.string_handling import markdown_parser
@@ -85,8 +85,8 @@ def new_fed(update: Update, context: CallbackContext):
     if not fednam == '':
         fed_id = str(uuid.uuid4())
         fed_name = fednam
-        LOGGER.info(fed_id)
-        if user.id == int(OWNER_ID):
+        logging.info(fed_id)
+        if user.id == int(CONFIG.owner_id):
             fed_id = fed_name
 
         x = sql.new_fed(user.id, fed_name, fed_id)
@@ -100,12 +100,12 @@ def new_fed(update: Update, context: CallbackContext):
                                                     fed_name, fed_id, fed_id),
                                             parse_mode=ParseMode.MARKDOWN)
         try:
-            context.bot.send_message(MESSAGE_DUMP,
+            context.bot.send_message(CONFIG.message_dump,
                              tld(chat.id, "feds_create_success_logger").format(
                                  fed_name, fed_id),
                              parse_mode=ParseMode.HTML)
         except Exception:
-            LOGGER.warning("Cannot send a message to MESSAGE_DUMP")
+            logging.warning("Cannot send a message to MESSAGE_DUMP")
     else:
         update.effective_message.reply_text(tld(chat.id, "feds_err_no_args"))
 
@@ -175,7 +175,7 @@ def join_fed(update: Update, context: CallbackContext):
     administrators = chat.get_administrators()
     fed_id = sql.get_fed_id(chat.id)
 
-    if user.id in SUDO_USERS:
+    if user.id in CONFIG.sudo_users:
         pass
     else:
         for admin in administrators:
@@ -216,7 +216,7 @@ def leave_fed(update: Update, context: CallbackContext):
 
     # administrators = chat.get_administrators().status
     getuser = context.bot.get_chat_member(chat.id, user.id).status
-    if getuser in 'creator' or user.id in SUDO_USERS:
+    if getuser in 'creator' or user.id in CONFIG.sudo_users:
         if sql.chat_leave_fed(chat.id) == True:
             update.effective_message.reply_text(
                 tld(chat.id, "feds_leave_success").format(fed_info['fname']))
@@ -249,7 +249,7 @@ def user_join_fed(update: Update, context: CallbackContext):
             msg.reply_text(tld(chat.id, "common_err_no_user"))
             return
         else:
-            LOGGER.warning('error')
+            logging.warning('error')
         getuser = sql.search_user_in_fed(fed_id, user_id)
         fed_id = sql.get_fed_id(chat.id)
         info = sql.get_fed_info(fed_id)
@@ -300,7 +300,7 @@ def user_demote_fed(update: Update, context: CallbackContext):
             msg.reply_text(tld(chat.id, "common_err_no_user"))
             return
         else:
-            LOGGER.warning('error')
+            logging.warning('error')
 
         if user_id == context.bot.id:
             update.effective_message.reply_text(tld(chat.id,
@@ -449,16 +449,16 @@ def fed_ban(update: Update, context: CallbackContext):
         message.reply_text("He is a federation admin, I can't fban him.")
         return
 
-    if user_id == OWNER_ID:
+    if user_id == CONFIG.owner_id:
         message.reply_text(
             "I don't want to fban my master, that's a very stupid idea!")
         return
 
-    if int(user_id) in SUDO_USERS:
+    if int(user_id) in CONFIG.sudo_users:
         message.reply_text("I will not fban sudos!")
         return
 
-    if int(user_id) in WHITELIST_USERS:
+    if int(user_id) in CONFIG.whitelist_users:
         message.reply_text(
             "This person is whitelisted, so they can't be fbanned!")
         return
@@ -504,7 +504,7 @@ def fed_ban(update: Update, context: CallbackContext):
                 if excp.message in FBAN_ERRORS:
                     pass
                 else:
-                    LOGGER.warning("Could not fban in {} because: {}".format(
+                    logging.warning("Could not fban in {} because: {}".format(
                         chat, excp.message))
             except TelegramError:
                 pass
@@ -547,15 +547,15 @@ def fed_ban(update: Update, context: CallbackContext):
         except BadRequest as excp:
             if excp.message in FBAN_ERRORS:
                 try:
-                    dispatcher.bot.getChat(chat)
+                    context.bot.getChat(chat)
                 except Unauthorized:
                     sql.chat_leave_fed(chat)
-                    LOGGER.info(
+                    logging.info(
                         "Chat {} has leave fed {} because bot is kicked".
                         format(chat, info['fname']))
                     continue
             else:
-                LOGGER.warning("Cannot fban on {} because: {}".format(
+                logging.warning("Cannot fban on {} because: {}".format(
                     chat, excp.message))
         except TelegramError:
             pass
@@ -622,7 +622,7 @@ def unfban(update: Update, context: CallbackContext):
             if excp.message in UNFBAN_ERRORS:
                 pass
             else:
-                LOGGER.warning("Cannot remove fban on {} because: {}".format(
+                logging.warning("Cannot remove fban on {} because: {}".format(
                     chat, excp.message))
         except TelegramError:
             pass
@@ -907,20 +907,17 @@ FED_CHATLIST_HANDLER = CommandHandler("fedchats", fed_chats, pass_args=True, run
 
 DELETEBTN_FED_HANDLER = CallbackQueryHandler(del_fed_button, pattern=r"rmfed_", run_async=True)
 
-dispatcher.add_handler(NEW_FED_HANDLER)
-dispatcher.add_handler(DEL_FED_HANDLER)
-dispatcher.add_handler(JOIN_FED_HANDLER)
-dispatcher.add_handler(LEAVE_FED_HANDLER)
-dispatcher.add_handler(PROMOTE_FED_HANDLER)
-dispatcher.add_handler(DEMOTE_FED_HANDLER)
-dispatcher.add_handler(INFO_FED_HANDLER)
-dispatcher.add_handler(BAN_FED_HANDLER)
-dispatcher.add_handler(UN_BAN_FED_HANDLER)
-dispatcher.add_handler(FED_SET_RULES_HANDLER)
-dispatcher.add_handler(FED_GET_RULES_HANDLER)
-dispatcher.add_handler(FED_CHAT_HANDLER)
-dispatcher.add_handler(FED_ADMIN_HANDLER)
-# dispatcher.add_handler(FED_NOTIF_HANDLER)
-# dispatcher.add_handler(FED_CHATLIST_HANDLER)
-
-dispatcher.add_handler(DELETEBTN_FED_HANDLER)
+CONFIG.dispatcher.add_handler(NEW_FED_HANDLER)
+CONFIG.dispatcher.add_handler(DEL_FED_HANDLER)
+CONFIG.dispatcher.add_handler(JOIN_FED_HANDLER)
+CONFIG.dispatcher.add_handler(LEAVE_FED_HANDLER)
+CONFIG.dispatcher.add_handler(PROMOTE_FED_HANDLER)
+CONFIG.dispatcher.add_handler(DEMOTE_FED_HANDLER)
+CONFIG.dispatcher.add_handler(INFO_FED_HANDLER)
+CONFIG.dispatcher.add_handler(BAN_FED_HANDLER)
+CONFIG.dispatcher.add_handler(UN_BAN_FED_HANDLER)
+CONFIG.dispatcher.add_handler(FED_SET_RULES_HANDLER)
+CONFIG.dispatcher.add_handler(FED_GET_RULES_HANDLER)
+CONFIG.dispatcher.add_handler(FED_CHAT_HANDLER)
+CONFIG.dispatcher.add_handler(FED_ADMIN_HANDLER)
+CONFIG.dispatcher.add_handler(DELETEBTN_FED_HANDLER)

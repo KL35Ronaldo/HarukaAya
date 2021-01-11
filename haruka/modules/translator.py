@@ -20,7 +20,7 @@ from typing import Optional
 from telegram import Message, Update, ParseMode, Chat
 from telegram.ext.callbackcontext import CallbackContext
 
-from haruka import dispatcher
+from haruka import CONFIG
 from haruka.modules.disable import DisableAbleCommandHandler
 from haruka.modules.helper_funcs.string_handling import remove_emoji
 from haruka.modules.tr_engine.strings import tld
@@ -64,5 +64,5 @@ def do_translate(update: Update, context: CallbackContext):
 
 __help__ = True
 
-dispatcher.add_handler(
+CONFIG.dispatcher.add_handler(
     DisableAbleCommandHandler("tr", do_translate, pass_args=True, run_async=True))

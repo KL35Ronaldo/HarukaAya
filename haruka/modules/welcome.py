@@ -16,6 +16,7 @@
 #    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 from html import escape
+import logging
 from typing import Optional
 import requests
 
@@ -27,7 +28,7 @@ from telegram.ext.callbackcontext import CallbackContext
 from telegram.utils.helpers import mention_html
 
 import haruka.modules.sql.welcome_sql as sql
-from haruka import dispatcher, OWNER_ID, LOGGER, MESSAGE_DUMP, spamwatch_api
+from haruka import CONFIG
 from haruka.modules.helper_funcs.chat_status import user_admin, is_user_ban_protected
 from haruka.modules.helper_funcs.misc import build_keyboard, revert_buttons
 from haruka.modules.helper_funcs.msg_types import get_welcome_type
@@ -42,14 +43,14 @@ VALID_WELCOME_FORMATTERS = [
 ]
 
 ENUM_FUNC_MAP = {
-    sql.Types.TEXT.value: dispatcher.bot.send_message,
-    sql.Types.BUTTON_TEXT.value: dispatcher.bot.send_message,
-    sql.Types.STICKER.value: dispatcher.bot.send_sticker,
-    sql.Types.DOCUMENT.value: dispatcher.bot.send_document,
-    sql.Types.PHOTO.value: dispatcher.bot.send_photo,
-    sql.Types.AUDIO.value: dispatcher.bot.send_audio,
-    sql.Types.VOICE.value: dispatcher.bot.send_voice,
-    sql.Types.VIDEO.value: dispatcher.bot.send_video
+    sql.Types.TEXT.value: CONFIG.dispatcher.bot.send_message,
+    sql.Types.BUTTON_TEXT.value: CONFIG.dispatcher.bot.send_message,
+    sql.Types.STICKER.value: CONFIG.dispatcher.bot.send_sticker,
+    sql.Types.DOCUMENT.value: CONFIG.dispatcher.bot.send_document,
+    sql.Types.PHOTO.value: CONFIG.dispatcher.bot.send_photo,
+    sql.Types.AUDIO.value: CONFIG.dispatcher.bot.send_audio,
+    sql.Types.VOICE.value: CONFIG.dispatcher.bot.send_voice,
+    sql.Types.VIDEO.value: CONFIG.dispatcher.bot.send_video
 }
 
 
@@ -61,7 +62,7 @@ def send(update, message, keyboard, backup_message):
     # Clean service welcome
     if cleanserv:
         try:
-            dispatcher.bot.delete_message(chat.id, update.message.message_id)
+            CONFIG.dispatcher.bot.delete_message(chat.id, update.message.message_id)
         except BadRequest:
             pass
         reply = False
@@ -112,9 +113,9 @@ def send(update, message, keyboard, backup_message):
                     "Please update."),
                 parse_mode=ParseMode.MARKDOWN,
                 reply_to_message_id=reply)
-            LOGGER.warning(message)
-            LOGGER.warning(keyboard)
-            LOGGER.exception("Could not parse! got invalid url host errors")
+            logging.warning(message)
+            logging.warning(keyboard)
+            logging.error("Could not parse! got invalid url host errors")
         else:
             try:
                 msg = update.effective_message.reply_text(
@@ -144,8 +145,8 @@ def new_member(update: Update, context: CallbackContext):
             # Give start information when add bot to group
 
             try:
-                if spamwatch_api != None:
-                    headers = {'Authorization': f'Bearer {spamwatch_api}'}
+                if CONFIG.spamwatch_api != None:
+                    headers = {'Authorization': f'Bearer {CONFIG.spamwatch_api}'}
                     resp = requests.get(
                         "https://api.spamwat.ch/banlist/{new_mem.id}",
                         headers=headers,
@@ -157,7 +158,7 @@ def new_member(update: Update, context: CallbackContext):
 
             if new_mem.id == context.bot.id:
                 context.bot.send_message(
-                    MESSAGE_DUMP,
+                    CONFIG.message_dump,
                     "I have been added to {} with ID: <pre>{}</pre>".format(
                         chat.title, chat.id),
                     parse_mode=ParseMode.HTML)
@@ -171,7 +172,7 @@ def new_member(update: Update, context: CallbackContext):
                     # Clean service welcome
                     if cleanserv:
                         try:
-                            dispatcher.bot.delete_message(
+                            context.bot.delete_message(
                                 chat.id, update.message.message_id)
                         except BadRequest:
                             pass
@@ -393,8 +394,8 @@ def left_member(update: Update, context: CallbackContext):
         left_mem = update.effective_message.left_chat_member
         if left_mem:
             try:
-                if spamwatch_api != None:
-                    headers = {'Authorization': f'Bearer {spamwatch_api}'}
+                if CONFIG.spamwatch_api != None:
+                    headers = {'Authorization': f'Bearer {CONFIG.spamwatch_api}'}
                     resp = requests.get(
                         "https://api.spamwat.ch/banlist/{left_mem.id}",
                         headers=headers,
@@ -409,7 +410,7 @@ def left_member(update: Update, context: CallbackContext):
                 return
 
             # Give the owner a special goodbye
-            if left_mem.id == OWNER_ID:
+            if left_mem.id == CONFIG.owner_id:
                 update.effective_message.reply_text(
                     tld(chat.id, 'welcome_bot_owner_left'))
                 return
@@ -421,7 +422,7 @@ def left_member(update: Update, context: CallbackContext):
                 # Clean service welcome
                 if cleanserv:
                     try:
-                        dispatcher.bot.delete_message(
+                        context.bot.delete_message(
                             chat.id, update.message.message_id)
                     except BadRequest:
                         pass
@@ -971,19 +972,18 @@ help_callback_handler = CallbackQueryHandler(check_bot_button,
                                              pattern=r"check_bot_",
                                              run_async=True)
 
-dispatcher.add_handler(NEW_MEM_HANDLER)
-dispatcher.add_handler(LEFT_MEM_HANDLER)
-dispatcher.add_handler(WELC_PREF_HANDLER)
-dispatcher.add_handler(GOODBYE_PREF_HANDLER)
-dispatcher.add_handler(SET_WELCOME)
-dispatcher.add_handler(SET_GOODBYE)
-dispatcher.add_handler(RESET_WELCOME)
-dispatcher.add_handler(RESET_GOODBYE)
-dispatcher.add_handler(CLEAN_WELCOME)
-dispatcher.add_handler(SECURITY_HANDLER)
-dispatcher.add_handler(SECURITY_MUTE_HANDLER)
-dispatcher.add_handler(SECURITY_BUTTONTXT_HANDLER)
-dispatcher.add_handler(SECURITY_BUTTONRESET_HANDLER)
-dispatcher.add_handler(CLEAN_SERVICE_HANDLER)
-
-dispatcher.add_handler(help_callback_handler)
+CONFIG.dispatcher.add_handler(NEW_MEM_HANDLER)
+CONFIG.dispatcher.add_handler(LEFT_MEM_HANDLER)
+CONFIG.dispatcher.add_handler(WELC_PREF_HANDLER)
+CONFIG.dispatcher.add_handler(GOODBYE_PREF_HANDLER)
+CONFIG.dispatcher.add_handler(SET_WELCOME)
+CONFIG.dispatcher.add_handler(SET_GOODBYE)
+CONFIG.dispatcher.add_handler(RESET_WELCOME)
+CONFIG.dispatcher.add_handler(RESET_GOODBYE)
+CONFIG.dispatcher.add_handler(CLEAN_WELCOME)
+CONFIG.dispatcher.add_handler(SECURITY_HANDLER)
+CONFIG.dispatcher.add_handler(SECURITY_MUTE_HANDLER)
+CONFIG.dispatcher.add_handler(SECURITY_BUTTONTXT_HANDLER)
+CONFIG.dispatcher.add_handler(SECURITY_BUTTONRESET_HANDLER)
+CONFIG.dispatcher.add_handler(CLEAN_SERVICE_HANDLER)
+CONFIG.dispatcher.add_handler(help_callback_handler)

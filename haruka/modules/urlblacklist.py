@@ -16,6 +16,7 @@
 #    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import html
+import logging
 
 from telegram import ParseMode, Update
 from telegram.error import BadRequest
@@ -23,7 +24,7 @@ from telegram.ext import CommandHandler, Filters, MessageHandler
 from telegram.ext.callbackcontext import CallbackContext
 
 import tldextract
-from haruka import LOGGER, dispatcher
+from haruka import CONFIG
 from haruka.modules.disable import DisableAbleCommandHandler
 from haruka.modules.helper_funcs.chat_status import user_admin, user_not_admin
 from haruka.modules.sql import urlblacklist_sql as sql
@@ -129,7 +130,7 @@ def del_blacklist_url(update: Update, context: CallbackContext):
                 if excp.message == "Message to delete not found":
                     pass
                 else:
-                    LOGGER.exception("Error while deleting blacklist message.")
+                    logging.error("Error while deleting blacklist message.")
             break
 
 
@@ -176,8 +177,8 @@ URL_DELETE_HANDLER = MessageHandler(Filters.entity("url"),
 
 __help__ = False
 
-dispatcher.add_handler(URL_BLACKLIST_HANDLER)
-dispatcher.add_handler(ADD_URL_BLACKLIST_HANDLER)
-dispatcher.add_handler(RM_BLACKLIST_URL_HANDLER)
-dispatcher.add_handler(GET_BLACKLISTED_URLS)
-dispatcher.add_handler(URL_DELETE_HANDLER)
+CONFIG.dispatcher.add_handler(URL_BLACKLIST_HANDLER)
+CONFIG.dispatcher.add_handler(ADD_URL_BLACKLIST_HANDLER)
+CONFIG.dispatcher.add_handler(RM_BLACKLIST_URL_HANDLER)
+CONFIG.dispatcher.add_handler(GET_BLACKLISTED_URLS)
+CONFIG.dispatcher.add_handler(URL_DELETE_HANDLER)

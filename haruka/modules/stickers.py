@@ -27,7 +27,7 @@ from telegram import Update
 from telegram.ext.callbackcontext import CallbackContext
 from telegram.utils.helpers import escape_markdown
 
-from haruka import dispatcher
+from haruka import CONFIG
 from haruka.modules.disable import DisableAbleCommandHandler
 from haruka.modules.tr_engine.strings import tld
 
@@ -288,6 +288,6 @@ KANG_HANDLER = DisableAbleCommandHandler("kang",
                                          run_async=True,
                                          admin_ok=True)
 
-dispatcher.add_handler(STICKERID_HANDLER)
-dispatcher.add_handler(GETSTICKER_HANDLER)
-dispatcher.add_handler(KANG_HANDLER)
+CONFIG.dispatcher.add_handler(STICKERID_HANDLER)
+CONFIG.dispatcher.add_handler(GETSTICKER_HANDLER)
+CONFIG.dispatcher.add_handler(KANG_HANDLER)

@@ -16,9 +16,10 @@
 #    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 from functools import wraps
+import logging
 from typing import Optional
 
-from haruka import dispatcher, LOGGER
+from haruka import CONFIG
 from haruka.modules.helper_funcs.chat_status import user_admin
 from haruka.modules.sql import log_channel_sql as sql
 from haruka.modules.tr_engine.strings import tld
@@ -49,7 +50,7 @@ def loggable(func):
         elif result == "":
             pass
         else:
-            LOGGER.warning(
+            logging.warning(
                 "%s was set as loggable, but had no return statement.", func)
 
         return result
@@ -66,9 +67,9 @@ def send_log(bot: Bot, log_chat_id: str, orig_chat_id: str, result: str):
                              "This log channel has been deleted - unsetting.")
             sql.stop_chat_logging(orig_chat_id)
         else:
-            LOGGER.warning(excp.message)
-            LOGGER.warning(result)
-            LOGGER.exception("Could not parse")
+            logging.warning(excp.message)
+            logging.warning(result)
+            logging.exception("Could not parse")
 
             bot.send_message(
                 log_chat_id, result +
@@ -110,7 +111,7 @@ def setlog(update: Update, context: CallbackContext):
             if excp.message == "Message to delete not found":
                 pass
             else:
-                LOGGER.exception(
+                logging.exception(
                     "Error deleting message in log channel. Should work anyway though."
                 )
 
@@ -125,7 +126,7 @@ def setlog(update: Update, context: CallbackContext):
                 context.bot.send_message(chat.id,
                                  tld(chat.id, "log_channel_link_success"))
             else:
-                LOGGER.exception("ERROR in setting the log channel.")
+                logging.exception("ERROR in setting the log channel.")
 
         context.bot.send_message(chat.id, tld(chat.id, "log_channel_link_success"))
 
@@ -166,6 +167,6 @@ LOG_HANDLER = CommandHandler("logchannel", logging, run_async=True)
 SET_LOG_HANDLER = CommandHandler("setlog", setlog, run_async=True)
 UNSET_LOG_HANDLER = CommandHandler("unsetlog", unsetlog, run_async=True)
 
-dispatcher.add_handler(LOG_HANDLER)
-dispatcher.add_handler(SET_LOG_HANDLER)
-dispatcher.add_handler(UNSET_LOG_HANDLER)
+CONFIG.dispatcher.add_handler(LOG_HANDLER)
+CONFIG.dispatcher.add_handler(SET_LOG_HANDLER)
+CONFIG.dispatcher.add_handler(UNSET_LOG_HANDLER)

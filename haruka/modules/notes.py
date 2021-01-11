@@ -16,7 +16,7 @@
 #    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import re
-from typing import List
+import logging
 
 from telegram import MAX_MESSAGE_LENGTH, ParseMode, InlineKeyboardMarkup
 from telegram import Update
@@ -25,7 +25,7 @@ from telegram.ext import CommandHandler, Filters, MessageHandler
 from telegram.ext.callbackcontext import CallbackContext
 
 import haruka.modules.sql.notes_sql as sql
-from haruka import dispatcher, MESSAGE_DUMP, LOGGER
+from haruka import CONFIG
 from haruka.modules.disable import DisableAbleCommandHandler
 from haruka.modules.helper_funcs.chat_status import user_admin
 from haruka.modules.helper_funcs.misc import build_keyboard, revert_buttons
@@ -45,15 +45,15 @@ MYVIDEO_MATCHER = re.compile(r"^###video(!photo)?###:")
 MYVIDEONOTE_MATCHER = re.compile(r"^###video_note(!photo)?###:")
 
 ENUM_FUNC_MAP = {
-    sql.Types.TEXT.value: dispatcher.bot.send_message,
-    sql.Types.BUTTON_TEXT.value: dispatcher.bot.send_message,
-    sql.Types.STICKER.value: dispatcher.bot.send_sticker,
-    sql.Types.DOCUMENT.value: dispatcher.bot.send_document,
-    sql.Types.PHOTO.value: dispatcher.bot.send_photo,
-    sql.Types.AUDIO.value: dispatcher.bot.send_audio,
-    sql.Types.VOICE.value: dispatcher.bot.send_voice,
-    sql.Types.VIDEO.value: dispatcher.bot.send_video,
-    sql.Types.VIDEO_NOTE.value: dispatcher.bot.send_video_note
+    sql.Types.TEXT.value: CONFIG.dispatcher.bot.send_message,
+    sql.Types.BUTTON_TEXT.value: CONFIG.dispatcher.bot.send_message,
+    sql.Types.STICKER.value: CONFIG.dispatcher.bot.send_sticker,
+    sql.Types.DOCUMENT.value: CONFIG.dispatcher.bot.send_document,
+    sql.Types.PHOTO.value: CONFIG.dispatcher.bot.send_photo,
+    sql.Types.AUDIO.value: CONFIG.dispatcher.bot.send_audio,
+    sql.Types.VOICE.value: CONFIG.dispatcher.bot.send_voice,
+    sql.Types.VIDEO.value: CONFIG.dispatcher.bot.send_video,
+    sql.Types.VIDEO_NOTE.value: CONFIG.dispatcher.bot.send_video_note
 }
 
 
@@ -85,10 +85,10 @@ def get(update: Update, context: CallbackContext, notename, show_none=True, no_f
         reply_id = message.message_id
 
     if note and note.is_reply:
-        if MESSAGE_DUMP:
+        if CONFIG.message_dump:
             try:
                 context.bot.forward_message(chat_id=chat_id,
-                                            from_chat_id=MESSAGE_DUMP,
+                                            from_chat_id=CONFIG.message_dump,
                                             message_id=note.value)
             except BadRequest as excp:
                 if excp.message == "Message to forward not found":
@@ -162,9 +162,9 @@ def get(update: Update, context: CallbackContext, notename, show_none=True, no_f
                 sql.rm_note(chat_id, notename)
             else:
                 message.reply_text(tld(chat.id, "note_cannot_send"))
-                LOGGER.exception("Could not parse message #%s in chat %s",
+                logging.error("Could not parse message #%s in chat %s",
                                  notename, str(chat_id))
-                LOGGER.warning("Message was: %s", str(note.value))
+                logging.warning("Message was: %s", str(note.value))
 
     return
 
@@ -195,7 +195,7 @@ def save(update: Update, context: CallbackContext):
     conn = connected(update, context, user.id)
     if conn:
         chat_id = conn
-        chat_name = dispatcher.bot.getChat(conn).title
+        chat_name = context.bot.getChat(conn).title
     else:
         chat_id = update.effective_chat.id
         if chat.type == "private":
@@ -244,7 +244,7 @@ def clear(update: Update, context: CallbackContext):
     conn = connected(update, context, user.id)
     if conn:
         chat_id = conn
-        chat_name = dispatcher.bot.getChat(conn).title
+        chat_name = context.bot.getChat(conn).title
     else:
         chat_id = update.effective_chat.id
         if chat.type == "private":
@@ -270,7 +270,7 @@ def list_notes(update: Update, context: CallbackContext):
     conn = connected(update, context, user.id, need_admin=False)
     if conn:
         chat_id = conn
-        chat_name = dispatcher.bot.getChat(conn).title
+        chat_name = context.bot.getChat(conn).title
         msg = tld(chat.id, "note_in_chat")
     else:
         chat_id = update.effective_chat.id
@@ -362,9 +362,9 @@ LIST_HANDLER = DisableAbleCommandHandler(["notes", "saved"],
                                          list_notes,
                                          admin_ok=True)
 
-dispatcher.add_handler(GET_HANDLER)
-dispatcher.add_handler(SAVE_HANDLER)
-dispatcher.add_handler(LIST_HANDLER)
-dispatcher.add_handler(DELETE_HANDLER)
-dispatcher.add_handler(HASH_GET_HANDLER)
-dispatcher.add_handler(REMOVE_ALL_NOTES_HANDLER)
+CONFIG.dispatcher.add_handler(GET_HANDLER)
+CONFIG.dispatcher.add_handler(SAVE_HANDLER)
+CONFIG.dispatcher.add_handler(LIST_HANDLER)
+CONFIG.dispatcher.add_handler(DELETE_HANDLER)
+CONFIG.dispatcher.add_handler(HASH_GET_HANDLER)
+CONFIG.dispatcher.add_handler(REMOVE_ALL_NOTES_HANDLER)

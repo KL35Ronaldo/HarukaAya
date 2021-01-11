@@ -26,7 +26,7 @@ from telegram.ext import CommandHandler, DispatcherHandlerStop, MessageHandler, 
 from telegram.ext.callbackcontext import CallbackContext
 from telegram.utils.helpers import mention_html
 
-from haruka import dispatcher
+from haruka import CONFIG
 from haruka.modules.disable import DisableAbleCommandHandler
 from haruka.modules.helper_funcs.chat_status import is_user_admin, bot_admin, user_admin, \
     can_restrict
@@ -48,7 +48,7 @@ def warn(user: User,
          reason: str,
          message: Message,
          warner: User = None) -> str:
-    bot = dispatcher.bot
+    bot = CONFIG.dispatcher.bot
 
     if is_user_admin(chat, user.id):
         message.reply_text(tld(chat.id, 'warns_warn_admin_no_warn'))
@@ -293,9 +293,9 @@ def add_warn_filter(update: Update, context: CallbackContext):
         return
 
     # Note: perhaps handlers can be removed somehow using sql.get_chat_filters
-    for handler in dispatcher.handlers.get(WARN_HANDLER_GROUP, []):
+    for handler in CONFIG.dispatcher.handlers.get(WARN_HANDLER_GROUP, []):
         if handler.filters == (keyword, chat.id):
-            dispatcher.remove_handler(handler, WARN_HANDLER_GROUP)
+            CONFIG.dispatcher.remove_handler(handler, WARN_HANDLER_GROUP)
 
     sql.add_warn_filter(chat.id, keyword, content)
 
@@ -516,15 +516,15 @@ REMOVE_WARNS_HANDLER = CommandHandler(["rmwarn", "unwarn"],
                                       run_async=True,
                                       filters=Filters.chat_type.groups)
 
-dispatcher.add_handler(WARN_HANDLER)
-dispatcher.add_handler(RMWARN_QUERY_HANDLER)
-dispatcher.add_handler(SENDRULES_QUERY_HANDLER)
-dispatcher.add_handler(RESET_WARN_HANDLER)
-dispatcher.add_handler(MYWARNS_HANDLER)
-dispatcher.add_handler(ADD_WARN_HANDLER)
-dispatcher.add_handler(RM_WARN_HANDLER)
-dispatcher.add_handler(LIST_WARN_HANDLER)
-dispatcher.add_handler(WARN_LIMIT_HANDLER)
-dispatcher.add_handler(WARN_STRENGTH_HANDLER)
-dispatcher.add_handler(WARN_FILTER_HANDLER, WARN_HANDLER_GROUP)
-dispatcher.add_handler(REMOVE_WARNS_HANDLER)
+CONFIG.dispatcher.add_handler(WARN_HANDLER)
+CONFIG.dispatcher.add_handler(RMWARN_QUERY_HANDLER)
+CONFIG.dispatcher.add_handler(SENDRULES_QUERY_HANDLER)
+CONFIG.dispatcher.add_handler(RESET_WARN_HANDLER)
+CONFIG.dispatcher.add_handler(MYWARNS_HANDLER)
+CONFIG.dispatcher.add_handler(ADD_WARN_HANDLER)
+CONFIG.dispatcher.add_handler(RM_WARN_HANDLER)
+CONFIG.dispatcher.add_handler(LIST_WARN_HANDLER)
+CONFIG.dispatcher.add_handler(WARN_LIMIT_HANDLER)
+CONFIG.dispatcher.add_handler(WARN_STRENGTH_HANDLER)
+CONFIG.dispatcher.add_handler(WARN_FILTER_HANDLER, WARN_HANDLER_GROUP)
+CONFIG.dispatcher.add_handler(REMOVE_WARNS_HANDLER)

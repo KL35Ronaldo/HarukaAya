@@ -16,8 +16,8 @@
 #    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import html
+import logging
 import re
-from typing import List
 
 from telegram import Update, ParseMode
 from telegram.error import BadRequest
@@ -25,7 +25,7 @@ from telegram.ext import CommandHandler, MessageHandler, Filters
 from telegram.ext.callbackcontext import CallbackContext
 
 import haruka.modules.sql.blacklist_sql as sql
-from haruka import dispatcher, LOGGER
+from haruka import CONFIG
 from haruka.modules.disable import DisableAbleCommandHandler
 from haruka.modules.helper_funcs.chat_status import user_admin, user_not_admin
 from haruka.modules.helper_funcs.extraction import extract_text
@@ -47,7 +47,7 @@ def blacklist(update: Update, context: CallbackContext):
     conn = connected(update, context, user.id, need_admin=False)
     if conn:
         chat_id = conn
-        chat_name = dispatcher.bot.getChat(conn).title
+        chat_name = context.bot.getChat(conn).title
     else:
         if chat.type == "private":
             return
@@ -86,7 +86,7 @@ def add_blacklist(update: Update, context: CallbackContext):
     conn = connected(update, context, user.id)
     if conn:
         chat_id = conn
-        chat_name = dispatcher.bot.getChat(conn).title
+        chat_name = context.bot.getChat(conn).title
     else:
         chat_id = update.effective_chat.id
         if chat.type == "private":
@@ -127,7 +127,7 @@ def unblacklist(update: Update, context: CallbackContext):
     conn = connected(update, context, user.id)
     if conn:
         chat_id = conn
-        chat_name = dispatcher.bot.getChat(conn).title
+        chat_name = context.bot.getChat(conn).title
     else:
         chat_id = update.effective_chat.id
         if chat.type == "private":
@@ -194,7 +194,7 @@ def del_blacklist(update: Update, context: CallbackContext):
                 if excp.message == "Message to delete not found":
                     pass
                 else:
-                    LOGGER.exception("Error while deleting blacklist message.")
+                    logging.error("Error while deleting blacklist message.")
             break
 
 
@@ -226,7 +226,7 @@ BLACKLIST_DEL_HANDLER = MessageHandler(
     del_blacklist,
     run_async=True)
 
-dispatcher.add_handler(BLACKLIST_HANDLER)
-dispatcher.add_handler(ADD_BLACKLIST_HANDLER)
-dispatcher.add_handler(UNBLACKLIST_HANDLER)
-dispatcher.add_handler(BLACKLIST_DEL_HANDLER, group=BLACKLIST_GROUP)
+CONFIG.dispatcher.add_handler(BLACKLIST_HANDLER)
+CONFIG.dispatcher.add_handler(ADD_BLACKLIST_HANDLER)
+CONFIG.dispatcher.add_handler(UNBLACKLIST_HANDLER)
+CONFIG.dispatcher.add_handler(BLACKLIST_DEL_HANDLER, group=BLACKLIST_GROUP)
