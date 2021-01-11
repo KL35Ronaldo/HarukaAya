@@ -17,9 +17,10 @@
 
 import html
 from typing import List, Optional
-from telegram import Message, Chat, Update, Bot, User, ParseMode, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram import Message, Chat, Update, User, ParseMode, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.error import BadRequest, Unauthorized
-from telegram.ext import CommandHandler, RegexHandler, run_async, Filters, CallbackQueryHandler
+from telegram.ext import CommandHandler, CallbackQueryHandler, Filters, MessageHandler
+from telegram.ext.callbackcontext import CallbackContext
 from telegram.utils.helpers import mention_html
 
 from haruka import dispatcher, LOGGER
@@ -31,9 +32,9 @@ from haruka.modules.tr_engine.strings import tld
 REPORT_GROUP = 5
 
 
-@run_async
 @user_admin
-def report_setting(bot: Bot, update: Update, args: List[str]):
+def report_setting(update: Update, context: CallbackContext):
+    args = context.args
     chat = update.effective_chat  # type: Optional[Chat]
     msg = update.effective_message  # type: Optional[Message]
 
@@ -66,10 +67,9 @@ def report_setting(bot: Bot, update: Update, args: List[str]):
                            parse_mode=ParseMode.MARKDOWN)
 
 
-@run_async
 @user_not_admin
 @loggable
-def report(bot: Bot, update: Update) -> str:
+def report(update: Update, context: CallbackContext) -> str:
     message = update.effective_message  # type: Optional[Message]
     chat = update.effective_chat  # type: Optional[Chat]
     user = update.effective_user  # type: Optional[User]
@@ -138,7 +138,7 @@ def report(bot: Bot, update: Update) -> str:
             if sql.user_should_report(admin.user.id):
                 try:
                     if not chat.type == Chat.SUPERGROUP:
-                        bot.send_message(admin.user.id,
+                        context.bot.send_message(admin.user.id,
                                          msg + link,
                                          parse_mode=ParseMode.HTML,
                                          disable_web_page_preview=True)
@@ -152,7 +152,7 @@ def report(bot: Bot, update: Update) -> str:
                                 message.forward(admin.user.id)
 
                     if not chat.username:
-                        bot.send_message(admin.user.id,
+                        context.bot.send_message(admin.user.id,
                                          msg + link,
                                          parse_mode=ParseMode.HTML,
                                          disable_web_page_preview=True)
@@ -166,7 +166,7 @@ def report(bot: Bot, update: Update) -> str:
                                 message.forward(admin.user.id)
 
                     if chat.username and chat.type == Chat.SUPERGROUP:
-                        bot.send_message(admin.user.id,
+                        context.bot.send_message(admin.user.id,
                                          msg + link,
                                          parse_mode=ParseMode.HTML,
                                          reply_markup=reply_markup,
@@ -200,37 +200,37 @@ def __migrate__(old_chat_id, new_chat_id):
     sql.migrate_chat(old_chat_id, new_chat_id)
 
 
-def buttons(bot: Bot, update):
+def buttons(update: Update, context: CallbackContext):
     query = update.callback_query
     splitter = query.data.replace("report_", "").split("=")
     if splitter[1] == "kick":
         try:
-            bot.kickChatMember(splitter[0], splitter[2])
-            bot.unbanChatMember(splitter[0], splitter[2])
+            context.bot.kickChatMember(splitter[0], splitter[2])
+            context.bot.unbanChatMember(splitter[0], splitter[2])
             query.answer("✅ Succesfully kicked")
             return ""
         except Exception as err:
             query.answer("❎ Failed to kick")
-            bot.sendMessage(text="Error: {}".format(err),
+            context.bot.sendMessage(text="Error: {}".format(err),
                             chat_id=query.message.chat_id,
                             parse_mode=ParseMode.HTML)
     elif splitter[1] == "banned":
         try:
-            bot.kickChatMember(splitter[0], splitter[2])
+            context.bot.kickChatMember(splitter[0], splitter[2])
             query.answer("✅  Succesfully Banned")
             return ""
         except Exception as err:
-            bot.sendMessage(text="Error: {}".format(err),
+            context.bot.sendMessage(text="Error: {}".format(err),
                             chat_id=query.message.chat_id,
                             parse_mode=ParseMode.HTML)
             query.answer("❎ Failed to ban")
     elif splitter[1] == "delete":
         try:
-            bot.deleteMessage(splitter[0], splitter[3])
+            context.bot.deleteMessage(splitter[0], splitter[3])
             query.answer("✅ Message Deleted")
             return ""
         except Exception as err:
-            bot.sendMessage(text="Error: {}".format(err),
+            context.bot.sendMessage(text="Error: {}".format(err),
                             chat_id=query.message.chat_id,
                             parse_mode=ParseMode.HTML)
             query.answer("❎ Failed to delete message!")
@@ -238,9 +238,9 @@ def buttons(bot: Bot, update):
 
 __help__ = True
 
-REPORT_HANDLER = CommandHandler("report", report, filters=Filters.group)
-SETTING_HANDLER = CommandHandler("reports", report_setting, pass_args=True)
-ADMIN_REPORT_HANDLER = RegexHandler("(?i)@admin(s)?", report)
+REPORT_HANDLER = CommandHandler("report", report, run_async=True, filters=Filters.chat_type.groups)
+SETTING_HANDLER = CommandHandler("reports", report_setting, pass_args=True, run_async=True)
+ADMIN_REPORT_HANDLER = MessageHandler(Filters.regex("(?i)@admin(s)?"), report, run_async=True)
 
 report_button_user_handler = CallbackQueryHandler(buttons, pattern=r"report_")
 dispatcher.add_handler(report_button_user_handler)
