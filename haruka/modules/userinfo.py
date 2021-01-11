@@ -16,11 +16,10 @@
 #    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import html
-from typing import List
 
-from telegram import Update, Bot
+from telegram import Update
 from telegram import ParseMode, MAX_MESSAGE_LENGTH
-from telegram.ext.dispatcher import run_async
+from telegram.ext.callbackcontext import CallbackContext
 from telegram.utils.helpers import escape_markdown
 
 import haruka.modules.sql.userinfo_sql as sql
@@ -31,14 +30,14 @@ from haruka.modules.helper_funcs.extraction import extract_user
 from haruka.modules.tr_engine.strings import tld
 
 
-@run_async
-def about_me(bot: Bot, update: Update, args: List[str]):
+def about_me(update: Update, context: CallbackContext):
+    args = context.args
     message = update.effective_message
     user_id = extract_user(message, args)
     chat = update.effective_chat
 
     if user_id:
-        user = bot.get_chat(user_id)
+        user = context.bot.get_chat(user_id)
     else:
         user = message.from_user
 
@@ -57,8 +56,7 @@ def about_me(bot: Bot, update: Update, args: List[str]):
             tld(chat.id, 'userinfo_about_not_set_you'))
 
 
-@run_async
-def set_about_me(bot: Bot, update: Update):
+def set_about_me(update: Update, context: CallbackContext):
     chat = update.effective_chat
     message = update.effective_message
     user_id = message.from_user.id
@@ -81,13 +79,13 @@ def set_about_me(bot: Bot, update: Update):
                                                       len(info[1])))
 
 
-@run_async
-def about_bio(bot: Bot, update: Update, args: List[str]):
+def about_bio(update: Update, context: CallbackContext):
+    args = context.args
     message = update.effective_message
     chat = update.effective_chat
     user_id = extract_user(message, args)
     if user_id:
-        user = bot.get_chat(user_id)
+        user = context.bot.get_chat(user_id)
     else:
         user = message.from_user
 
@@ -106,8 +104,7 @@ def about_bio(bot: Bot, update: Update, args: List[str]):
             tld(chat.id, 'userinfo_bio_none_you'))
 
 
-@run_async
-def set_about_bio(bot: Bot, update: Update):
+def set_about_bio(update: Update, context: CallbackContext):
     chat = update.effective_chat
     message = update.effective_message
     sender = update.effective_user
@@ -120,7 +117,7 @@ def set_about_bio(bot: Bot, update: Update):
         if user_id == message.from_user.id:
             message.reply_text(tld(chat.id, 'userinfo_bio_you_cant_set'))
             return
-        elif user_id == bot.id and sender.id not in SUDO_USERS:
+        elif user_id == context.bot.id and sender.id not in SUDO_USERS:
             message.reply_text(tld(chat.id, 'userinfo_bio_bot_sudo_only'))
             return
         elif user_id in SUDO_USERS and sender.id not in SUDO_USERS:
@@ -167,11 +164,11 @@ def __gdpr__(user_id):
 
 __help__ = True
 
-SET_BIO_HANDLER = DisableAbleCommandHandler("setbio", set_about_bio)
-GET_BIO_HANDLER = DisableAbleCommandHandler("bio", about_bio, pass_args=True)
+SET_BIO_HANDLER = DisableAbleCommandHandler("setbio", set_about_bio, run_async=True)
+GET_BIO_HANDLER = DisableAbleCommandHandler("bio", about_bio, pass_args=True, run_async=True)
 
-SET_ABOUT_HANDLER = DisableAbleCommandHandler("setme", set_about_me)
-GET_ABOUT_HANDLER = DisableAbleCommandHandler("me", about_me, pass_args=True)
+SET_ABOUT_HANDLER = DisableAbleCommandHandler("setme", set_about_me, run_async=True)
+GET_ABOUT_HANDLER = DisableAbleCommandHandler("me", about_me, pass_args=True, run_async=True)
 
 dispatcher.add_handler(SET_BIO_HANDLER)
 dispatcher.add_handler(GET_BIO_HANDLER)
