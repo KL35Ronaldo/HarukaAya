@@ -15,10 +15,10 @@
 #    You should have received a copy of the GNU Affero General Public License
 #    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-from typing import Optional, List
+from typing import Optional
 
-from telegram import Message, Update, Bot, ParseMode, Chat
-from telegram.ext import run_async
+from telegram import Message, Update, ParseMode, Chat
+from telegram.ext.callbackcontext import CallbackContext
 
 from haruka import dispatcher
 from haruka.modules.disable import DisableAbleCommandHandler
@@ -28,8 +28,8 @@ from haruka.modules.tr_engine.strings import tld
 from googletrans import LANGUAGES, Translator
 
 
-@run_async
-def do_translate(bot: Bot, update: Update, args: List[str]):
+def do_translate(update: Update, context: CallbackContext):
+    args = context.args
     chat = update.effective_chat  # type: Optional[Chat]
     msg = update.effective_message  # type: Optional[Message]
 
@@ -65,4 +65,4 @@ def do_translate(bot: Bot, update: Update, args: List[str]):
 __help__ = True
 
 dispatcher.add_handler(
-    DisableAbleCommandHandler("tr", do_translate, pass_args=True))
+    DisableAbleCommandHandler("tr", do_translate, pass_args=True, run_async=True))
