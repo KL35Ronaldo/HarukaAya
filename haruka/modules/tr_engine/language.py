@@ -15,21 +15,23 @@
 #    You should have received a copy of the GNU Affero General Public License
 #    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-from haruka.modules.sql.locales_sql import switch_to_locale, prev_locale
-from haruka.modules.tr_engine.strings import tld, LANGUAGES
-from telegram.ext import CommandHandler
-from telegram import ParseMode, InlineKeyboardMarkup, InlineKeyboardButton
-from haruka import dispatcher
-from haruka.modules.tr_engine.list_locale import list_locales
-from haruka.modules.helper_funcs.chat_status import user_admin
-from telegram.ext import CallbackQueryHandler
 import re
 
+from telegram import InlineKeyboardMarkup, InlineKeyboardButton, ParseMode, Update
+from telegram.ext import CommandHandler, CallbackQueryHandler
+from telegram.ext.callbackcontext import CallbackContext
+
+from haruka import dispatcher
 from haruka.modules.connection import connected
+from haruka.modules.helper_funcs.chat_status import user_admin
+from haruka.modules.sql.locales_sql import switch_to_locale, prev_locale
+from haruka.modules.tr_engine.strings import tld, LANGUAGES
+from haruka.modules.tr_engine.list_locale import list_locales
 
 
 @user_admin
-def locale(bot, update, args):
+def locale(update: Update, context: CallbackContext):
+    args = context.args
     chat = update.effective_chat
     message = update.effective_message
     if len(args) > 0:
@@ -78,7 +80,7 @@ def locale(bot, update, args):
 
 
 @user_admin
-def locale_button(bot, update):
+def locale_button(update: Update, context: CallbackContext):
     chat = update.effective_chat
     user = update.effective_user
     query = update.callback_query
@@ -101,7 +103,7 @@ def locale_button(bot, update):
     text = tld(chat.id, "language_select_language")
     text += tld(chat.id, "language_user_language").format(curr_lang)
 
-    conn = connected(bot, update, chat, user.id, need_admin=False)
+    conn = connected(update, context, user.id, need_admin=False)
 
     if conn:
         try:
@@ -113,7 +115,7 @@ def locale_button(bot, update):
 
     text += tld(chat.id, "language_sel_user_lang")
 
-    bot.edit_message_text(
+    context.bot.edit_message_text(
         chat_id=query.message.chat_id,
         message_id=query.message.message_id,
         text=text,
@@ -131,7 +133,7 @@ def locale_button(bot, update):
         ]]))
 
     # query.message.delete()
-    bot.answer_callback_query(query.id)
+    context.bot.answer_callback_query(query.id)
 
 
 LOCALE_HANDLER = CommandHandler(["set_locale", "locale", "lang", "setlang"],
