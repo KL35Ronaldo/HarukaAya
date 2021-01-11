@@ -15,10 +15,11 @@
 #    You should have received a copy of the GNU Affero General Public License
 #    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-from telegram import Update, Bot
+from telegram import Update
 from telegram import ParseMode, InlineKeyboardMarkup, InlineKeyboardButton
 from telegram.error import BadRequest
-from telegram.ext import CommandHandler, run_async
+from telegram.ext import CommandHandler
+from telegram.ext.callbackcontext import CallbackContext
 from telegram.utils.helpers import escape_markdown
 
 import haruka.modules.sql.rules_sql as sql
@@ -30,14 +31,13 @@ from haruka.modules.tr_engine.strings import tld
 from haruka.modules.connection import connected
 
 
-@run_async
-def get_rules(bot: Bot, update: Update):
+def get_rules(update: Update, context: CallbackContext):
     chat = update.effective_chat
     user = update.effective_user
     msg = update.effective_message
     from_pm = False
 
-    conn = connected(bot, update, chat, user.id)
+    conn = connected(update, context, user.id)
     if conn:
         chat_id = conn
         from_pm = True
@@ -86,14 +86,13 @@ def send_rules(update, chat_id, from_pm=False):
         update.effective_message.reply_text(tld(chat.id, "rules_not_found"))
 
 
-@run_async
 @user_admin
-def set_rules(bot: Bot, update: Update):
+def set_rules(update: Update, context: CallbackContext):
     chat = update.effective_chat
     user = update.effective_user
     msg = update.effective_message
 
-    conn = connected(bot, update, chat, user.id)
+    conn = connected(update, context, user.id)
     if conn: chat_id = conn
     else:
         if chat.type == 'private':
@@ -116,14 +115,13 @@ def set_rules(bot: Bot, update: Update):
         msg.reply_text(tld(chat.id, "rules_success"))
 
 
-@run_async
 @user_admin
-def clear_rules(bot: Bot, update: Update):
+def clear_rules(update: Update, context: CallbackContext):
     chat = update.effective_chat
     user = update.effective_user
     msg = update.effective_message
 
-    conn = connected(bot, update, chat, user.id)
+    conn = connected(update, context, user.id)
     if conn: chat_id = conn
     else:
         if chat.type == 'private':
@@ -145,9 +143,9 @@ def __migrate__(old_chat_id, new_chat_id):
 
 __help__ = True
 
-GET_RULES_HANDLER = CommandHandler("rules", get_rules)
-SET_RULES_HANDLER = CommandHandler("setrules", set_rules)
-RESET_RULES_HANDLER = CommandHandler("clearrules", clear_rules)
+GET_RULES_HANDLER = CommandHandler("rules", get_rules, run_async=True)
+SET_RULES_HANDLER = CommandHandler("setrules", set_rules, run_async=True)
+RESET_RULES_HANDLER = CommandHandler("clearrules", clear_rules, run_async=True)
 
 dispatcher.add_handler(GET_RULES_HANDLER)
 dispatcher.add_handler(SET_RULES_HANDLER)
