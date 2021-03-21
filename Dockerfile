@@ -21,6 +21,9 @@ RUN apk add --no-cache --virtual .build-deps \
     msttcorefonts-installer \
     fontconfig
 
+# Rust Compiler
+RUN apk add cargo
+
 RUN update-ms-fonts && \
     fc-cache -f
 
