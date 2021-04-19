@@ -10,3 +10,4 @@ backups/
 *.backup
 haruka.session
 venv/
+images/*
