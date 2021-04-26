@@ -69,16 +69,6 @@ admin_help: |
   - /invitelink: Mendapat tautan undangan grup
   - /promote: Mempromosikan pengguna Membalas pengguna atau menggunakan nama pengguna mereka.
   - /demote: Menurunkan pangkat seorang pengguna. Balas ke pengguna atau gunakan nama pengguna mereka.
-#AFK
-modname_afk: AFK
-user_now_afk: "{} sekarang AFK!"
-user_no_longer_afk: "{} tidak lagi AFK!"
-status_afk_noreason: "{} sedang AFK!"
-status_afk_reason: "{} AFK! Katanya lagi:\n{}"
-afk_help: |
-  - /afk <reason>: Tandai diri Anda sebagai AFK.
-  - brb <reason>: Sama seperti perintah afk, tetapi bukan perintah.\n
-  Ketika ditandai sebagai AFK, panggilan apa pun akan dijawab dengan pesan yang mengatakan bahwa Anda tidak tersedia!
 #Android
 modname_android: Android
 download: "*Unduh:* [{}]({})\n"

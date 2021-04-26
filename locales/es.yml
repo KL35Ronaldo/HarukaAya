@@ -65,16 +65,6 @@ admin_help: |
   - /invitelink: Obtiene el enlace de invitación del grupo
   - /promote: Promociona que un usuario responda al usuario o use su nombre de usuario.
   - /demote: Destruye un usuario. Responde al usuario o use su nombre de usuario.
-#AFK
-modname_afk: AFK
-user_now_afk: "¡{} está ahora AFK!"
-user_no_longer_afk: "¡{} ya no está AFK!"
-status_afk_noreason: "¡{} está AFK!"
-status_afk_reason: "¡{} está AFK! Dice que se debe a:\n{}"
-afk_help: |
-  - /afk <reason>: Marque usted mismo como AFK.
-  - brb <reason>: Igual que el comando afk, pero no un comando.\n
-  Cuando se marque como AFK, cualquier mención será respondida con un mensaje indicando que no está disponible!
 #Android
 modname_android: Android
 download: "**Descargar:** [{}]({})\n"
