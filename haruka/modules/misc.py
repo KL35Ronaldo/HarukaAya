@@ -43,12 +43,6 @@ cvid = Covid(source="worldometers")
 
 
 @run_async
-def get_bot_ip(bot: Bot, update: Update):
-    res = requests.get("http://ipinfo.io/ip")
-    update.message.reply_text(res.text)
-
-
-@run_async
 def get_id(bot: Bot, update: Update, args: List[str]):
     user_id = extract_user(update.effective_message, args)
     chat = update.effective_chat  # type: Optional[Chat]
@@ -136,17 +130,6 @@ def info(bot: Bot, update: Update, args: List[str]):
             text += "\n\n" + mod_info
 
     update.effective_message.reply_text(text, parse_mode=ParseMode.HTML)
-
-
-@run_async
-def echo(bot: Bot, update: Update):
-    message = update.effective_message
-    message.delete()
-    args = update.effective_message.text.split(None, 1)
-    if message.reply_to_message:
-        message.reply_to_message.reply_text(args[1])
-    else:
-        message.reply_text(args[1], quote=False)
 
 
 @run_async
@@ -471,7 +454,6 @@ ID_HANDLER = DisableAbleCommandHandler("id",
                                        get_id,
                                        pass_args=True,
                                        admin_ok=True)
-IP_HANDLER = CommandHandler("ip", get_bot_ip, filters=Filters.chat(OWNER_ID))
 INFO_HANDLER = DisableAbleCommandHandler("info",
                                          info,
                                          pass_args=True,
@@ -481,8 +463,6 @@ REPO_HANDLER = DisableAbleCommandHandler("repo",
                                          repo,
                                          pass_args=True,
                                          admin_ok=True)
-
-ECHO_HANDLER = CommandHandler("echo", echo, filters=Filters.user(OWNER_ID))
 MD_HELP_HANDLER = CommandHandler("markdownhelp",
                                  markdown_help,
                                  filters=Filters.private)
@@ -505,9 +485,7 @@ dispatcher.add_handler(PASTE_HANDLER)
 dispatcher.add_handler(GET_PASTE_HANDLER)
 dispatcher.add_handler(PASTE_STATS_HANDLER)
 dispatcher.add_handler(ID_HANDLER)
-dispatcher.add_handler(IP_HANDLER)
 dispatcher.add_handler(INFO_HANDLER)
-dispatcher.add_handler(ECHO_HANDLER)
 dispatcher.add_handler(MD_HELP_HANDLER)
 dispatcher.add_handler(STATS_HANDLER)
 dispatcher.add_handler(GDPR_HANDLER)
