@@ -274,8 +274,11 @@ def reply_filter(bot: Bot, update: Update):
                                          disable_web_page_preview=True,
                                          reply_markup=keyboard)
                     else:
-                        message.reply_text(
-                            tld(chat.id, "cust_filters_err_badformat"))
+                        try:
+                            message.reply_text(
+                                tld(chat.id, "cust_filters_err_badformat"))
+                        except:
+                            return
 
             else:
                 # LEGACY - all new filters will have has_markdown set to True.
