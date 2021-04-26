@@ -18,7 +18,7 @@
 from telegram import Update, Bot
 from telegram import ParseMode, InlineKeyboardMarkup, InlineKeyboardButton
 from telegram.error import BadRequest
-from telegram.ext import CommandHandler, run_async, Filters
+from telegram.ext import CommandHandler, run_async
 from telegram.utils.helpers import escape_markdown
 
 import haruka.modules.sql.rules_sql as sql
@@ -34,6 +34,7 @@ from haruka.modules.connection import connected
 def get_rules(bot: Bot, update: Update):
     chat = update.effective_chat
     user = update.effective_user
+    msg = update.effective_message
     from_pm = False
 
     conn = connected(bot, update, chat, user.id)
@@ -120,6 +121,7 @@ def set_rules(bot: Bot, update: Update):
 def clear_rules(bot: Bot, update: Update):
     chat = update.effective_chat
     user = update.effective_user
+    msg = update.effective_message
 
     conn = connected(bot, update, chat, user.id)
     if conn: chat_id = conn
@@ -130,7 +132,7 @@ def clear_rules(bot: Bot, update: Update):
         chat_id = chat.id
 
     sql.set_rules(chat_id, "")
-    update.effective_message.reply_text(tld(chat.id, 'rules_clean_success'))
+    msg.reply_text(tld(chat.id, 'rules_clean_success'))
 
 
 def __stats__():

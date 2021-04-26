@@ -15,7 +15,6 @@
 #    You should have received a copy of the GNU Affero General Public License
 #    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-import random
 from typing import Optional, List
 
 from telegram import Message, Update, Bot, ParseMode, Chat
@@ -24,7 +23,7 @@ from telegram.ext import run_async
 from haruka import dispatcher
 from haruka.modules.disable import DisableAbleCommandHandler
 from haruka.modules.helper_funcs.string_handling import remove_emoji
-from haruka.modules.tr_engine.strings import tld, tld_list
+from haruka.modules.tr_engine.strings import tld
 
 from googletrans import LANGUAGES, Translator
 

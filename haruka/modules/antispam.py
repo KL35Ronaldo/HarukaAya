@@ -15,24 +15,16 @@
 #    You should have received a copy of the GNU Affero General Public License
 #    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-import html
-import time
-from io import BytesIO
 from typing import List
+import json
 import requests
 
 from telegram import Update, Bot, ParseMode
-from telegram.error import BadRequest  #,  TelegramError
 from telegram.ext import run_async, CommandHandler, MessageHandler, Filters
-from telegram.utils.helpers import mention_html
 
 import haruka.modules.sql.antispam_sql as sql
-from haruka import dispatcher, OWNER_ID, SUDO_USERS, STRICT_ANTISPAM, spamwatch_api
+from haruka import dispatcher, STRICT_ANTISPAM, spamwatch_api
 from haruka.modules.helper_funcs.chat_status import user_admin, is_user_admin
-from haruka.modules.helper_funcs.extraction import extract_user_and_text
-from haruka.modules.helper_funcs.filters import CustomFilters
-#from haruka.modules.helper_funcs.misc import send_to_list
-# from haruka.modules.sql.users_sql import get_all_chats
 
 from haruka.modules.tr_engine.strings import tld
 
@@ -54,8 +46,7 @@ def check_and_ban(update, user_id, should_message=True):
                 chat.kick_member(user_id)
                 if should_message:
                     message.reply_text(tld(
-                        chat.id,
-                        "antispam_spamwatch_banned").format(spamwatch_reason),
+                        chat.id, "antispam_spamwatch_banned").format(reason),
                                        parse_mode=ParseMode.HTML)
                     return
                 else:

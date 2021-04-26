@@ -20,7 +20,6 @@ import urllib
 from hurry.filesize import size as sizee
 from telethon import custom
 from haruka.events import register
-from haruka import LOGGER
 from haruka.modules.tr_engine.strings import tld
 
 from requests import get
@@ -125,7 +124,7 @@ async def evo(event):
         try:
             usr = json.loads(fetch.content)
             filename = usr['filename']
-            url = usr['url']
+            url = f"https://evolution-x.org/device/{device}"
             version = usr['version']
             maintainer = usr['maintainer']
             maintainer_url = usr['telegram_username']
@@ -265,8 +264,6 @@ async def bootleggers(event):
 async def magisk(event):
     if event.sender_id is None:
         return
-
-    chat_id = event.chat_id
 
     url = 'https://raw.githubusercontent.com/topjohnwu/magisk_files/'
     releases = '**Latest Magisk Releases:**\n'
