@@ -375,7 +375,7 @@ def process_update(self, update):
     if update.effective_chat:  # Checks if update contains chat object
         now = datetime.datetime.utcnow()
     try:
-        if update.effective_chat.id:
+        if update.effective_chat:
             cnt = CHATS_CNT.get(update.effective_chat.id, 0)
         else:
             return

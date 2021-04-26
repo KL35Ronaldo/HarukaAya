@@ -218,9 +218,11 @@ def reply_filter(bot: Bot, update: Update):
     chat = update.effective_chat
     message = update.effective_message
 
-    if update.effective_user.id:
+    if update.effective_user:
         if update.effective_user.id == 777000:
             return
+        else:
+            pass
     else:
         return
 
