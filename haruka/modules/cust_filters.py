@@ -236,7 +236,7 @@ def reply_filter(bot: Bot, update: Update):
                 try:
                     message.reply_document(filt.reply)
                 except Exception:
-                    print("L")
+                    return
             elif filt.is_image:
                 message.reply_photo(filt.reply)
             elif filt.is_audio:
@@ -247,7 +247,7 @@ def reply_filter(bot: Bot, update: Update):
                 try:
                     message.reply_video(filt.reply)
                 except Exception:
-                    print("Nut")
+                    return
             elif filt.has_markdown:
                 buttons = sql.get_buttons(chat.id, filt.keyword)
                 keyb = build_keyboard(buttons)
@@ -269,16 +269,7 @@ def reply_filter(bot: Bot, update: Update):
                                          disable_web_page_preview=True,
                                          reply_markup=keyboard)
                     else:
-                        try:
-                            message.reply_text(
-                                tld(chat.id, "cust_filters_err_badformat"))
-                            LOGGER.warning("Message %s could not be parsed",
-                                           str(filt.reply))
-                            LOGGER.exception(
-                                "Could not parse filter %s in chat %s",
-                                str(filt.keyword), str(chat.id))
-                        except Exception:
-                            print("Nut")
+                        message.reply_text(tld(chat.id, "cust_filters_err_badformat"))
 
             else:
                 # LEGACY - all new filters will have has_markdown set to True.

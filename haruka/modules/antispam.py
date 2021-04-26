@@ -85,8 +85,9 @@ def enforce_gban(bot: Bot, update: Update):
                 if user and not is_user_admin(chat, user.id):
                     check_and_ban(update, user.id, should_message=False)
                     return
-    except Exception as f:
-        print(f"err {f}")
+    except Exception:
+        # Often timeout, bot kicked from chat, or bot is not in chat.
+        return
 
 
 @run_async
