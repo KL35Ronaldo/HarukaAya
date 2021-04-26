@@ -278,7 +278,7 @@ def main():
     Dispatcher.process_update = process_update
 
     logging.info("Using long polling.")
-    CONFIG.updater.start_polling(timeout=15, read_latency=4, clean=True)
+    CONFIG.updater.start_polling(timeout=15, read_latency=4, drop_pending_updates=True)
 
     logging.info("Successfully loaded")
     if len(argv) not in (1, 3, 4):
