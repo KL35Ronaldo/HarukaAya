@@ -17,6 +17,7 @@
 
 from html import escape
 from typing import Optional, List
+import requests
 
 from telegram import Message, Chat, Update, Bot, User, CallbackQuery
 from telegram import ParseMode, InlineKeyboardMarkup, InlineKeyboardButton
@@ -25,7 +26,7 @@ from telegram.ext import MessageHandler, Filters, CommandHandler, run_async, Cal
 from telegram.utils.helpers import mention_html
 
 import haruka.modules.sql.welcome_sql as sql
-from haruka import dispatcher, OWNER_ID, LOGGER, MESSAGE_DUMP, sw
+from haruka import dispatcher, OWNER_ID, LOGGER, MESSAGE_DUMP, spamwatch_api
 from haruka.modules.helper_funcs.chat_status import user_admin, is_user_ban_protected
 from haruka.modules.helper_funcs.misc import build_keyboard, revert_buttons
 from haruka.modules.helper_funcs.msg_types import get_welcome_type
@@ -141,10 +142,17 @@ def new_member(bot: Bot, update: Update):
         for new_mem in new_members:
             # Give start information when add bot to group
 
-            if sw != None:
-                sw_ban = sw.get_ban(new_mem.id)
-                if sw_ban:
-                    return
+            try:
+                if spamwatch_api != None:
+                    headers = {'Authorization': f'Bearer {spamwatch_api}'}
+                    resp = requests.get(
+                        "https://api.spamwat.ch/banlist/{new_mem.id}",
+                        headers=headers,
+                        timeout=5)
+                    if resp.status_code == 200:
+                        return
+            except:
+                pass
 
             if new_mem.id == bot.id:
                 bot.send_message(
@@ -368,7 +376,7 @@ def check_bot_button(bot: Bot, update: Update):
         try:
             query.answer(text=tld(chat.id, 'welcome_mute_btn_old_user'))
         except Exception:
-            print("Nut")
+            return
 
 
 @run_async
@@ -381,11 +389,17 @@ def left_member(bot: Bot, update: Update):
     if should_goodbye:
         left_mem = update.effective_message.left_chat_member
         if left_mem:
-
-            if sw != None:
-                sw_ban = sw.get_ban(left_mem.id)
-                if sw_ban:
-                    return
+            try:
+                if spamwatch_api != None:
+                    headers = {'Authorization': f'Bearer {spamwatch_api}'}
+                    resp = requests.get(
+                        "https://api.spamwat.ch/banlist/{left_mem.id}",
+                        headers=headers,
+                        timeout=5)
+                    if resp.status_code == 200:
+                        return
+            except:
+                pass
 
             # Ignore bot being kicked
             if left_mem.id == bot.id:

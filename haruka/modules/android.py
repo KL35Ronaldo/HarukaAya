@@ -24,6 +24,7 @@ from haruka import LOGGER
 from haruka.modules.tr_engine.strings import tld
 
 from requests import get
+from requests.exceptions import Timeout
 import rapidjson as json
 
 
@@ -44,7 +45,16 @@ async def los(event):
         await event.reply(reply_text, link_preview=False)
         return
 
-    fetch = get(f'https://download.lineageos.org/api/v1/{device}/nightly/*')
+    try:
+        fetch = get(
+            f'https://download.lineageos.org/api/v1/{device}/nightly/*',
+            timeout=5)
+    except Timeout:
+        await event.reply(
+            "Haruka Aya have been trying to connect to Github User Content, It seem like Github User Content is down"
+        )
+        return
+
     if fetch.status_code == 200 and len(fetch.json()['response']) != 0:
         usr = json.loads(fetch.content)
         response = usr['response'][0]
@@ -95,9 +105,15 @@ async def evo(event):
         await event.reply(reply_text, link_preview=False)
         return
 
-    fetch = get(
-        f'https://raw.githubusercontent.com/Evolution-X-Devices/official_devices/master/builds/{device}.json'
-    )
+    try:
+        fetch = get(
+            f'https://raw.githubusercontent.com/Evolution-X-Devices/official_devices/master/builds/{device}.json',
+            timeout=5)
+    except Timeout:
+        await event.reply(
+            "Haruka Aya have been trying to connect to Github User Content, It seem like Github User Content is down"
+        )
+        return
 
     if fetch.status_code in [500, 504, 505]:
         await event.reply(
@@ -144,9 +160,16 @@ async def phh(event):
 
     chat_id = event.chat_id
 
-    fetch = get(
-        "https://api.github.com/repos/phhusson/treble_experimentations/releases/latest"
-    )
+    try:
+        fetch = get(
+            "https://api.github.com/repos/phhusson/treble_experimentations/releases/latest",
+            timeout=5)
+    except Timeout:
+        await event.reply(
+            "Haruka Aya have been trying to connect to Github User Content, It seem like Github User Content is down"
+        )
+        return
+
     usr = json.loads(fetch.content)
     reply_text = tld(chat_id, "phh_releases")
     for i in range(len(usr)):
@@ -176,7 +199,16 @@ async def bootleggers(event):
         await event.reply(reply_text, link_preview=False)
         return
 
-    fetch = get('https://bootleggersrom-devices.github.io/api/devices.json')
+    try:
+        fetch = get(
+            'https://bootleggersrom-devices.github.io/api/devices.json',
+            timeout=5)
+    except Timeout:
+        await event.reply(
+            "Haruka Aya have been trying to connect to Github User Content, It seem like Github User Content is down"
+        )
+        return
+
     if fetch.status_code == 200:
         nestedjson = json.loads(fetch.content)
 
@@ -240,7 +272,14 @@ async def magisk(event):
     releases = '**Latest Magisk Releases:**\n'
     variant = ['master/stable', 'master/beta', 'canary/canary']
     for variants in variant:
-        fetch = get(url + variants + '.json')
+        try:
+            fetch = get(url + variants + '.json', timeout=5)
+        except Timeout:
+            await event.reply(
+                "Haruka Aya have been trying to connect to Github User Content, It seem like Github User Content is down"
+            )
+            return
+
         data = json.loads(fetch.content)
         if variants == "master/stable":
             name = "**Stable**"

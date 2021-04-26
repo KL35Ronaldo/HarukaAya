@@ -19,6 +19,7 @@ import html
 import time
 from io import BytesIO
 from typing import List
+import requests
 
 from telegram import Update, Bot, ParseMode
 from telegram.error import BadRequest  #,  TelegramError
@@ -26,7 +27,7 @@ from telegram.ext import run_async, CommandHandler, MessageHandler, Filters
 from telegram.utils.helpers import mention_html
 
 import haruka.modules.sql.antispam_sql as sql
-from haruka import dispatcher, OWNER_ID, SUDO_USERS, STRICT_ANTISPAM, sw
+from haruka import dispatcher, OWNER_ID, SUDO_USERS, STRICT_ANTISPAM, spamwatch_api
 from haruka.modules.helper_funcs.chat_status import user_admin, is_user_admin
 from haruka.modules.helper_funcs.extraction import extract_user_and_text
 from haruka.modules.helper_funcs.filters import CustomFilters
@@ -42,10 +43,14 @@ def check_and_ban(update, user_id, should_message=True):
     chat = update.effective_chat
     message = update.effective_message
     try:
-        if sw != None:
-            sw_ban = sw.get_ban(user_id)
-            if sw_ban:
-                spamwatch_reason = sw_ban.reason
+        if spamwatch_api != None:
+            headers = {'Authorization': f'Bearer {spamwatch_api}'}
+            resp = requests.get("https://api.spamwat.ch/banlist/{user_id}",
+                                headers=headers,
+                                timeout=5)
+            if resp.status_code == 200:
+                sw_ban = json.loads(resp.content)
+                reason = sw_ban['reason']
                 chat.kick_member(user_id)
                 if should_message:
                     message.reply_text(tld(
@@ -55,7 +60,9 @@ def check_and_ban(update, user_id, should_message=True):
                     return
                 else:
                     return
-    except Exception:
+        else:
+            return
+    except:
         pass
 
 

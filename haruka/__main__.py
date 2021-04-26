@@ -124,7 +124,7 @@ def start(bot: Bot, update: Update, args: List[str]):
             update.effective_message.reply_text(
                 tld(chat.id, 'main_start_group'))
         except Exception:
-            print("Nut")
+            return
 
 
 def send_start(bot, update):
@@ -375,7 +375,10 @@ def process_update(self, update):
     if update.effective_chat:  # Checks if update contains chat object
         now = datetime.datetime.utcnow()
     try:
-        cnt = CHATS_CNT.get(update.effective_chat.id, 0)
+        if update.effective_chat.id:
+            cnt = CHATS_CNT.get(update.effective_chat.id, 0)
+        else:
+            return
     except AttributeError:
         self.logger.exception(
             'An uncaught error was raised while updating process')

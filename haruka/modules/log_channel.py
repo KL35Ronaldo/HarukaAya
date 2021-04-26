@@ -90,7 +90,7 @@ def logging(bot: Bot, update: Update):
                                        log_channel),
                                parse_mode=ParseMode.MARKDOWN)
         except Exception:
-            print("Nut")
+            return
     else:
         message.reply_text(tld(chat.id, "log_channel_none"))
 

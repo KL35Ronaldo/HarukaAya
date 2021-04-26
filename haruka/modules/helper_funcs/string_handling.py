@@ -307,4 +307,5 @@ def markdown_to_html(text):
 
 def remove_emoji(inputString):
     """ Remove emojis and other non-safe characters from string """
-    return re.sub("\s\s+", " ", emoji.get_emoji_regexp().sub(u' ', inputString))
+    return re.sub("\s\s+", " ",
+                  emoji.get_emoji_regexp().sub(u' ', inputString))

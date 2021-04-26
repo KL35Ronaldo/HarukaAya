@@ -24,7 +24,7 @@ from telegram.error import BadRequest
 from telegram.ext import MessageHandler, DispatcherHandlerStop, run_async
 from telegram.utils.helpers import escape_markdown
 
-from haruka import dispatcher, LOGGER
+from haruka import dispatcher
 from haruka.modules.disable import DisableAbleCommandHandler
 from haruka.modules.helper_funcs.chat_status import user_admin
 from haruka.modules.helper_funcs.extraction import extract_text
@@ -218,7 +218,10 @@ def reply_filter(bot: Bot, update: Update):
     chat = update.effective_chat
     message = update.effective_message
 
-    if update.effective_user.id == 777000:
+    if update.effective_user.id:
+        if update.effective_user.id == 777000:
+            return
+    else:
         return
 
     to_match = extract_text(message)
@@ -269,7 +272,8 @@ def reply_filter(bot: Bot, update: Update):
                                          disable_web_page_preview=True,
                                          reply_markup=keyboard)
                     else:
-                        message.reply_text(tld(chat.id, "cust_filters_err_badformat"))
+                        message.reply_text(
+                            tld(chat.id, "cust_filters_err_badformat"))
 
             else:
                 # LEGACY - all new filters will have has_markdown set to True.
