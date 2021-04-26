@@ -60,6 +60,7 @@ class AntispamSettings(BASE):
 AntispamSettings.__table__.create(checkfirst=True)
 
 GBANSTAT_LIST = set()
+ASPAM_SETTING_LOCK = threading.RLock()
 ANTISPAMSETTING = set()
 
 
