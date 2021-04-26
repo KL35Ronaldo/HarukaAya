@@ -134,7 +134,8 @@ def new_member(bot: Bot, update: Update):
 
     should_welc, cust_welcome, cust_content, welc_type = sql.get_welc_pref(
         chat.id)
-    cust_welcome = markdown_to_html(cust_welcome)
+    if cust_welcome:
+        cust_welcome = markdown_to_html(cust_welcome)
 
     if should_welc:
         sent = None
@@ -363,7 +364,10 @@ def check_bot_button(bot: Bot, update: Update):
     query = update.callback_query  # type: Optional[CallbackQuery]
     getalluser = sql.get_chat_userlist(chat.id)
     if user.id in getalluser:
-        query.answer(text=tld(chat.id, 'welcome_mute_btn_unmuted'))
+        try:
+            query.answer(text=tld(chat.id, 'welcome_mute_btn_unmuted'))
+        except:
+            pass
         # Unmute user
         bot.restrict_chat_member(chat.id,
                                  user.id,
@@ -384,7 +388,8 @@ def left_member(bot: Bot, update: Update):
     chat = update.effective_chat  # type: Optional[Chat]
     should_goodbye, cust_goodbye, cust_content, goodbye_type = sql.get_gdbye_pref(
         chat.id)
-    cust_goodbye = markdown_to_html(cust_goodbye)
+    if cust_goodbye:
+        cust_goodbye = markdown_to_html(cust_goodbye)
 
     if should_goodbye:
         left_mem = update.effective_message.left_chat_member

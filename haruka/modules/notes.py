@@ -301,8 +301,11 @@ def list_notes(bot: Bot, update: Update):
 
     elif len(msg) != 0:
         msg += tld(chat.id, "note_get")
-        update.effective_message.reply_text(msg.format(chat_name),
-                                            parse_mode=ParseMode.MARKDOWN)
+        try:
+            update.effective_message.reply_text(msg.format(chat_name),
+                                                parse_mode=ParseMode.MARKDOWN)
+        except:
+            return
 
 
 @run_async
