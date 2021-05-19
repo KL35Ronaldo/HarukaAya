@@ -153,8 +153,7 @@ def gdpr(bot: Bot, update: Update):
     for mod in GDPR:
         mod.__gdpr__(update.effective_user.id)
 
-    update.effective_message.reply_text(tld(update.effective_chat.id,
-                                            "send_gdpr"),
+    update.effective_message.reply_text("GDPR is done",
                                         parse_mode=ParseMode.MARKDOWN)
 
 
