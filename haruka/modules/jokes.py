@@ -19,10 +19,10 @@ import random, io
 import os
 
 from typing import List
-from telegram import Update, Bot, ParseMode, Message
+from telegram import Update, ParseMode, Message
 from telegram.ext import run_async
+from telegram.ext.callbackcontext import CallbackContext
 
-from haruka import dispatcher
 from haruka.modules.disable import DisableAbleCommandHandler
 from telegram.utils.helpers import escape_markdown
 from haruka.modules.helper_funcs.extraction import extract_user
@@ -30,14 +30,16 @@ from haruka.modules.tr_engine.strings import tld, tld_list
 
 
 @run_async
-def runs(bot: Bot, update: Update):
+def runs(update: Update, context: CallbackContext):
     chat = update.effective_chat
     update.effective_message.reply_text(
         random.choice(tld_list(chat.id, "jokes_runs_list")))
 
 
 @run_async
-def slap(bot: Bot, update: Update, args: List[str]):
+def slap(update: Update, context: CallbackContext):
+    args = context.args
+
     chat = update.effective_chat
     msg = update.effective_message
 
@@ -53,7 +55,7 @@ def slap(bot: Bot, update: Update, args: List[str]):
 
     user_id = extract_user(update.effective_message, args)
     if user_id:
-        slapped_user = bot.get_chat(user_id)
+        slapped_user = context.bot.get_chat(user_id)
         user1 = curr_user
         if slapped_user.username == "RealAkito":
             reply_text(tld(chat.id, "jokes_not_doing_that"))
@@ -66,7 +68,7 @@ def slap(bot: Bot, update: Update, args: List[str]):
 
     # if no target found, bot targets the sender
     else:
-        user1 = "[{}](tg://user?id={})".format(bot.first_name, bot.id)
+        user1 = "[{}](tg://user?id={})".format(context.bot.first_name, context.bot.id)
         user2 = curr_user
 
     temp = random.choice(tld_list(chat.id, "jokes_slaps_templates_list"))
