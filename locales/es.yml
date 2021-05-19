@@ -387,7 +387,7 @@ language_not_supported: "¡{} aún no está soportado!"
 language_code_not_valid: Eso no es un código de idioma válido. ¡Usa un código ISO internacionalmente aceptado!
 language_current_locale: "El idioma actual para este chat es: *{}*"
 language_select_language: "*Seleccionar idioma* \n"
-language_user_language: "Lenguage de usuario: `{}`\n\nAyúdanos a incorporar más lenguajes al bot contribuyendo con el proyecto en [Crowdin](https://translate.harukaaya.me/HarukaAya)!\n"
+language_user_language: "Lenguage de usuario: `{}`\n\nAyúdanos a incorporar más lenguajes al bot contribuyendo con el proyecto en [Crowdinhttps://haruka.crowdin.com/HarukaAya/)!\n"
 language_chat_language: "\nIdioma de chat conectado: `{}`"
 language_sel_user_lang: "*\n\nSeleccione un nuevo idioma de usuario:*"
 #Locks
