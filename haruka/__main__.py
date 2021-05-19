@@ -34,6 +34,7 @@ from telegram.utils.helpers import DEFAULT_FALSE
 # Needed to dynamically load modules
 # NOTE: Module order is not guaranteed, specify that in the config file!
 from haruka import CONFIG
+from haruka.modules import ALL_MODULES
 from haruka.modules.helper_funcs.misc import paginate_modules
 from haruka.modules.tr_engine.strings import tld
 
@@ -46,6 +47,34 @@ USER_INFO = []
 DATA_IMPORT = []
 DATA_EXPORT = []
 GDPR = []
+
+importlib.import_module("haruka.modules.tr_engine.language")
+
+for module_name in ALL_MODULES:
+    imported_module = importlib.import_module("haruka.modules." + module_name)
+    modname = imported_module.__name__.split('.')[2]
+
+    if not modname.lower() in IMPORTED:
+        IMPORTED[modname.lower()] = imported_module
+    else:
+        raise Exception(
+            "Can't have two modules with the same name! Please change one")
+
+    if hasattr(imported_module, "__help__") and imported_module.__help__:
+        HELPABLE[modname.lower()] = tld(0, "modname_" + modname).strip()
+
+    # Chats to migrate on chat_migrated events
+    if hasattr(imported_module, "__migrate__"):
+        MIGRATEABLE.append(imported_module)
+
+    if hasattr(imported_module, "__stats__"):
+        STATS.append(imported_module)
+
+    if hasattr(imported_module, "__gdpr__"):
+        GDPR.append(imported_module)
+
+    if hasattr(imported_module, "__user_info__"):
+        USER_INFO.append(imported_module)
 
 
 # Do NOT async this!
@@ -402,41 +431,6 @@ def __list_all_modules():
 
 if __name__ == "__main__":
     # TODO -> Make a proper startup function for this
-    importlib.import_module("haruka.modules.tr_engine.language")
-
-    ALL_MODULES = sorted(__list_all_modules())
-    logging.info("Modules to load: %s", str(ALL_MODULES))
-
-    for module_name in ALL_MODULES:
-        imported_module = importlib.import_module(f"haruka.modules.{module_name}")
-        modname = imported_module.__name__.split('.')[2]
-
-        if modname.lower() in IMPORTED:
-            logging.error("Cannot have two modules with identical names, quitting")
-            exit(1)
-        IMPORTED[modname.lower()] = imported_module
-
-        if hasattr(imported_module, "__help__") and imported_module.__help__:
-            HELPABLE[modname.lower()] = tld(0, "modname_" + modname).strip()
-
-        if hasattr(imported_module, "__migrate__"):
-            MIGRATEABLE.append(imported_module)
-
-        if hasattr(imported_module, "__stats__"):
-            STATS.append(imported_module)
-
-        if hasattr(imported_module, "__gdpr__"):
-            GDPR.append(imported_module)
-
-        if hasattr(imported_module, "__user_info__"):
-            USER_INFO.append(imported_module)
-
-        if hasattr(imported_module, "__import_data__"):
-            DATA_IMPORT.append(imported_module)
-
-        if hasattr(imported_module, "__export_data__"):
-            DATA_EXPORT.append(imported_module)
-
     logging.info("Successfully loaded modules: " + str(ALL_MODULES))
     CONFIG.telethon_client.start(bot_token=CONFIG.bot_token)
     main()
