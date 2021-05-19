@@ -266,9 +266,12 @@ async def magisk(event):
         return
 
     magisk_dict = {
-        "Stable": "https://raw.githubusercontent.com/topjohnwu/magisk-files/master/stable.json",
-        "Beta": "https://raw.githubusercontent.com/topjohnwu/magisk-files/master/beta.json",
-        "Canary": "https://raw.githubusercontent.com/topjohnwu/magisk-files/master/canary.json",
+        "Stable":
+        "https://raw.githubusercontent.com/topjohnwu/magisk-files/master/stable.json",
+        "Beta":
+        "https://raw.githubusercontent.com/topjohnwu/magisk-files/master/beta.json",
+        "Canary":
+        "https://raw.githubusercontent.com/topjohnwu/magisk-files/master/canary.json",
     }
 
     releases = "**Latest Magisk Releases:**\n"
@@ -285,8 +288,7 @@ async def magisk(event):
         data = json.loads(fetch.content)
         releases += (
             f'**{name}:** [APK {data["magisk"]["version"]}]({data["magisk"]["link"]}) | '
-            f'[Changelog]({data["magisk"]["note"]})\n'
-        )
+            f'[Changelog]({data["magisk"]["note"]})\n')
     await event.reply(releases, link_preview=False)
 
 
