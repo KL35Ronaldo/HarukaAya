@@ -16,4 +16,4 @@ docker:deploy:
     - docker build --pull -t "$DOCKER_IMAGE" .
     - docker push "registry.gitlab.com/harukanetwork/oss/harukaaya:$CI_COMMIT_BRANCH"
   only:
-    - dockerstation
+    - dockerstation-beta
