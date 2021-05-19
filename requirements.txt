@@ -1,5 +1,5 @@
 #### Bot lib ####
-git+https://gitlab.com/HarukaNetwork/OSS/PTB.git
+python-telegram-bot>=13.0.0
 telethon
 #################
 aiohttp>=2.2.5
