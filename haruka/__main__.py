@@ -130,6 +130,7 @@ def send_start(update: Update, context: CallbackContext):
     """
 
     chat = update.effective_chat
+    query = update.callback_query
     text = tld(chat.id, 'main_start_pm')
 
     keyboard = [[
@@ -142,19 +143,6 @@ def send_start(update: Update, context: CallbackContext):
         InlineKeyboardButton(text=tld(chat.id, 'btn_help'),
                              callback_data="help_back")
     ]]
-
-    try:
-        query = update.callback_query
-        context.bot.edit_message_text(
-            chat_id=query.message.chat_id,
-            message_id=query.message.message_id,
-            text=text,
-            parse_mode=ParseMode.MARKDOWN,
-            reply_markup=InlineKeyboardMarkup(keyboard),
-            disable_web_page_preview=True)
-    except (TelegramError, NetworkError, AttributeError) as error:
-        logging.error(
-            f"An exception occurred, {type(error).__name__}: {error}")
 
     try:
         if query:
@@ -171,7 +159,7 @@ def send_start(update: Update, context: CallbackContext):
                 reply_markup=InlineKeyboardMarkup(keyboard),
                 parse_mode=ParseMode.MARKDOWN,
                 disable_web_page_preview=True)
-    except (TelegramError, NetworkError) as error:
+    except (TelegramError, NetworkError, AttributeError) as error:
         logging.error(
             f"An exception occurred, {type(error).__name__}: {error}")
 
