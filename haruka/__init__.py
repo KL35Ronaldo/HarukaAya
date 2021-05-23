@@ -51,29 +51,37 @@ class HarukaConfig(BaseModel):
 
 
 logging.basicConfig(
-    format="[%(levelname)s %(asctime)s] Module '%(module)s', function '%(funcName)s' at line %(lineno)d -> %(message)s",
+    format=
+    "[%(levelname)s %(asctime)s] Module '%(module)s', function '%(funcName)s' at line %(lineno)d -> %(message)s",
     level=logging.INFO)
 logging.info("Starting haruka...")
 
 if sys.version_info < (3, 8, 0):
-    logging.error("Your Python version is too old for Haruka to run, please update to Python 3.8 or above")
+    logging.error(
+        "Your Python version is too old for Haruka to run, please update to Python 3.8 or above"
+    )
     exit(1)
 
 try:
-    config_file = dict(yaml.load(open('config.yml', 'r'), Loader=yaml.SafeLoader))
+    config_file = dict(
+        yaml.load(open('config.yml', 'r'), Loader=yaml.SafeLoader))
 except Exception as error:
-    logging.error(f"Could not load config file due to a {type(error).__name__}: {error}")
+    logging.error(
+        f"Could not load config file due to a {type(error).__name__}: {error}")
     exit(1)
 
 if not config_file['is_example_config_or_not'] == "not_sample_anymore":
-    logging.warning("Please make sure that your configuration file is correct, refusing to start")
+    logging.warning(
+        "Please make sure that your configuration file is correct, refusing to start"
+    )
     exit(1)
 config_file.pop("is_example_config_or_not")
 
 try:
     CONFIG = HarukaConfig(**config_file)
 except ValidationError as validation_error:
-    logging.error(f"Something went wrong when parsing config.yml: {validation_error}")
+    logging.error(
+        f"Something went wrong when parsing config.yml: {validation_error}")
     exit(1)
 
 CONFIG.sudo_users.add(CONFIG.owner_id)
@@ -81,11 +89,14 @@ CONFIG.sudo_users.add(CONFIG.owner_id)
 try:
     CONFIG.updater = tg.Updater(CONFIG.bot_token, workers=CONFIG.workers)
     CONFIG.dispatcher = CONFIG.updater.dispatcher
-    CONFIG.telethon_client = TelegramClient("haruka", CONFIG.api_id, CONFIG.api_hash)
+    CONFIG.telethon_client = TelegramClient("haruka", CONFIG.api_id,
+                                            CONFIG.api_hash)
 
     # We import it now to ensure that all previous variables have been set
     from haruka.modules.helper_funcs.handlers import CustomCommandHandler
     tg.CommandHandler = CustomCommandHandler
 except Exception as telegram_error:
-    logging.error(f"Could not initialize Telegram client due to a {type(telegram_error).__name__}: {telegram_error}")
+    logging.error(
+        f"Could not initialize Telegram client due to a {type(telegram_error).__name__}: {telegram_error}"
+    )
     exit(1)

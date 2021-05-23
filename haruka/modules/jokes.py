@@ -68,7 +68,8 @@ def slap(update: Update, context: CallbackContext):
 
     # if no target found, bot targets the sender
     else:
-        user1 = "[{}](tg://user?id={})".format(context.bot.first_name, context.bot.id)
+        user1 = "[{}](tg://user?id={})".format(context.bot.first_name,
+                                               context.bot.id)
         user2 = curr_user
 
     temp = random.choice(tld_list(chat.id, "jokes_slaps_templates_list"))

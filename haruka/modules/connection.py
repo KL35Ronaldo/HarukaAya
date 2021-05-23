@@ -139,8 +139,8 @@ def connect_chat(update: Update, context: CallbackContext):
 
     elif update.effective_chat.type == 'supergroup':
         connect_chat = chat.id
-        if (context.bot.get_chat_member(connect_chat,
-                                update.effective_message.from_user.id).status
+        if (context.bot.get_chat_member(
+                connect_chat, update.effective_message.from_user.id).status
                 in ('administrator', 'creator') or
             (sql.allow_connect_to_chat(connect_chat) == True)
                 and context.bot.get_chat_member(
@@ -184,7 +184,10 @@ def disconnect_chat(update: Update, context: CallbackContext):
         update.effective_message.reply_text(tld(chat.id, "common_cmd_pm_only"))
 
 
-def connected(update: Update, context: CallbackContext, user_id, need_admin=True):
+def connected(update: Update,
+              context: CallbackContext,
+              user_id,
+              need_admin=True):
     chat = update.effective_chat  # type: Optional[Chat]
     if chat.type == chat.PRIVATE and sql.get_connected_chat(user_id):
         conn_id = sql.get_connected_chat(user_id).chat_id
@@ -222,8 +225,7 @@ CONNECT_CHAT_HANDLER = CommandHandler(["connect", "connection"],
                                       connect_chat,
                                       pass_args=True,
                                       run_async=True)
-DISCONNECT_CHAT_HANDLER = CommandHandler("disconnect",
-                                         disconnect_chat)
+DISCONNECT_CHAT_HANDLER = CommandHandler("disconnect", disconnect_chat)
 ALLOW_CONNECTIONS_HANDLER = CommandHandler("allowconnect",
                                            allow_connections,
                                            pass_args=True,

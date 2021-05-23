@@ -52,7 +52,8 @@ def check_flood(update: Update, context: CallbackContext) -> str:
         return ""
 
     try:
-        context.bot.restrict_chat_member(chat.id, user.id, ChatPermissions(can_send_messages=False))
+        context.bot.restrict_chat_member(
+            chat.id, user.id, ChatPermissions(can_send_messages=False))
         msg.reply_text(tld(chat.id, "flood_mute"))
 
         return tld(chat.id, "flood_logger_success").format(
@@ -124,14 +125,19 @@ __help__ = True
 
 # TODO: Add actions: ban/kick/mute/tban/tmute
 
-FLOOD_BAN_HANDLER = MessageHandler(
-    Filters.all & ~Filters.status_update & Filters.chat_type.groups, check_flood, run_async=True)
+FLOOD_BAN_HANDLER = MessageHandler(Filters.all & ~Filters.status_update
+                                   & Filters.chat_type.groups,
+                                   check_flood,
+                                   run_async=True)
 SET_FLOOD_HANDLER = CommandHandler("setflood",
                                    set_flood,
                                    pass_args=True,
                                    run_async=True,
                                    filters=Filters.chat_type.groups)
-FLOOD_HANDLER = CommandHandler("flood", flood, run_async=True, filters=Filters.chat_type.groups)
+FLOOD_HANDLER = CommandHandler("flood",
+                               flood,
+                               run_async=True,
+                               filters=Filters.chat_type.groups)
 
 CONFIG.dispatcher.add_handler(FLOOD_BAN_HANDLER, FLOOD_GROUP)
 CONFIG.dispatcher.add_handler(SET_FLOOD_HANDLER)

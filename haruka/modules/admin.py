@@ -78,16 +78,17 @@ def promote(update: Update, context: CallbackContext) -> str:
     # set same perms as bot - bot can't assign higher perms than itself!
     bot_member = chatD.get_member(context.bot.id)
 
-    context.bot.promoteChatMember(chatD.id,
-                          user_id,
-                          can_change_info=bot_member.can_change_info,
-                          can_post_messages=bot_member.can_post_messages,
-                          can_edit_messages=bot_member.can_edit_messages,
-                          can_delete_messages=bot_member.can_delete_messages,
-                          can_invite_users=bot_member.can_invite_users,
-                          can_restrict_members=bot_member.can_restrict_members,
-                          can_pin_messages=bot_member.can_pin_messages,
-                          can_promote_members=bot_member.can_promote_members)
+    context.bot.promoteChatMember(
+        chatD.id,
+        user_id,
+        can_change_info=bot_member.can_change_info,
+        can_post_messages=bot_member.can_post_messages,
+        can_edit_messages=bot_member.can_edit_messages,
+        can_delete_messages=bot_member.can_delete_messages,
+        can_invite_users=bot_member.can_invite_users,
+        can_restrict_members=bot_member.can_restrict_members,
+        can_pin_messages=bot_member.can_pin_messages,
+        can_promote_members=bot_member.can_promote_members)
 
     message.reply_text(tld(chat.id, "admin_promote_success").format(
         mention_html(user.id, user.first_name),
@@ -146,15 +147,15 @@ def demote(update: Update, context: CallbackContext) -> str:
 
     try:
         context.bot.promoteChatMember(int(chatD.id),
-                              int(user_id),
-                              can_change_info=False,
-                              can_post_messages=False,
-                              can_edit_messages=False,
-                              can_delete_messages=False,
-                              can_invite_users=False,
-                              can_restrict_members=False,
-                              can_pin_messages=False,
-                              can_promote_members=False)
+                                      int(user_id),
+                                      can_change_info=False,
+                                      can_post_messages=False,
+                                      can_edit_messages=False,
+                                      can_delete_messages=False,
+                                      can_invite_users=False,
+                                      can_restrict_members=False,
+                                      can_pin_messages=False,
+                                      can_promote_members=False)
         message.reply_text(tld(chat.id, "admin_demote_success").format(
             mention_html(user.id, user.first_name),
             mention_html(user_member.user.id, user_member.user.first_name),
@@ -191,8 +192,8 @@ def pin(update: Update, context: CallbackContext) -> str:
     if prev_message and is_group:
         try:
             context.bot.pinChatMessage(chat.id,
-                               prev_message.message_id,
-                               disable_notification=is_silent)
+                                       prev_message.message_id,
+                                       disable_notification=is_silent)
         except BadRequest as excp:
             if excp.message == "Chat_not_modified":
                 pass
@@ -317,10 +318,21 @@ UNPIN_HANDLER = DisableAbleCommandHandler("unpin",
                                           run_async=True,
                                           filters=Filters.chat_type.groups)
 
-INVITE_HANDLER = CommandHandler("invitelink", invite, admin_ok=True, run_async=True)
+INVITE_HANDLER = CommandHandler("invitelink",
+                                invite,
+                                admin_ok=True,
+                                run_async=True)
 
-PROMOTE_HANDLER = DisableAbleCommandHandler("promote", promote, admin_ok=True, pass_args=True, run_async=True)
-DEMOTE_HANDLER = DisableAbleCommandHandler("demote", demote, pass_args=True, admin_ok=True, run_async=True)
+PROMOTE_HANDLER = DisableAbleCommandHandler("promote",
+                                            promote,
+                                            admin_ok=True,
+                                            pass_args=True,
+                                            run_async=True)
+DEMOTE_HANDLER = DisableAbleCommandHandler("demote",
+                                           demote,
+                                           pass_args=True,
+                                           admin_ok=True,
+                                           run_async=True)
 
 REACT_HANDLER = DisableAbleCommandHandler("reaction",
                                           reaction,
@@ -330,7 +342,9 @@ REACT_HANDLER = DisableAbleCommandHandler("reaction",
                                           filters=Filters.chat_type.groups)
 
 ADMINLIST_HANDLER = DisableAbleCommandHandler(["adminlist", "admins"],
-                                              adminlist, admin_ok=True, run_async=True)
+                                              adminlist,
+                                              admin_ok=True,
+                                              run_async=True)
 
 CONFIG.dispatcher.add_handler(PIN_HANDLER)
 CONFIG.dispatcher.add_handler(UNPIN_HANDLER)

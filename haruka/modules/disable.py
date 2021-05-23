@@ -42,7 +42,12 @@ if is_module_loaded(FILENAME):
     ADMIN_CMDS = []
 
     class DisableAbleCommandHandler(CommandHandler):
-        def __init__(self, command, callback, run_async=False, admin_ok=False, **kwargs):
+        def __init__(self,
+                     command,
+                     callback,
+                     run_async=False,
+                     admin_ok=False,
+                     **kwargs):
             super().__init__(command, callback, run_async=run_async, **kwargs)
             self.admin_ok = admin_ok
             if isinstance(command, string_types):
@@ -82,7 +87,12 @@ if is_module_loaded(FILENAME):
             return False
 
     class DisableAbleMessageHandler(MessageHandler):
-        def __init__(self, pattern, callback, run_async=False, friendly="", **kwargs):
+        def __init__(self,
+                     pattern,
+                     callback,
+                     run_async=False,
+                     friendly="",
+                     **kwargs):
             super().__init__(pattern, callback, run_async=run_async, **kwargs)
             DISABLE_OTHER.append(friendly or pattern)
             self.friendly = friendly or pattern
@@ -90,7 +100,8 @@ if is_module_loaded(FILENAME):
         def check_update(self, update):
             if isinstance(update, Update) and update.effective_message:
                 chat = update.effective_chat
-                return self.filters(update) and not sql.is_command_disabled(chat.id, self.friendly)
+                return self.filters(update) and not sql.is_command_disabled(
+                    chat.id, self.friendly)
 
     @user_admin
     def disable(update: Update, context: CallbackContext):

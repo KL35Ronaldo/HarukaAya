@@ -469,14 +469,18 @@ WARN_HANDLER = DisableAbleCommandHandler("warn",
                                          run_async=True,
                                          filters=Filters.chat_type.groups,
                                          admin_ok=True)
-RESET_WARN_HANDLER = DisableAbleCommandHandler(["resetwarn", "resetwarns"],
-                                               reset_warns,
-                                               pass_args=True,
-                                               run_async=True,
-                                               filters=Filters.chat_type.groups)
-RMWARN_QUERY_HANDLER = CallbackQueryHandler(rmwarn_handler, pattern=r"rm_warn", run_async=True)
+RESET_WARN_HANDLER = DisableAbleCommandHandler(
+    ["resetwarn", "resetwarns"],
+    reset_warns,
+    pass_args=True,
+    run_async=True,
+    filters=Filters.chat_type.groups)
+RMWARN_QUERY_HANDLER = CallbackQueryHandler(rmwarn_handler,
+                                            pattern=r"rm_warn",
+                                            run_async=True)
 SENDRULES_QUERY_HANDLER = CallbackQueryHandler(sendrules_handler,
-                                               pattern=r"send_rules", run_async=True)
+                                               pattern=r"send_rules",
+                                               run_async=True)
 MYWARNS_HANDLER = DisableAbleCommandHandler("warns",
                                             warns,
                                             pass_args=True,
@@ -496,15 +500,17 @@ LIST_WARN_HANDLER = DisableAbleCommandHandler(["warnlist", "warnfilters"],
                                               run_async=True,
                                               filters=Filters.chat_type.groups,
                                               admin_ok=True)
-WARN_FILTER_HANDLER = MessageHandler(CustomFilters.has_text & Filters.chat_type.groups,
+WARN_FILTER_HANDLER = MessageHandler(CustomFilters.has_text
+                                     & Filters.chat_type.groups,
                                      reply_filter,
                                      run_async=True)
-WARN_LIMIT_HANDLER = DisableAbleCommandHandler("warnlimit",
-                                               set_warn_limit,
-                                               pass_args=True,
-                                               run_async=True,
-                                               filters=Filters.chat_type.groups,
-                                               admin_ok=True)
+WARN_LIMIT_HANDLER = DisableAbleCommandHandler(
+    "warnlimit",
+    set_warn_limit,
+    pass_args=True,
+    run_async=True,
+    filters=Filters.chat_type.groups,
+    admin_ok=True)
 WARN_STRENGTH_HANDLER = CommandHandler("strongwarn",
                                        set_warn_strength,
                                        pass_args=True,

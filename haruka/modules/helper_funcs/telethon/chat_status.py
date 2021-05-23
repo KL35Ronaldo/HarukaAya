@@ -20,7 +20,8 @@ from telethon.tl.types import ChannelParticipantAdmin, ChannelParticipantCreator
 
 
 async def user_is_ban_protected(user_id: int, message):
-    if message.is_private or user_id in (CONFIG.whitelist_users + CONFIG.sudo_users):
+    if message.is_private or user_id in (CONFIG.whitelist_users +
+                                         CONFIG.sudo_users):
         return True
 
     if message.is_channel:
@@ -29,8 +30,8 @@ async def user_is_ban_protected(user_id: int, message):
         return isinstance(participant.participant,
                           (ChannelParticipantAdmin, ChannelParticipantCreator))
 
-    async for user in CONFIG.telethon_client.iter_participants(message.chat_id,
-                                             filter=ChannelParticipantsAdmins):
+    async for user in CONFIG.telethon_client.iter_participants(
+            message.chat_id, filter=ChannelParticipantsAdmins):
         if user_id == user.id:
             return True
     return False
@@ -46,8 +47,8 @@ async def user_is_admin(user_id: int, message):
         return isinstance(participant.participant,
                           (ChannelParticipantAdmin, ChannelParticipantCreator))
 
-    async for user in CONFIG.telethon_client.iter_participants(message.chat_id,
-                                             filter=ChannelParticipantsAdmins):
+    async for user in CONFIG.telethon_client.iter_participants(
+            message.chat_id, filter=ChannelParticipantsAdmins):
         if user_id == user.id:
             return True
     return False
@@ -58,7 +59,8 @@ async def is_user_admin(user_id: int, chat_id):
         return True
 
     try:
-        participant = await CONFIG.telethon_client(GetParticipantRequest(chat_id, user_id))
+        participant = await CONFIG.telethon_client(
+            GetParticipantRequest(chat_id, user_id))
         return isinstance(participant.participant,
                           (ChannelParticipantAdmin, ChannelParticipantCreator))
     except TypeError:
@@ -71,7 +73,8 @@ async def is_user_admin(user_id: int, chat_id):
 
 async def haruka_is_admin(chat_id: int):
     try:
-        participant = await CONFIG.telethon_client(GetParticipantRequest(chat_id, 'me'))
+        participant = await CONFIG.telethon_client(
+            GetParticipantRequest(chat_id, 'me'))
         return isinstance(participant.participant, ChannelParticipantAdmin)
     except TypeError:
         async for user in CONFIG.telethon_client.iter_participants(

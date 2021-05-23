@@ -52,7 +52,8 @@ def getsticker(update: Update, context: CallbackContext):
         file_id = msg.reply_to_message.sticker.file_id
         newFile = context.bot.get_file(file_id)
         newFile.download('images/sticker.png')
-        context.bot.send_document(chat_id, document=open('images/sticker.png', 'rb'))
+        context.bot.send_document(chat_id,
+                                  document=open('images/sticker.png', 'rb'))
         os.remove("images/sticker.png")
     else:
         update.effective_message.reply_text(
@@ -122,8 +123,8 @@ def kang(update: Update, context: CallbackContext):
                 im.save(kangsticker, "PNG")
             context.bot.add_sticker_to_set(user_id=user.id,
                                            name=packname,
-                                           png_sticker=open('images/kangsticker.png',
-                                                            'rb'),
+                                           png_sticker=open(
+                                               'images/kangsticker.png', 'rb'),
                                            emojis=sticker_emoji)
             msg.reply_text(tld(chat.id, 'stickers_kang_success').format(
                 packname, sticker_emoji),
@@ -135,14 +136,16 @@ def kang(update: Update, context: CallbackContext):
         except TelegramError as e:
             if e.message == "Stickerset_invalid":
                 makepack_internal(msg, user,
-                                  open('images/kangsticker.png', 'rb'),
-                                  sticker_emoji, context.bot, packname, packnum, chat)
+                                  open('images/kangsticker.png',
+                                       'rb'), sticker_emoji, context.bot,
+                                  packname, packnum, chat)
             elif e.message == "Sticker_png_dimensions":
                 im.save(kangsticker, "PNG")
                 context.bot.add_sticker_to_set(user_id=user.id,
                                                name=packname,
                                                png_sticker=open(
-                                                   'images/kangsticker.png', 'rb'),
+                                                   'images/kangsticker.png',
+                                                   'rb'),
                                                emojis=sticker_emoji)
                 msg.reply_text(tld(chat.id, 'stickers_kang_success').format(
                     packname, sticker_emoji),
@@ -188,8 +191,8 @@ def kang(update: Update, context: CallbackContext):
             msg.reply_photo(photo=open('images/kangsticker.png', 'rb'))
             context.bot.add_sticker_to_set(user_id=user.id,
                                            name=packname,
-                                           png_sticker=open('images/kangsticker.png',
-                                                            'rb'),
+                                           png_sticker=open(
+                                               'images/kangsticker.png', 'rb'),
                                            emojis=sticker_emoji)
             msg.reply_text(tld(chat.id, 'stickers_kang_success').format(
                 packname, sticker_emoji),
@@ -201,14 +204,16 @@ def kang(update: Update, context: CallbackContext):
         except TelegramError as e:
             if e.message == "Stickerset_invalid":
                 makepack_internal(msg, user,
-                                  open('images/kangsticker.png', 'rb'),
-                                  sticker_emoji, context.bot, packname, packnum, chat)
+                                  open('images/kangsticker.png',
+                                       'rb'), sticker_emoji, context.bot,
+                                  packname, packnum, chat)
             elif e.message == "Sticker_png_dimensions":
                 im.save(kangsticker, "PNG")
                 context.bot.add_sticker_to_set(user_id=user.id,
                                                name=packname,
                                                png_sticker=open(
-                                                   'images/kangsticker.png', 'rb'),
+                                                   'images/kangsticker.png',
+                                                   'rb'),
                                                emojis=sticker_emoji)
                 msg.reply_text(tld(chat.id, 'stickers_kang_success').format(
                     packname, sticker_emoji),
@@ -280,8 +285,12 @@ def makepack_internal(msg, user, png_sticker, emoji, bot, packname, packnum,
 
 __help__ = True
 
-STICKERID_HANDLER = DisableAbleCommandHandler("stickerid", stickerid, run_async=True)
-GETSTICKER_HANDLER = DisableAbleCommandHandler("getsticker", getsticker, run_async=True)
+STICKERID_HANDLER = DisableAbleCommandHandler("stickerid",
+                                              stickerid,
+                                              run_async=True)
+GETSTICKER_HANDLER = DisableAbleCommandHandler("getsticker",
+                                               getsticker,
+                                               run_async=True)
 KANG_HANDLER = DisableAbleCommandHandler("kang",
                                          kang,
                                          pass_args=True,

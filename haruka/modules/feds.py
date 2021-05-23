@@ -101,9 +101,10 @@ def new_fed(update: Update, context: CallbackContext):
                                             parse_mode=ParseMode.MARKDOWN)
         try:
             context.bot.send_message(CONFIG.message_dump,
-                             tld(chat.id, "feds_create_success_logger").format(
-                                 fed_name, fed_id),
-                             parse_mode=ParseMode.HTML)
+                                     tld(chat.id,
+                                         "feds_create_success_logger").format(
+                                             fed_name, fed_id),
+                                     parse_mode=ParseMode.HTML)
         except Exception:
             logging.warning("Cannot send a message to MESSAGE_DUMP")
     else:
@@ -886,26 +887,67 @@ def get_chat(chat_id, chat_data):
 
 __help__ = True
 
-NEW_FED_HANDLER = CommandHandler("newfed", new_fed, pass_args=True, run_async=True)
-DEL_FED_HANDLER = CommandHandler("delfed", del_fed, pass_args=True, run_async=True)
+NEW_FED_HANDLER = CommandHandler("newfed",
+                                 new_fed,
+                                 pass_args=True,
+                                 run_async=True)
+DEL_FED_HANDLER = CommandHandler("delfed",
+                                 del_fed,
+                                 pass_args=True,
+                                 run_async=True)
 JOIN_FED_HANDLER = CommandHandler("joinfed", join_fed, pass_args=True)
-LEAVE_FED_HANDLER = CommandHandler("leavefed", leave_fed, pass_args=True, run_async=True)
-PROMOTE_FED_HANDLER = CommandHandler("fpromote", user_join_fed, pass_args=True, run_async=True)
-DEMOTE_FED_HANDLER = CommandHandler("fdemote", user_demote_fed, pass_args=True, run_async=True)
-INFO_FED_HANDLER = CommandHandler("fedinfo", fed_info, pass_args=True, run_async=True)
+LEAVE_FED_HANDLER = CommandHandler("leavefed",
+                                   leave_fed,
+                                   pass_args=True,
+                                   run_async=True)
+PROMOTE_FED_HANDLER = CommandHandler("fpromote",
+                                     user_join_fed,
+                                     pass_args=True,
+                                     run_async=True)
+DEMOTE_FED_HANDLER = CommandHandler("fdemote",
+                                    user_demote_fed,
+                                    pass_args=True,
+                                    run_async=True)
+INFO_FED_HANDLER = CommandHandler("fedinfo",
+                                  fed_info,
+                                  pass_args=True,
+                                  run_async=True)
 BAN_FED_HANDLER = DisableAbleCommandHandler(["fban", "fedban"],
                                             fed_ban,
                                             pass_args=True,
                                             run_async=True)
-UN_BAN_FED_HANDLER = CommandHandler("unfban", unfban, pass_args=True, run_async=True)
-FED_SET_RULES_HANDLER = CommandHandler("setfrules", set_frules, pass_args=True, run_async=True)
-FED_GET_RULES_HANDLER = CommandHandler("frules", get_frules, pass_args=True, run_async=True)
-FED_CHAT_HANDLER = CommandHandler("chatfed", fed_chat, pass_args=True, run_async=True)
-FED_ADMIN_HANDLER = CommandHandler("fedadmins", fed_admin, pass_args=True, run_async=True)
-FED_NOTIF_HANDLER = CommandHandler("fednotif", fed_notif, pass_args=True, run_async=True)
-FED_CHATLIST_HANDLER = CommandHandler("fedchats", fed_chats, pass_args=True, run_async=True)
+UN_BAN_FED_HANDLER = CommandHandler("unfban",
+                                    unfban,
+                                    pass_args=True,
+                                    run_async=True)
+FED_SET_RULES_HANDLER = CommandHandler("setfrules",
+                                       set_frules,
+                                       pass_args=True,
+                                       run_async=True)
+FED_GET_RULES_HANDLER = CommandHandler("frules",
+                                       get_frules,
+                                       pass_args=True,
+                                       run_async=True)
+FED_CHAT_HANDLER = CommandHandler("chatfed",
+                                  fed_chat,
+                                  pass_args=True,
+                                  run_async=True)
+FED_ADMIN_HANDLER = CommandHandler("fedadmins",
+                                   fed_admin,
+                                   pass_args=True,
+                                   run_async=True)
+FED_NOTIF_HANDLER = CommandHandler("fednotif",
+                                   fed_notif,
+                                   pass_args=True,
+                                   run_async=True)
+FED_CHATLIST_HANDLER = CommandHandler("fedchats",
+                                      fed_chats,
+                                      pass_args=True,
+                                      run_async=True)
 
-DELETEBTN_FED_HANDLER = CallbackQueryHandler(del_fed_button, pattern=r"rmfed_", run_async=True)
+DELETEBTN_FED_HANDLER = CallbackQueryHandler(del_fed_button,
+                                             pattern=r"rmfed_",
+                                             run_async=True)
 
 CONFIG.dispatcher.add_handler(NEW_FED_HANDLER)
 CONFIG.dispatcher.add_handler(DEL_FED_HANDLER)

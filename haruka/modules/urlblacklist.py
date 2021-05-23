@@ -150,12 +150,13 @@ def get_blacklisted_urls(update: Update, context: CallbackContext):
     message.reply_text(base_string, parse_mode=ParseMode.HTML)
 
 
-URL_BLACKLIST_HANDLER = DisableAbleCommandHandler("blacklist",
-                                                  add_blacklist_url,
-                                                  filters=Filters.chat_type.groups,
-                                                  pass_args=True,
-                                                  run_async=True,
-                                                  admin_ok=True)
+URL_BLACKLIST_HANDLER = DisableAbleCommandHandler(
+    "blacklist",
+    add_blacklist_url,
+    filters=Filters.chat_type.groups,
+    pass_args=True,
+    run_async=True,
+    admin_ok=True)
 ADD_URL_BLACKLIST_HANDLER = CommandHandler("addurl",
                                            add_blacklist_url,
                                            run_async=True,

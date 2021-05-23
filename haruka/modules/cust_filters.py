@@ -268,10 +268,10 @@ def reply_filter(update: Update, context: CallbackContext):
                             tld(chat.id, "cust_filters_err_protocol"))
                     elif excp.message == "Reply message not found":
                         context.bot.send_message(chat.id,
-                                         filt.reply,
-                                         parse_mode=ParseMode.MARKDOWN,
-                                         disable_web_page_preview=True,
-                                         reply_markup=keyboard)
+                                                 filt.reply,
+                                                 parse_mode=ParseMode.MARKDOWN,
+                                                 disable_web_page_preview=True,
+                                                 reply_markup=keyboard)
                     else:
                         try:
                             message.reply_text(
@@ -332,12 +332,16 @@ __help__ = True
 
 FILTER_HANDLER = DisableAbleCommandHandler("filter", filters)
 STOP_HANDLER = DisableAbleCommandHandler("stop", stop_filter)
-STOPALL_HANDLER = DisableAbleCommandHandler("stopall", stop_all_filters, run_async=True)
+STOPALL_HANDLER = DisableAbleCommandHandler("stopall",
+                                            stop_all_filters,
+                                            run_async=True)
 LIST_HANDLER = DisableAbleCommandHandler("filters",
                                          list_handlers,
                                          run_async=True,
                                          admin_ok=True)
-CUST_FILTER_HANDLER = MessageHandler(CustomFilters.has_text, reply_filter, run_async=True)
+CUST_FILTER_HANDLER = MessageHandler(CustomFilters.has_text,
+                                     reply_filter,
+                                     run_async=True)
 
 CONFIG.dispatcher.add_handler(FILTER_HANDLER)
 CONFIG.dispatcher.add_handler(STOP_HANDLER)

@@ -94,7 +94,7 @@ def ban(update: Update, context: CallbackContext) -> str:
         else:
             logging.warning(update)
             logging.error("ERROR banning user %s in chat %s (%s) due to %s",
-                             user_id, chat.title, chat.id, excp.message)
+                          user_id, chat.title, chat.id, excp.message)
             message.reply_text(
                 tld(chat.id, "bans_err_unknown").format("banning"))
 
@@ -180,7 +180,7 @@ def temp_ban(update: Update, context: CallbackContext) -> str:
         else:
             logging.warning(update)
             logging.error("ERROR banning user %s in chat %s (%s) due to %s",
-                             user_id, chat.title, chat.id, excp.message)
+                          user_id, chat.title, chat.id, excp.message)
             message.reply_text(
                 tld(chat.id, "bans_err_unknown").format("tbanning"))
 
@@ -371,8 +371,9 @@ def sban(update: Update, context: CallbackContext) -> str:
             return log
         else:
             logging.warning(update)
-            logging.exception("ERROR banning user %s in chat %s (%s) due to %s",
-                             user_id, chat.title, chat.id, excp.message)
+            logging.exception(
+                "ERROR banning user %s in chat %s (%s) due to %s", user_id,
+                chat.title, chat.id, excp.message)
     return ""
 
 

@@ -159,7 +159,8 @@ def revert_buttons(buttons):
 
 
 def is_module_loaded(name):
-    return (not CONFIG.load or name in CONFIG.load) and name not in CONFIG.no_load
+    return (not CONFIG.load
+            or name in CONFIG.load) and name not in CONFIG.no_load
 
 
 def user_bot_owner(func):

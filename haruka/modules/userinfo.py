@@ -164,11 +164,21 @@ def __gdpr__(user_id):
 
 __help__ = True
 
-SET_BIO_HANDLER = DisableAbleCommandHandler("setbio", set_about_bio, run_async=True)
-GET_BIO_HANDLER = DisableAbleCommandHandler("bio", about_bio, pass_args=True, run_async=True)
+SET_BIO_HANDLER = DisableAbleCommandHandler("setbio",
+                                            set_about_bio,
+                                            run_async=True)
+GET_BIO_HANDLER = DisableAbleCommandHandler("bio",
+                                            about_bio,
+                                            pass_args=True,
+                                            run_async=True)
 
-SET_ABOUT_HANDLER = DisableAbleCommandHandler("setme", set_about_me, run_async=True)
-GET_ABOUT_HANDLER = DisableAbleCommandHandler("me", about_me, pass_args=True, run_async=True)
+SET_ABOUT_HANDLER = DisableAbleCommandHandler("setme",
+                                              set_about_me,
+                                              run_async=True)
+GET_ABOUT_HANDLER = DisableAbleCommandHandler("me",
+                                              about_me,
+                                              pass_args=True,
+                                              run_async=True)
 
 CONFIG.dispatcher.add_handler(SET_BIO_HANDLER)
 CONFIG.dispatcher.add_handler(GET_BIO_HANDLER)

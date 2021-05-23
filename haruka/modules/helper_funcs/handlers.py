@@ -42,12 +42,13 @@ class CustomCommandHandler(tg.CommandHandler):
                         fst_word.startswith(start) for start in CMD_STARTERS):
                     args = message.text.split()[1:]
                     command = fst_word[1:].split('@')
-                    command.append(message.bot.username)  # in case the command was sent without a username
+                    command.append(
+                        message.bot.username
+                    )  # in case the command was sent without a username
 
-                    if not (
-                        command[0].lower() in self.command
-                        and command[1].lower() == message.bot.username.lower()
-                    ):
+                    if not (command[0].lower() in self.command
+                            and command[1].lower()
+                            == message.bot.username.lower()):
                         return None
 
                     if self.filters is None:

@@ -93,9 +93,9 @@ class CustomCommandHandler(tg.CommandHandler):
             if not filter_result:
                 return False
 
-            return args, filter_result and not (
-                sql.is_restr_locked(update.effective_chat.id, 'messages') and
-                not is_user_admin(update.effective_chat, update.effective_user.id))
+            return args, filter_result and not (sql.is_restr_locked(
+                update.effective_chat.id, 'messages') and not is_user_admin(
+                    update.effective_chat, update.effective_user.id))
 
         return False
 
@@ -115,12 +115,12 @@ def restr_members(bot,
         if mem.user in CONFIG.sudo_users:
             pass
         try:
-            bot.restrict_chat_member(chat_id,
-                                     mem.user,
-                                     ChatPermissions(can_send_messages=messages,
-                                                     can_send_media_messages=media,
-                                                     can_send_other_messages=other,
-                                                     can_add_web_page_previews=previews))
+            bot.restrict_chat_member(
+                chat_id, mem.user,
+                ChatPermissions(can_send_messages=messages,
+                                can_send_media_messages=media,
+                                can_send_other_messages=other,
+                                can_add_web_page_previews=previews))
         except TelegramError:
             pass
 
@@ -135,12 +135,12 @@ def unrestr_members(bot,
                     previews=True):
     for mem in members:
         try:
-            bot.restrict_chat_member(chat_id,
-                                     mem.user,
-                                     ChatPermissions(can_send_messages=messages,
-                                                     can_send_media_messages=media,
-                                                     can_send_other_messages=other,
-                                                     can_add_web_page_previews=previews))
+            bot.restrict_chat_member(
+                chat_id, mem.user,
+                ChatPermissions(can_send_messages=messages,
+                                can_send_media_messages=media,
+                                can_send_other_messages=other,
+                                can_add_web_page_previews=previews))
         except TelegramError:
             pass
 
@@ -248,7 +248,8 @@ def unlock(update: Update, context: CallbackContext) -> str:
                 message.reply_text(tld(chat.id, "locks_type_invalid"))
 
         else:
-            context.bot.sendMessage(chat.id, tld(chat.id, "locks_unlock_no_type"))
+            context.bot.sendMessage(chat.id,
+                                    tld(chat.id, "locks_unlock_no_type"))
 
     return ""
 
@@ -339,7 +340,9 @@ def __migrate__(old_chat_id, new_chat_id):
 
 __help__ = True
 
-LOCKTYPES_HANDLER = DisableAbleCommandHandler("locktypes", locktypes, run_async=True)
+LOCKTYPES_HANDLER = DisableAbleCommandHandler("locktypes",
+                                              locktypes,
+                                              run_async=True)
 LOCK_HANDLER = CommandHandler("lock",
                               lock,
                               pass_args=True,
@@ -349,7 +352,10 @@ UNLOCK_HANDLER = CommandHandler("unlock",
                                 pass_args=True,
                                 run_async=True,
                                 filters=Filters.chat_type.groups)
-LOCKED_HANDLER = CommandHandler("locks", list_locks, run_async=True, filters=Filters.chat_type.groups)
+LOCKED_HANDLER = CommandHandler("locks",
+                                list_locks,
+                                run_async=True,
+                                filters=Filters.chat_type.groups)
 
 CONFIG.dispatcher.add_handler(LOCK_HANDLER)
 CONFIG.dispatcher.add_handler(UNLOCK_HANDLER)
@@ -357,6 +363,10 @@ CONFIG.dispatcher.add_handler(LOCKTYPES_HANDLER)
 CONFIG.dispatcher.add_handler(LOCKED_HANDLER)
 
 CONFIG.dispatcher.add_handler(
-    MessageHandler(Filters.all & Filters.chat_type.groups, del_lockables, run_async=True), PERM_GROUP)
+    MessageHandler(Filters.all & Filters.chat_type.groups,
+                   del_lockables,
+                   run_async=True), PERM_GROUP)
 CONFIG.dispatcher.add_handler(
-    MessageHandler(Filters.all & Filters.chat_type.groups, rest_handler, run_async=True), REST_GROUP)
+    MessageHandler(Filters.all & Filters.chat_type.groups,
+                   rest_handler,
+                   run_async=True), REST_GROUP)

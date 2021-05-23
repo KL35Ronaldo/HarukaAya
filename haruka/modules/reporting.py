@@ -140,9 +140,9 @@ def report(update: Update, context: CallbackContext) -> str:
                 try:
                     if not chat.type == Chat.SUPERGROUP:
                         context.bot.send_message(admin.user.id,
-                                         msg + link,
-                                         parse_mode=ParseMode.HTML,
-                                         disable_web_page_preview=True)
+                                                 msg + link,
+                                                 parse_mode=ParseMode.HTML,
+                                                 disable_web_page_preview=True)
 
                         if should_forward:
                             message.reply_to_message.forward(admin.user.id)
@@ -154,9 +154,9 @@ def report(update: Update, context: CallbackContext) -> str:
 
                     if not chat.username:
                         context.bot.send_message(admin.user.id,
-                                         msg + link,
-                                         parse_mode=ParseMode.HTML,
-                                         disable_web_page_preview=True)
+                                                 msg + link,
+                                                 parse_mode=ParseMode.HTML,
+                                                 disable_web_page_preview=True)
 
                         if should_forward:
                             message.reply_to_message.forward(admin.user.id)
@@ -168,10 +168,10 @@ def report(update: Update, context: CallbackContext) -> str:
 
                     if chat.username and chat.type == Chat.SUPERGROUP:
                         context.bot.send_message(admin.user.id,
-                                         msg + link,
-                                         parse_mode=ParseMode.HTML,
-                                         reply_markup=reply_markup,
-                                         disable_web_page_preview=True)
+                                                 msg + link,
+                                                 parse_mode=ParseMode.HTML,
+                                                 reply_markup=reply_markup,
+                                                 disable_web_page_preview=True)
 
                         if should_forward:
                             message.reply_to_message.forward(admin.user.id)
@@ -184,8 +184,7 @@ def report(update: Update, context: CallbackContext) -> str:
                 except Unauthorized:
                     pass
                 except BadRequest as excp:  # TODO: cleanup exceptions
-                    logging.error(
-                        f"Exception while reporting user : {excp}")
+                    logging.error(f"Exception while reporting user : {excp}")
 
         message.reply_to_message.reply_text(tld(
             chat.id,
@@ -213,8 +212,8 @@ def buttons(update: Update, context: CallbackContext):
         except Exception as err:
             query.answer("❎ Failed to kick")
             context.bot.sendMessage(text="Error: {}".format(err),
-                            chat_id=query.message.chat_id,
-                            parse_mode=ParseMode.HTML)
+                                    chat_id=query.message.chat_id,
+                                    parse_mode=ParseMode.HTML)
     elif splitter[1] == "banned":
         try:
             context.bot.kickChatMember(splitter[0], splitter[2])
@@ -222,8 +221,8 @@ def buttons(update: Update, context: CallbackContext):
             return ""
         except Exception as err:
             context.bot.sendMessage(text="Error: {}".format(err),
-                            chat_id=query.message.chat_id,
-                            parse_mode=ParseMode.HTML)
+                                    chat_id=query.message.chat_id,
+                                    parse_mode=ParseMode.HTML)
             query.answer("❎ Failed to ban")
     elif splitter[1] == "delete":
         try:
@@ -232,16 +231,24 @@ def buttons(update: Update, context: CallbackContext):
             return ""
         except Exception as err:
             context.bot.sendMessage(text="Error: {}".format(err),
-                            chat_id=query.message.chat_id,
-                            parse_mode=ParseMode.HTML)
+                                    chat_id=query.message.chat_id,
+                                    parse_mode=ParseMode.HTML)
             query.answer("❎ Failed to delete message!")
 
 
 __help__ = True
 
-REPORT_HANDLER = CommandHandler("report", report, run_async=True, filters=Filters.chat_type.groups)
-SETTING_HANDLER = CommandHandler("reports", report_setting, pass_args=True, run_async=True)
-ADMIN_REPORT_HANDLER = MessageHandler(Filters.regex("(?i)@admin(s)?"), report, run_async=True)
+REPORT_HANDLER = CommandHandler("report",
+                                report,
+                                run_async=True,
+                                filters=Filters.chat_type.groups)
+SETTING_HANDLER = CommandHandler("reports",
+                                 report_setting,
+                                 pass_args=True,
+                                 run_async=True)
+ADMIN_REPORT_HANDLER = MessageHandler(Filters.regex("(?i)@admin(s)?"),
+                                      report,
+                                      run_async=True)
 
 report_button_user_handler = CallbackQueryHandler(buttons, pattern=r"report_")
 CONFIG.dispatcher.add_handler(report_button_user_handler)

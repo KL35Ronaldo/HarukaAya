@@ -123,12 +123,13 @@ def setlog(update: Update, context: CallbackContext):
                                                         or chat.first_name))
         except Unauthorized as excp:
             if excp.message == "Forbidden: bot is not a member of the channel chat":
-                context.bot.send_message(chat.id,
-                                 tld(chat.id, "log_channel_link_success"))
+                context.bot.send_message(
+                    chat.id, tld(chat.id, "log_channel_link_success"))
             else:
                 logging.exception("ERROR in setting the log channel.")
 
-        context.bot.send_message(chat.id, tld(chat.id, "log_channel_link_success"))
+        context.bot.send_message(chat.id,
+                                 tld(chat.id, "log_channel_link_success"))
 
     else:
         message.reply_text(tld(chat.id, "log_channel_invalid_message"),

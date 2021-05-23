@@ -80,7 +80,7 @@ def broadcast(update: Update, context: CallbackContext):
             except TelegramError:
                 failed += 1
                 logging.warning("Couldn't send broadcast to %s, group name %s",
-                               str(chat.chat_id), str(chat.chat_name))
+                                str(chat.chat_id), str(chat.chat_name))
 
         update.effective_message.reply_text(
             "Broadcast complete. {} groups failed to receive the message, probably "
@@ -167,9 +167,9 @@ def leavechat(update: Update, context: CallbackContext):
             chat_id = chat.id
             reply_text = "`I'll leave this group`"
             context.bot.send_message(chat_id,
-                             reply_text,
-                             parse_mode='Markdown',
-                             disable_web_page_preview=True)
+                                     reply_text,
+                                     parse_mode='Markdown',
+                                     disable_web_page_preview=True)
             context.bot.leaveChat(chat_id)
         except BadRequest as excp:
             if excp.message == "Chat not found":
@@ -183,9 +183,9 @@ def leavechat(update: Update, context: CallbackContext):
         titlechat = context.bot.get_chat(chat_id).title
         reply_text = "`I'll Go Away!`"
         context.bot.send_message(chat_id,
-                         reply_text,
-                         parse_mode='Markdown',
-                         disable_web_page_preview=True)
+                                 reply_text,
+                                 parse_mode='Markdown',
+                                 disable_web_page_preview=True)
         context.bot.leaveChat(chat_id)
         update.effective_message.reply_text(
             "I'll left group {}".format(titlechat))

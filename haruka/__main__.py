@@ -38,7 +38,6 @@ from haruka.modules import ALL_MODULES
 from haruka.modules.helper_funcs.misc import paginate_modules
 from haruka.modules.tr_engine.strings import tld
 
-
 IMPORTED = {}
 MIGRATEABLE = []
 HELPABLE = {}
@@ -120,7 +119,8 @@ def start(update: Update, context: CallbackContext):
             update.effective_message.reply_text(
                 tld(chat.id, 'main_start_group'))
         except Exception as error:
-            logging.error(f"An exception occurred, {type(error).__name__}: {error}")
+            logging.error(
+                f"An exception occurred, {type(error).__name__}: {error}")
 
 
 def send_start(update: Update, context: CallbackContext):
@@ -145,23 +145,26 @@ def send_start(update: Update, context: CallbackContext):
 
     try:
         query = update.callback_query
-        context.bot.edit_message_text(chat_id=query.message.chat_id,
-                                      message_id=query.message.message_id,
-                                      text=text,
-                                      parse_mode=ParseMode.MARKDOWN,
-                                      reply_markup=InlineKeyboardMarkup(keyboard),
-                                      disable_web_page_preview=True)
+        context.bot.edit_message_text(
+            chat_id=query.message.chat_id,
+            message_id=query.message.message_id,
+            text=text,
+            parse_mode=ParseMode.MARKDOWN,
+            reply_markup=InlineKeyboardMarkup(keyboard),
+            disable_web_page_preview=True)
     except (TelegramError, NetworkError, AttributeError) as error:
-        logging.error(f"An exception occurred, {type(error).__name__}: {error}")
+        logging.error(
+            f"An exception occurred, {type(error).__name__}: {error}")
 
     try:
         if query:
-            context.bot.edit_message_text(chat_id=query.message.chat_id,
-                                  message_id=query.message.message_id,
-                                  text=text,
-                                  parse_mode=ParseMode.MARKDOWN,
-                                  reply_markup=InlineKeyboardMarkup(keyboard),
-                                  disable_web_page_preview=True)
+            context.bot.edit_message_text(
+                chat_id=query.message.chat_id,
+                message_id=query.message.message_id,
+                text=text,
+                parse_mode=ParseMode.MARKDOWN,
+                reply_markup=InlineKeyboardMarkup(keyboard),
+                disable_web_page_preview=True)
         else:
             update.effective_message.reply_text(
                 text,
@@ -169,7 +172,8 @@ def send_start(update: Update, context: CallbackContext):
                 parse_mode=ParseMode.MARKDOWN,
                 disable_web_page_preview=True)
     except (TelegramError, NetworkError) as error:
-        logging.error(f"An exception occurred, {type(error).__name__}: {error}")
+        logging.error(
+            f"An exception occurred, {type(error).__name__}: {error}")
 
 
 def help_button(update: Update, context: CallbackContext):
@@ -187,32 +191,32 @@ def help_button(update: Update, context: CallbackContext):
             mod_name = tld(chat.id, "modname_" + module).strip()
             help_txt = tld(
                 chat.id, module +
-                         "_help")  # tld_help(chat.id, HELPABLE[module].__mod_name__)
+                "_help")  # tld_help(chat.id, HELPABLE[module].__mod_name__)
             if not help_txt:
                 logging.warning(f"Help string for {module} not found!")
             text = tld(chat.id, "here_is_help").format(mod_name, help_txt)
-            context.bot.edit_message_text(chat_id=query.message.chat_id,
-                                          message_id=query.message.message_id,
-                                          text=text,
-                                          parse_mode=ParseMode.MARKDOWN,
-                                          reply_markup=InlineKeyboardMarkup([[
-                                              InlineKeyboardButton(
-                                                  text=tld(chat.id, "btn_go_back"),
-                                                  callback_data="help_back")
-                                          ]]),
-                                          disable_web_page_preview=True)
+            context.bot.edit_message_text(
+                chat_id=query.message.chat_id,
+                message_id=query.message.message_id,
+                text=text,
+                parse_mode=ParseMode.MARKDOWN,
+                reply_markup=InlineKeyboardMarkup([[
+                    InlineKeyboardButton(text=tld(chat.id, "btn_go_back"),
+                                         callback_data="help_back")
+                ]]),
+                disable_web_page_preview=True)
 
         elif back_match:
-            context.bot.edit_message_text(chat_id=query.message.chat_id,
-                                          message_id=query.message.message_id,
-                                          text=tld(chat.id, "send-help").format(
-                                              context.bot.first_name,
-                                              tld(chat.id, "cmd_multitrigger")),
-                                          parse_mode=ParseMode.MARKDOWN,
-                                          reply_markup=InlineKeyboardMarkup(
-                                              paginate_modules(chat.id, 0, HELPABLE,
-                                                               "help")),
-                                          disable_web_page_preview=True)
+            context.bot.edit_message_text(
+                chat_id=query.message.chat_id,
+                message_id=query.message.message_id,
+                text=tld(chat.id,
+                         "send-help").format(context.bot.first_name,
+                                             tld(chat.id, "cmd_multitrigger")),
+                parse_mode=ParseMode.MARKDOWN,
+                reply_markup=InlineKeyboardMarkup(
+                    paginate_modules(chat.id, 0, HELPABLE, "help")),
+                disable_web_page_preview=True)
 
         context.bot.answer_callback_query(query.id)
     except BadRequest:
@@ -289,9 +293,14 @@ def main():
     Starts Haruka
     """
 
-    start_handler = CommandHandler("start", start, pass_args=True, run_async=True)
+    start_handler = CommandHandler("start",
+                                   start,
+                                   pass_args=True,
+                                   run_async=True)
     help_handler = CommandHandler("help", get_help, run_async=True)
-    help_callback_handler = CallbackQueryHandler(help_button, pattern=r"help_", run_async=True)
+    help_callback_handler = CallbackQueryHandler(help_button,
+                                                 pattern=r"help_",
+                                                 run_async=True)
     start_callback_handler = CallbackQueryHandler(send_start,
                                                   pattern=r"bot_start")
     migrate_handler = MessageHandler(Filters.status_update.migrate,
@@ -307,7 +316,9 @@ def main():
     Dispatcher.process_update = process_update
 
     logging.info("Using long polling.")
-    CONFIG.updater.start_polling(timeout=15, read_latency=4, drop_pending_updates=True)
+    CONFIG.updater.start_polling(timeout=15,
+                                 read_latency=4,
+                                 drop_pending_updates=True)
 
     logging.info("Successfully loaded")
     if len(argv) not in (1, 3, 4):
@@ -328,7 +339,8 @@ def process_update(self, update):
             self.dispatch_error(None, update)
         except Exception as dispatch_error:
             self.logger.exception(
-                f'An uncaught error was raised while handling the error -> {type(dispatch_error).__name__}: {dispatch_error}')
+                f'An uncaught error was raised while handling the error -> {type(dispatch_error).__name__}: {dispatch_error}'
+            )
         return
 
     if update.effective_chat:  # Checks if update contains chat object
@@ -340,7 +352,7 @@ def process_update(self, update):
             return
     except AttributeError:
         self.logger.exception(
-        'An uncaught error was raised while updating process')
+            'An uncaught error was raised while updating process')
         return
 
     t = CHATS_TIME.get(update.effective_chat.id, datetime.datetime(1970, 1, 1))
@@ -373,7 +385,8 @@ def process_update(self, update):
 
         # Stop processing with any other handler.
         except DispatcherHandlerStop:
-            self.logger.debug('Stopping further handlers due to DispatcherHandlerStop')
+            self.logger.debug(
+                'Stopping further handlers due to DispatcherHandlerStop')
             self.update_persistence(update=update)
             break
 
@@ -386,13 +399,15 @@ def process_update(self, update):
                 break
             # Errors should not stop the thread.
             except Exception:
-                self.logger.exception('An uncaught error was raised while handling the error.')
+                self.logger.exception(
+                    'An uncaught error was raised while handling the error.')
 
     # Update persistence, if handled
     handled_only_async = all(sync_modes)
     if handled:
         # Respect default settings
-        if all(mode is DEFAULT_FALSE for mode in sync_modes) and self.bot.defaults:
+        if all(mode is DEFAULT_FALSE
+               for mode in sync_modes) and self.bot.defaults:
             handled_only_async = self.bot.defaults.run_async
         # If update was only handled by async handlers, we don't need to update here
         if not handled_only_async:
@@ -409,12 +424,17 @@ def __list_all_modules():
 
     # This generates a list of modules in this folder for the * in __main__ to work.
     paths = glob.glob(dirname(__file__) + "/modules/*.py")
-    all_modules = [basename(f)[:-3] for f in paths if isfile(f) and f.endswith(".py") and not f.endswith('__init__.py') and not f.endswith('__main__.py')]
+    all_modules = [
+        basename(f)[:-3] for f in paths if isfile(f) and f.endswith(".py")
+        and not f.endswith('__init__.py') and not f.endswith('__main__.py')
+    ]
 
     if CONFIG.load or CONFIG.no_load:
         to_load = CONFIG.load
         if to_load:
-            if not all(any(mod == module_name for module_name in all_modules) for mod in to_load):
+            if not all(
+                    any(mod == module_name for module_name in all_modules)
+                    for mod in to_load):
                 logging.error("Invalid load order names. Quitting.")
                 quit(1)
         else:
@@ -422,7 +442,9 @@ def __list_all_modules():
 
         if CONFIG.no_load:
             logging.info(f"Not loading: {CONFIG.no_load}")
-            return list(filter(lambda m: m not in CONFIG.no_load, [item for item in to_load]))
+            return list(
+                filter(lambda m: m not in CONFIG.no_load,
+                       [item for item in to_load]))
 
         return to_load
 

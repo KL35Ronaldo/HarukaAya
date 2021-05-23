@@ -216,7 +216,9 @@ BLACKLIST_HANDLER = DisableAbleCommandHandler("blacklist",
                                               pass_args=True,
                                               run_async=True,
                                               admin_ok=True)
-ADD_BLACKLIST_HANDLER = CommandHandler("addblacklist", add_blacklist, run_async=True)
+ADD_BLACKLIST_HANDLER = CommandHandler("addblacklist",
+                                       add_blacklist,
+                                       run_async=True)
 UNBLACKLIST_HANDLER = CommandHandler(["unblacklist", "rmblacklist"],
                                      unblacklist,
                                      run_async=True)

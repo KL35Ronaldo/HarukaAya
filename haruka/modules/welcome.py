@@ -62,7 +62,8 @@ def send(update, message, keyboard, backup_message):
     # Clean service welcome
     if cleanserv:
         try:
-            CONFIG.dispatcher.bot.delete_message(chat.id, update.message.message_id)
+            CONFIG.dispatcher.bot.delete_message(chat.id,
+                                                 update.message.message_id)
         except BadRequest:
             pass
         reply = False
@@ -146,7 +147,9 @@ def new_member(update: Update, context: CallbackContext):
 
             try:
                 if CONFIG.spamwatch_api != None:
-                    headers = {'Authorization': f'Bearer {CONFIG.spamwatch_api}'}
+                    headers = {
+                        'Authorization': f'Bearer {CONFIG.spamwatch_api}'
+                    }
                     resp = requests.get(
                         "https://api.spamwat.ch/banlist/{new_mem.id}",
                         headers=headers,
@@ -162,7 +165,8 @@ def new_member(update: Update, context: CallbackContext):
                     "I have been added to {} with ID: <pre>{}</pre>".format(
                         chat.title, chat.id),
                     parse_mode=ParseMode.HTML)
-                context.bot.send_message(chat.id, tld(chat.id, 'welcome_added_to_grp'))
+                context.bot.send_message(chat.id,
+                                         tld(chat.id, 'welcome_added_to_grp'))
 
             else:
                 # If welcome message is media, send with appropriate function
@@ -217,9 +221,9 @@ def new_member(update: Update, context: CallbackContext):
                                 if member.can_send_messages is None or member.can_send_messages:
                                     try:
                                         context.bot.restrict_chat_member(
-                                            chat.id,
-                                            new_mem.id,
-                                            ChatPermissions(can_send_messages=False))
+                                            chat.id, new_mem.id,
+                                            ChatPermissions(
+                                                can_send_messages=False))
                                         canrest = True
                                     except BadRequest:
                                         canrest = False
@@ -235,7 +239,8 @@ def new_member(update: Update, context: CallbackContext):
                                         context.bot.restrict_chat_member(
                                             chat.id,
                                             new_mem.id,
-                                            ChatPermissions(can_send_messages=False),
+                                            ChatPermissions(
+                                                can_send_messages=False),
                                             until_date=mutetime)
                                         canrest = True
                                     except BadRequest:
@@ -307,9 +312,9 @@ def new_member(update: Update, context: CallbackContext):
                             if member.can_send_messages is None or member.can_send_messages:
                                 try:
                                     context.bot.restrict_chat_member(
-                                        chat.id,
-                                        new_mem.id,
-                                        ChatPermissions(can_send_messages=False))
+                                        chat.id, new_mem.id,
+                                        ChatPermissions(
+                                            can_send_messages=False))
                                     canrest = True
                                 except BadRequest:
                                     canrest = False
@@ -325,7 +330,8 @@ def new_member(update: Update, context: CallbackContext):
                                     context.bot.restrict_chat_member(
                                         chat.id,
                                         new_mem.id,
-                                        ChatPermissions(can_send_messages=False),
+                                        ChatPermissions(
+                                            can_send_messages=False),
                                         until_date=mutetime)
                                     canrest = True
                                 except BadRequest:
@@ -369,12 +375,12 @@ def check_bot_button(update: Update, context: CallbackContext):
         except:
             pass
         # Unmute user
-        context.bot.restrict_chat_member(chat.id,
-                                         user.id,
-                                         ChatPermissions(can_send_messages=True,
-                                                         can_send_media_messages=True,
-                                                         can_send_other_messages=True,
-                                                         can_add_web_page_previews=True))
+        context.bot.restrict_chat_member(
+            chat.id, user.id,
+            ChatPermissions(can_send_messages=True,
+                            can_send_media_messages=True,
+                            can_send_other_messages=True,
+                            can_add_web_page_previews=True))
         sql.rm_from_userlist(chat.id, user.id)
     else:
         try:
@@ -395,7 +401,9 @@ def left_member(update: Update, context: CallbackContext):
         if left_mem:
             try:
                 if CONFIG.spamwatch_api != None:
-                    headers = {'Authorization': f'Bearer {CONFIG.spamwatch_api}'}
+                    headers = {
+                        'Authorization': f'Bearer {CONFIG.spamwatch_api}'
+                    }
                     resp = requests.get(
                         "https://api.spamwat.ch/banlist/{left_mem.id}",
                         headers=headers,
@@ -422,8 +430,8 @@ def left_member(update: Update, context: CallbackContext):
                 # Clean service welcome
                 if cleanserv:
                     try:
-                        context.bot.delete_message(
-                            chat.id, update.message.message_id)
+                        context.bot.delete_message(chat.id,
+                                                   update.message.message_id)
                     except BadRequest:
                         pass
                     reply = False
@@ -928,8 +936,14 @@ GOODBYE_PREF_HANDLER = CommandHandler("goodbye",
                                       pass_args=True,
                                       run_async=True,
                                       filters=Filters.chat_type.groups)
-SET_WELCOME = CommandHandler("setwelcome", set_welcome, run_async=True, filters=Filters.chat_type.groups)
-SET_GOODBYE = CommandHandler("setgoodbye", set_goodbye, run_async=True, filters=Filters.chat_type.groups)
+SET_WELCOME = CommandHandler("setwelcome",
+                             set_welcome,
+                             run_async=True,
+                             filters=Filters.chat_type.groups)
+SET_GOODBYE = CommandHandler("setgoodbye",
+                             set_goodbye,
+                             run_async=True,
+                             filters=Filters.chat_type.groups)
 RESET_WELCOME = CommandHandler("resetwelcome",
                                reset_welcome,
                                run_async=True,

@@ -58,7 +58,11 @@ ENUM_FUNC_MAP = {
 
 
 # Do not async
-def get(update: Update, context: CallbackContext, notename, show_none=True, no_format=False):
+def get(update: Update,
+        context: CallbackContext,
+        notename,
+        show_none=True,
+        no_format=False):
     chat = update.effective_chat
     user = update.effective_user
     conn = connected(update, context, user.id, need_admin=False)
@@ -163,7 +167,7 @@ def get(update: Update, context: CallbackContext, notename, show_none=True, no_f
             else:
                 message.reply_text(tld(chat.id, "note_cannot_send"))
                 logging.error("Could not parse message #%s in chat %s",
-                                 notename, str(chat_id))
+                              notename, str(chat_id))
                 logging.warning("Message was: %s", str(note.value))
 
     return
@@ -352,10 +356,14 @@ def __migrate__(old_chat_id, new_chat_id):
 __help__ = True
 
 GET_HANDLER = CommandHandler("get", cmd_get, pass_args=True, run_async=True)
-HASH_GET_HANDLER = MessageHandler(Filters.regex(r"^#[^\s]+"), hash_get, run_async=True)
+HASH_GET_HANDLER = MessageHandler(Filters.regex(r"^#[^\s]+"),
+                                  hash_get,
+                                  run_async=True)
 
 SAVE_HANDLER = CommandHandler("save", save, run_async=True)
-REMOVE_ALL_NOTES_HANDLER = CommandHandler("clearall", remove_all_notes, run_async=True)
+REMOVE_ALL_NOTES_HANDLER = CommandHandler("clearall",
+                                          remove_all_notes,
+                                          run_async=True)
 DELETE_HANDLER = CommandHandler("clear", clear, pass_args=True, run_async=True)
 
 LIST_HANDLER = DisableAbleCommandHandler(["notes", "saved"],

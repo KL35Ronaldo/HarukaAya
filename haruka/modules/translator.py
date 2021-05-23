@@ -65,4 +65,7 @@ def do_translate(update: Update, context: CallbackContext):
 __help__ = True
 
 CONFIG.dispatcher.add_handler(
-    DisableAbleCommandHandler("tr", do_translate, pass_args=True, run_async=True))
+    DisableAbleCommandHandler("tr",
+                              do_translate,
+                              pass_args=True,
+                              run_async=True))

@@ -143,7 +143,7 @@ def reply_keyboard_remove(update: Update, context: CallbackContext):
         reply_markup=reply_markup,
         reply_to_message_id=update.message.message_id)
     context.bot.delete_message(chat_id=update.message.chat_id,
-                       message_id=old_message.message_id)
+                               message_id=old_message.message_id)
 
 
 def gdpr(update: Update, context: CallbackContext):
@@ -373,9 +373,10 @@ def wiki(update: Update, context: CallbackContext):
                                      url=wikipedia.page(kueri).url)
             ]])
             context.bot.editMessageText(chat_id=update.effective_chat.id,
-                                message_id=pertama.message_id,
-                                text=wikipedia.summary(kueri, sentences=10),
-                                reply_markup=keyboard)
+                                        message_id=pertama.message_id,
+                                        text=wikipedia.summary(kueri,
+                                                               sentences=10),
+                                        reply_markup=keyboard)
         except wikipedia.PageError as e:
             update.effective_message.reply_text("⚠ Error: {}".format(e))
         except BadRequest as et:
@@ -462,9 +463,18 @@ MD_HELP_HANDLER = CommandHandler("markdownhelp",
                                  run_async=True,
                                  filters=Filters.chat_type.private)
 
-STATS_HANDLER = CommandHandler("stats", stats, run_async=True, filters=Filters.user(CONFIG.owner_id))
-GDPR_HANDLER = CommandHandler("gdpr", gdpr, run_async=True, filters=Filters.chat_type.private)
-PASTE_HANDLER = DisableAbleCommandHandler("paste", paste, pass_args=True, run_async=True)
+STATS_HANDLER = CommandHandler("stats",
+                               stats,
+                               run_async=True,
+                               filters=Filters.user(CONFIG.owner_id))
+GDPR_HANDLER = CommandHandler("gdpr",
+                              gdpr,
+                              run_async=True,
+                              filters=Filters.chat_type.private)
+PASTE_HANDLER = DisableAbleCommandHandler("paste",
+                                          paste,
+                                          pass_args=True,
+                                          run_async=True)
 GET_PASTE_HANDLER = DisableAbleCommandHandler("getpaste",
                                               get_paste_content,
                                               pass_args=True,
@@ -475,7 +485,10 @@ PASTE_STATS_HANDLER = DisableAbleCommandHandler("pastestats",
                                                 run_async=True)
 UD_HANDLER = DisableAbleCommandHandler("ud", ud, run_async=True)
 WIKI_HANDLER = DisableAbleCommandHandler("wiki", wiki, run_async=True)
-COVID_HANDLER = DisableAbleCommandHandler("covid", covid, run_async=True, admin_ok=True)
+COVID_HANDLER = DisableAbleCommandHandler("covid",
+                                          covid,
+                                          run_async=True,
+                                          admin_ok=True)
 
 CONFIG.dispatcher.add_handler(UD_HANDLER)
 CONFIG.dispatcher.add_handler(PASTE_HANDLER)

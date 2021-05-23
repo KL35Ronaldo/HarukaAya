@@ -116,7 +116,9 @@ ANTISPAM_STATUS = CommandHandler("antispam",
                                  run_async=True,
                                  filters=Filters.chat_type.groups)
 
-GBAN_ENFORCER = MessageHandler(Filters.all & Filters.chat_type.groups, enforce_gban, run_async=True)
+GBAN_ENFORCER = MessageHandler(Filters.all & Filters.chat_type.groups,
+                               enforce_gban,
+                               run_async=True)
 
 CONFIG.dispatcher.add_handler(ANTISPAM_STATUS)
 

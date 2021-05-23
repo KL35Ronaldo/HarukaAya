@@ -43,7 +43,8 @@ def get_rules(update: Update, context: CallbackContext):
         from_pm = True
     else:
         if chat.type == 'private':
-            update.effective_message.reply_text(tld(chat.id, 'common_cmd_group_only'))
+            update.effective_message.reply_text(
+                tld(chat.id, 'common_cmd_group_only'))
             return
         chat_id = chat.id
 
