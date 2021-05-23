@@ -15,11 +15,9 @@
 #    You should have received a copy of the GNU Affero General Public License
 #    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-import random, io
-import os
+import random
 
-from typing import List
-from telegram import Update, ParseMode, Message
+from telegram import Update, ParseMode
 from telegram.ext import run_async
 from telegram.ext.callbackcontext import CallbackContext
 
@@ -28,6 +26,7 @@ from telegram.utils.helpers import escape_markdown
 from haruka.modules.helper_funcs.extraction import extract_user
 from haruka.modules.tr_engine.strings import tld, tld_list
 
+from haruka import CONFIG
 
 @run_async
 def runs(update: Update, context: CallbackContext):
@@ -98,5 +97,5 @@ SLAP_HANDLER = DisableAbleCommandHandler("slap",
                                          pass_args=True,
                                          admin_ok=True)
 
-dispatcher.add_handler(RUNS_HANDLER)
-dispatcher.add_handler(SLAP_HANDLER)
+CONFIG.dispatcher.add_handler(RUNS_HANDLER)
+CONFIG.dispatcher.add_handler(SLAP_HANDLER)
