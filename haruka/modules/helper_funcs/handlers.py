@@ -26,6 +26,7 @@ class CustomCommandHandler(tg.CommandHandler):
     def __init__(self, command, callback, run_async=False, **kwargs):
         if "admin_ok" in kwargs:
             del kwargs["admin_ok"]
+        kwargs["filters"] = kwargs.get("filters", tg.Filters.update.message) & ~tg.Filters.update.edited_message
         super().__init__(command, callback, run_async=run_async, **kwargs)
 
     def check_update(self, update):
@@ -51,16 +52,18 @@ class CustomCommandHandler(tg.CommandHandler):
                             == message.bot.username.lower()):
                         return None
 
-                    if self.filters is None:
-                        res = True
-                    elif isinstance(self.filters, list):
-                        res = any(func(message) for func in self.filters)
-                    else:
-                        res = self.filters(update)
+                    filter_result = self.filters(update)
+                    if filter_result:
+                        return args, filter_result
+                    return False
 
-                    return args, res
+        return False
 
-            return False
+
+class CustomMessageHandler(tg.MessageHandler):
+    def __init__(self, filters, callback, run_async=False, **kwargs):
+        filters = (filters or tg.Filters.update) & ~tg.Filters.update.edited_message
+        super().__init__(filters, callback, run_async=run_async, **kwargs)
 
 
 class GbanLockHandler(tg.CommandHandler):

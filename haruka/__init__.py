@@ -93,8 +93,9 @@ try:
                                             CONFIG.api_hash)
 
     # We import it now to ensure that all previous variables have been set
-    from haruka.modules.helper_funcs.handlers import CustomCommandHandler
+    from haruka.modules.helper_funcs.handlers import CustomCommandHandler, CustomMessageHandler
     tg.CommandHandler = CustomCommandHandler
+    tg.MessageHandler = CustomMessageHandler
 except Exception as telegram_error:
     logging.error(
         f"Could not initialize Telegram client due to a {type(telegram_error).__name__}: {telegram_error}"
