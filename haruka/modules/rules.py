@@ -34,7 +34,6 @@ from haruka.modules.connection import connected
 def get_rules(update: Update, context: CallbackContext):
     chat = update.effective_chat
     user = update.effective_user
-    msg = update.effective_message
     from_pm = False
 
     conn = connected(update, context, user.id)

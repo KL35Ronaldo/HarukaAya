@@ -19,7 +19,7 @@ import html
 import wikipedia
 import re
 from datetime import datetime
-from typing import Optional, List
+from typing import Optional
 from covid import Covid
 
 import requests

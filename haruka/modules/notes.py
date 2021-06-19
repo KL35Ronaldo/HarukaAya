@@ -154,7 +154,6 @@ def get(update: Update,
                                                 caption=text,
                                                 reply_to_message_id=reply_id,
                                                 parse_mode=parseMode,
-                                                disable_web_page_preview=True,
                                                 reply_markup=keyboard)
 
         except BadRequest as excp:

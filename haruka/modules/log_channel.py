@@ -16,7 +16,7 @@
 #    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 from functools import wraps
-import logging
+import logging as logging_m
 from typing import Optional
 
 from haruka import CONFIG
@@ -50,7 +50,7 @@ def loggable(func):
         elif result == "":
             pass
         else:
-            logging.warning(
+            logging_m.warning(
                 "%s was set as loggable, but had no return statement.", func)
 
         return result
@@ -67,9 +67,9 @@ def send_log(bot: Bot, log_chat_id: str, orig_chat_id: str, result: str):
                              "This log channel has been deleted - unsetting.")
             sql.stop_chat_logging(orig_chat_id)
         else:
-            logging.warning(excp.message)
-            logging.warning(result)
-            logging.exception("Could not parse")
+            logging_m.warning(excp.message)
+            logging_m.warning(result)
+            logging_m.exception("Could not parse")
 
             bot.send_message(
                 log_chat_id, result +
@@ -111,7 +111,7 @@ def setlog(update: Update, context: CallbackContext):
             if excp.message == "Message to delete not found":
                 pass
             else:
-                logging.exception(
+                logging_m.exception(
                     "Error deleting message in log channel. Should work anyway though."
                 )
 
@@ -126,7 +126,7 @@ def setlog(update: Update, context: CallbackContext):
                 context.bot.send_message(
                     chat.id, tld(chat.id, "log_channel_link_success"))
             else:
-                logging.exception("ERROR in setting the log channel.")
+                logging_m.exception("ERROR in setting the log channel.")
 
         context.bot.send_message(chat.id,
                                  tld(chat.id, "log_channel_link_success"))
