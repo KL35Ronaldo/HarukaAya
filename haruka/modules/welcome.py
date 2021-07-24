@@ -80,14 +80,16 @@ def send(update, message, keyboard, backup_message):
                             "invalid due to markdown issues. Could be "
                             "due to the user's name."),
             parse_mode=ParseMode.MARKDOWN,
-            reply_to_message_id=reply)
+            reply_to_message_id=reply,
+            disable_web_page_preview=True)
     except KeyError:
         msg = update.effective_message.reply_text(
             markdown_parser(backup_message + "\nNote: the current message is "
                             "invalid due to an issue with some misplaced "
                             "curly brackets. Please update"),
             parse_mode=ParseMode.MARKDOWN,
-            reply_to_message_id=reply)
+            reply_to_message_id=reply,
+            disable_web_page_preview=True)
     except BadRequest as excp:
         if excp.message == "Button_url_invalid":
             msg = update.effective_message.reply_text(
@@ -96,7 +98,8 @@ def send(update, message, keyboard, backup_message):
                     "\nNote: the current message has an invalid url "
                     "in one of its buttons. Please update."),
                 parse_mode=ParseMode.MARKDOWN,
-                reply_to_message_id=reply)
+                reply_to_message_id=reply,
+                disable_web_page_preview=True)
         elif excp.message == "Unsupported url protocol":
             msg = update.effective_message.reply_text(
                 markdown_parser(
@@ -105,7 +108,8 @@ def send(update, message, keyboard, backup_message):
                     "use url protocols that are unsupported by "
                     "telegram. Please update."),
                 parse_mode=ParseMode.MARKDOWN,
-                reply_to_message_id=reply)
+                reply_to_message_id=reply,
+                disable_web_page_preview=True)
         elif excp.message == "Wrong url host":
             msg = update.effective_message.reply_text(
                 markdown_parser(
@@ -113,7 +117,8 @@ def send(update, message, keyboard, backup_message):
                     "\nNote: the current message has some bad urls. "
                     "Please update."),
                 parse_mode=ParseMode.MARKDOWN,
-                reply_to_message_id=reply)
+                reply_to_message_id=reply,
+                disable_web_page_preview=True)
             logging.warning(message)
             logging.warning(keyboard)
             logging.error("Could not parse! got invalid url host errors")
@@ -125,7 +130,8 @@ def send(update, message, keyboard, backup_message):
                         "\nNote: An error occured when sending the "
                         "custom message. Please update."),
                     reply_to_message_id=reply,
-                    parse_mode=ParseMode.MARKDOWN)
+                    parse_mode=ParseMode.MARKDOWN,
+                    disable_web_page_preview=True)
             except BadRequest:
                 return ""
     return msg
@@ -697,8 +703,7 @@ def welcome(update: Update, context: CallbackContext):
                                             cust_content,
                                             caption=welcome_m,
                                             reply_markup=keyboard,
-                                            parse_mode=ParseMode.HTML,
-                                            disable_web_page_preview=True)
+                                            parse_mode=ParseMode.HTML)
 
     elif len(args) >= 1:
         if args[0].lower() in ("on", "yes"):
@@ -760,8 +765,7 @@ def goodbye(update: Update, context: CallbackContext):
                                             cust_content,
                                             caption=goodbye_m,
                                             reply_markup=keyboard,
-                                            parse_mode=ParseMode.HTML,
-                                            disable_web_page_preview=True)
+                                            parse_mode=ParseMode.HTML)
 
     elif len(args) >= 1:
         if args[0].lower() in ("on", "yes"):
