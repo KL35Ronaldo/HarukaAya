@@ -1,9 +1,9 @@
-FROM registry.gitlab.com/harukanetwork/oss/harukaaya:dockerstation-beta
+FROM registry.gitlab.com/harukanetwork/oss/harukaaya:dockerstation
 
-RUN git clone https://gitlab.com/HarukaNetwork/OSS/HarukaAya.git -b ptb13-revive /data/HarukaBeta
+RUN git clone https://gitlab.com/HarukaNetwork/OSS/HarukaAya.git -b staging /data/HarukaAya
 
-COPY ./config.yml /data/HarukaBeta
+COPY ./config.yml /data/HarukaAya
 
-WORKDIR /data/HarukaBeta
+WORKDIR /data/HarukaAya
 
 CMD ["python", "-m", "haruka"]
