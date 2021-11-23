@@ -31,7 +31,7 @@ RUN mkdir /data
 
 RUN chmod 777 /data
 
-RUN pip install -r https://gitlab.com/HarukaNetwork/OSS/HarukaAya/-/raw/ptb13-revive/requirements.txt
+RUN pip install -r https://gitlab.com/HarukaNetwork/OSS/HarukaAya/-/raw/staging/requirements.txt
 
 RUN apk del .build-deps
 
